@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Norman Segment Priorities</title>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">Norman traffic count segments</div>
+    <div class="subtitle">v/c, collisions and combined score by council ward</div>
+    <div class="topbar-right"><button id="basemap-toggle" class="btn" type="button">Satellite</button></div>
+  </header>
+  <main class="layout">
+    <aside class="panel" id="panel">
+      <section class="controls">
+        <label class="control"><span>Ward</span>
+          <select id="ward-select"><option value="">All wards</option></select>
+        </label>
+        <div class="control"><span>Color by</span>
+          <div class="segmented" id="metric-toggle">
+            <button type="button" data-metric="combined" class="active">Combined</button>
+            <button type="button" data-metric="v_c">v/c</button>
+            <button type="button" data-metric="collisions">Collisions</button>
+          </div>
+        </div>
+        <div class="control"><span>Capacity (LOS)</span>
+          <div class="segmented" id="los-toggle">
+            <button type="button" data-los="E" class="active">E (2025 plan)</button>
+            <button type="button" data-los="C">C (2020 plan)</button>
+          </div>
+        </div>
+        <div class="control years"><span>Collision years</span>
+          <select id="year-min"></select><span class="to">to</span><select id="year-max"></select>
+        </div>
+        <label class="control checkbox"><input type="checkbox" id="show-collectors"> <span>Include collectors</span></label>
+      </section>
+      <section class="stats" id="stats"></section>
+      <section class="table-wrap">
+        <table id="rank-table">
+          <thead><tr><th>#</th><th>Segment</th><th class="num">v/c</th><th class="num">Crashes</th><th class="num">Score</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </aside>
+    <div id="map"></div>
+    <div class="legend" id="legend"></div>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

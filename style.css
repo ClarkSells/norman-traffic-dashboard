@@ -1,0 +1,55 @@
+:root {
+  --surface: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --hairline: #e1e0d9; --border: rgba(11,11,11,0.10); --accent: #d45f14;
+  --panel-w: 380px; --topbar-h: 56px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--plane); color: var(--ink); }
+.topbar { height: var(--topbar-h); display: flex; align-items: baseline; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--hairline); background: var(--surface); }
+.topbar .title { font-weight: 600; font-size: 16px; }
+.topbar .subtitle { color: var(--ink-2); font-size: 13px; }
+.topbar-right { margin-left: auto; }
+.btn { font: inherit; font-size: 13px; padding: 6px 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.layout { display: grid; grid-template-columns: var(--panel-w) 1fr; height: calc(100% - var(--topbar-h)); position: relative; }
+.panel { background: var(--surface); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; min-height: 0; }
+.controls { padding: 12px 16px; display: grid; gap: 10px; border-bottom: 1px solid var(--hairline); }
+.control { display: grid; gap: 4px; font-size: 12px; color: var(--ink-2); }
+.control select { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.control.years { grid-template-columns: auto 1fr auto 1fr; align-items: center; }
+.control.years > span:first-child { grid-column: 1 / -1; }
+.control.checkbox { grid-template-columns: auto 1fr; align-items: center; }
+.segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.segmented button { font: inherit; font-size: 12px; padding: 6px 10px; border: 0; background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.segmented button + button { border-left: 1px solid var(--hairline); }
+.segmented button.active { background: var(--ink); color: #fff; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--hairline); }
+.stat .value { font-size: 20px; font-weight: 600; }
+.stat .label { font-size: 11px; color: var(--muted); }
+.table-wrap { overflow: auto; flex: 1; min-height: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; color: var(--ink-2); padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr { cursor: pointer; }
+tbody tr:hover, tbody tr.selected { background: #f3efe9; }
+td .road { font-weight: 600; }
+td .span { color: var(--ink-2); font-size: 11px; }
+td .tag { display: inline-block; font-size: 10px; color: var(--ink-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+#map { position: relative; }
+.legend { position: absolute; right: 12px; bottom: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 11px; min-width: 180px; }
+.legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.legend .swatch { width: 22px; height: 4px; border-radius: 2px; }
+.legend .dot { width: 9px; height: 9px; border-radius: 50%; }
+.legend .ward { width: 12px; height: 12px; border-radius: 2px; opacity: 0.6; }
+.legend .title { font-weight: 600; margin-bottom: 4px; color: var(--ink-2); }
+.legend .group { margin-top: 8px; }
+.mapboxgl-popup-content { font: 12px/1.4 system-ui, sans-serif; padding: 10px 12px; max-width: 280px; }
+.popup h4 { margin: 0 0 4px; font-size: 13px; }
+.popup .span { color: var(--ink-2); margin-bottom: 6px; }
+.popup table { font-size: 11px; }
+.popup td { padding: 2px 6px 2px 0; border: 0; }
+.popup td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.popup a { color: var(--accent); }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; grid-template-rows: 45% 1fr; } .panel { border-right: 0; border-bottom: 1px solid var(--hairline); } }
