@@ -1,50 +1,87 @@
 :root {
   --surface: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
-  --hairline: #e1e0d9; --border: rgba(11,11,11,0.10); --accent: #d45f14;
+  --hairline: #e1e0d9; --border: rgba(11,11,11,0.10); --accent: #d45f14; --focus: #1c5cab;
   --panel-w: 380px; --topbar-h: 56px;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--plane); color: var(--ink); }
-.topbar { height: var(--topbar-h); display: flex; align-items: baseline; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--hairline); background: var(--surface); }
+body { display: flex; flex-direction: column; overflow: hidden; }
+.topbar { flex: none; min-height: var(--topbar-h); display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; padding: 8px 16px; border-bottom: 1px solid var(--hairline); background: var(--surface); }
 .topbar .title { font-weight: 600; font-size: 16px; }
 .topbar .subtitle { color: var(--ink-2); font-size: 13px; }
-.topbar-right { margin-left: auto; }
-.btn { font: inherit; font-size: 13px; padding: 6px 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer; }
+.topbar-right { margin-left: auto; display: flex; gap: 8px; align-self: center; }
+.btn { font: inherit; font-size: 13px; padding: 6px 12px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 6px; cursor: pointer; }
 .btn:hover { border-color: var(--muted); }
-.layout { display: grid; grid-template-columns: var(--panel-w) 1fr; height: calc(100% - var(--topbar-h)); position: relative; }
-.panel { background: var(--surface); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; min-height: 0; }
+.btn.small { font-size: 12px; padding: 4px 10px; }
+.btn.open { background: var(--ink); color: #fff; border-color: var(--ink); }
+.panel-toggle { display: none; }
+
+/* Keyboard focus: one visible ring for every control, including table rows and Mapbox buttons. */
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible, .mapboxgl-ctrl button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.segmented button:focus-visible { outline-offset: -3px; }
+tbody tr:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; background: #eef3fa; }
+
+.layout { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--panel-w) 1fr; position: relative; }
+.panel { background: var(--surface); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .controls { padding: 12px 16px; display: grid; gap: 10px; border-bottom: 1px solid var(--hairline); }
+.panel-actions { display: flex; justify-content: flex-end; }
 .control { display: grid; gap: 4px; font-size: 12px; color: var(--ink-2); }
-.control select { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.control select { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--ink); min-width: 0; max-width: 100%; }
 .control.years { grid-template-columns: auto 1fr auto 1fr; align-items: center; }
 .control.years > span:first-child { grid-column: 1 / -1; }
 .control.checkbox { grid-template-columns: auto 1fr; align-items: center; }
-.segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.segmented { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 .segmented button { font: inherit; font-size: 12px; padding: 6px 10px; border: 0; background: var(--surface); color: var(--ink-2); cursor: pointer; }
 .segmented button + button { border-left: 1px solid var(--hairline); }
 .segmented button.active { background: var(--ink); color: #fff; }
+
+/* "How to read this" box */
+.help { padding: 12px 16px; border-bottom: 1px solid var(--hairline); background: #faf7f2; font-size: 12px; line-height: 1.45; color: var(--ink); }
+.help h3 { margin: 0 0 8px; font-size: 13px; }
+.help dl { margin: 0; }
+.help dt { font-weight: 600; margin-top: 8px; }
+.help dd { margin: 2px 0 0; color: var(--ink-2); }
+
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--hairline); }
 .stat .value { font-size: 20px; font-weight: 600; }
 .stat .label { font-size: 11px; color: var(--muted); }
 .table-wrap { overflow: auto; flex: 1; min-height: 0; }
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; color: var(--ink-2); padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
-td { padding: 7px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; color: var(--ink-2); padding: 8px 10px; border-bottom: 1px solid var(--hairline); z-index: 1; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; overflow-wrap: anywhere; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 tbody tr { cursor: pointer; }
 tbody tr:hover, tbody tr.selected { background: #f3efe9; }
 td .road { font-weight: 600; }
 td .span { color: var(--ink-2); font-size: 11px; }
 td .tag { display: inline-block; font-size: 10px; color: var(--ink-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
-#map { position: relative; }
-.legend { position: absolute; right: 12px; bottom: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 11px; min-width: 180px; }
+#map { position: relative; min-width: 0; min-height: 0; }
+.legend { position: absolute; right: 12px; bottom: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 11px; min-width: 180px; max-height: calc(100% - 60px); overflow: auto; }
 .legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
-.legend .swatch { width: 22px; height: 4px; border-radius: 2px; }
-.legend .dot { width: 9px; height: 9px; border-radius: 50%; }
-.legend .ward { width: 12px; height: 12px; border-radius: 2px; opacity: 0.6; }
+.legend .swatch { width: 22px; height: 4px; border-radius: 2px; flex: none; }
+.legend .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.legend .ward { width: 12px; height: 12px; border-radius: 2px; opacity: 0.6; flex: none; }
 .legend .title { font-weight: 600; margin-bottom: 4px; color: var(--ink-2); }
+.legend .legend-toggle { font: inherit; font-weight: 600; background: none; border: 0; padding: 0; width: 100%; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; text-align: left; cursor: pointer; color: var(--ink-2); }
+.legend .legend-toggle::after { content: "\25BE"; font-size: 12px; }
+.legend.collapsed .legend-toggle::after { content: "\25B8"; }
+.legend.collapsed .legend-toggle { margin-bottom: 0; }
+.legend.collapsed > :not(.legend-toggle) { display: none; }
 .legend .group { margin-top: 8px; }
+
+/* Loading and error card over the map */
+.loading { position: absolute; inset: 0; left: var(--panel-w); display: flex; align-items: center; justify-content: center; background: rgba(249,249,247,0.82); z-index: 5; padding: 16px; }
+.loading[hidden] { display: none; }
+.loading-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; max-width: 360px; width: 100%; display: grid; gap: 12px; justify-items: center; text-align: center; font-size: 13px; color: var(--ink-2); box-shadow: 0 6px 24px rgba(11,11,11,0.08); }
+.loading-card p { margin: 0; }
+.spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--hairline); border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
+.loading.error .spinner { display: none; }
+.loading.error .loading-card { border-color: #e34948; color: var(--ink); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-top-color: var(--hairline); } }
+
 .mapboxgl-popup-content { font: 12px/1.4 system-ui, sans-serif; padding: 10px 12px; max-width: 280px; }
 .popup h4 { margin: 0 0 4px; font-size: 13px; }
 .popup .span { color: var(--ink-2); margin-bottom: 6px; }
@@ -52,4 +89,24 @@ td .tag { display: inline-block; font-size: 10px; color: var(--ink-2); border: 1
 .popup td { padding: 2px 6px 2px 0; border: 0; }
 .popup td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
 .popup a { color: var(--accent); }
-@media (max-width: 800px) { .layout { grid-template-columns: 1fr; grid-template-rows: 45% 1fr; } .panel { border-right: 0; border-bottom: 1px solid var(--hairline); } }
+
+/* Narrow screens: the list stacks above the map and scrolls as one block; "Hide list" gives the map the full height. */
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; grid-template-rows: minmax(0, 45%) minmax(0, 1fr); }
+  .layout.panel-collapsed { grid-template-rows: minmax(0, 1fr); }
+  .layout.panel-collapsed .panel { display: none; }
+  .panel { border-right: 0; border-bottom: 1px solid var(--hairline); overflow: auto; }
+  .table-wrap { overflow: visible; flex: none; }
+  .panel-toggle { display: inline-block; }
+  .loading { left: 0; }
+  .legend { right: 8px; bottom: 24px; font-size: 10px; min-width: 150px; max-height: 42%; padding: 8px 10px; }
+  .stats { padding: 10px 16px; }
+  .stat .value { font-size: 18px; }
+}
+@media (max-width: 480px) {
+  .topbar { padding: 8px 12px; gap: 2px 10px; }
+  .topbar .subtitle { display: none; }
+  .topbar .title { font-size: 15px; }
+  .controls, .help, .stats { padding-left: 12px; padding-right: 12px; }
+  th, td { padding-left: 8px; padding-right: 8px; }
+}
