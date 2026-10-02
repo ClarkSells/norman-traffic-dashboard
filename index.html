@@ -12,32 +12,39 @@
   <header class="topbar">
     <div class="title">Norman traffic count segments</div>
     <div class="subtitle">v/c, collisions and combined score by council ward</div>
-    <div class="topbar-right"><button id="basemap-toggle" class="btn" type="button">Satellite</button></div>
+    <div class="topbar-right">
+      <button id="panel-toggle" class="btn panel-toggle" type="button" aria-expanded="true" aria-controls="panel">Hide list</button>
+      <button id="basemap-toggle" class="btn" type="button">Satellite</button>
+    </div>
   </header>
-  <main class="layout">
+  <main class="layout" id="layout">
     <aside class="panel" id="panel">
       <section class="controls">
+        <div class="panel-actions">
+          <button id="help-toggle" class="btn small" type="button" aria-expanded="false" aria-controls="help-box">How to read this</button>
+        </div>
         <label class="control"><span>Ward</span>
           <select id="ward-select"><option value="">All wards</option></select>
         </label>
-        <div class="control"><span>Color by</span>
-          <div class="segmented" id="metric-toggle">
-            <button type="button" data-metric="combined" class="active">Combined</button>
-            <button type="button" data-metric="v_c">v/c</button>
-            <button type="button" data-metric="collisions">Collisions</button>
+        <div class="control"><span id="metric-label">Color by</span>
+          <div class="segmented" id="metric-toggle" role="group" aria-labelledby="metric-label">
+            <button type="button" data-metric="combined" class="active" aria-pressed="true">Combined</button>
+            <button type="button" data-metric="v_c" aria-pressed="false">v/c</button>
+            <button type="button" data-metric="collisions" aria-pressed="false">Collisions</button>
           </div>
         </div>
-        <div class="control"><span>Capacity (LOS)</span>
-          <div class="segmented" id="los-toggle">
-            <button type="button" data-los="E" class="active">E (2025 plan)</button>
-            <button type="button" data-los="C">C (2020 plan)</button>
+        <div class="control"><span id="los-label">Capacity (LOS)</span>
+          <div class="segmented" id="los-toggle" role="group" aria-labelledby="los-label">
+            <button type="button" data-los="E" class="active" aria-pressed="true">E (2025 plan)</button>
+            <button type="button" data-los="C" aria-pressed="false">C (2020 plan)</button>
           </div>
         </div>
         <div class="control years"><span>Collision years</span>
-          <select id="year-min"></select><span class="to">to</span><select id="year-max"></select>
+          <select id="year-min" aria-label="First collision year"></select><span class="to">to</span><select id="year-max" aria-label="Last collision year"></select>
         </div>
         <label class="control checkbox"><input type="checkbox" id="show-collectors"> <span>Include collectors</span></label>
       </section>
+      <section class="help" id="help-box" hidden></section>
       <section class="stats" id="stats"></section>
       <section class="table-wrap">
         <table id="rank-table">
@@ -48,6 +55,13 @@
     </aside>
     <div id="map"></div>
     <div class="legend" id="legend"></div>
+    <div class="loading" id="loading" role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loading-text">Loading the map and about 4 MB of segment and crash data.</p>
+        <button id="loading-reload" class="btn" type="button" hidden>Reload</button>
+      </div>
+    </div>
   </main>
   <script type="module" src="app.js"></script>
 </body>

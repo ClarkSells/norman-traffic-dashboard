@@ -12,7 +12,10 @@ export function initControls() {
     const box = document.getElementById(id);
     box.addEventListener("click", (e) => {
       const btn = e.target.closest("button"); if (!btn) return;
-      box.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+      box.querySelectorAll("button").forEach(b => {
+        b.classList.toggle("active", b === btn);
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
       setState({ [key]: btn.dataset[key] });
     });
   }
@@ -31,14 +34,43 @@ export function initControls() {
   document.getElementById("show-collectors").addEventListener("change", (e) => setState({ includeCollectors: e.target.checked }));
 }
 
+// On narrow screens the list stacks above the map. "Hide list" collapses it so the map gets the full height.
+export function initPanelToggle() {
+  const btn = document.getElementById("panel-toggle"), layout = document.getElementById("layout");
+  if (!btn || !layout) return null;
+  const set = (open) => {
+    layout.classList.toggle("panel-collapsed", !open);
+    btn.setAttribute("aria-expanded", String(open));
+    btn.textContent = open ? "Hide list" : "Show list";
+  };
+  set(true);
+  btn.addEventListener("click", () => set(btn.getAttribute("aria-expanded") !== "true"));
+  return set;
+}
+
+// Enter or Space on a focused row acts like a click. Other keys fall through.
+export function rowKeyActivates(e) {
+  return e.key === "Enter" || e.key === " " || e.key === "Spacebar";
+}
+
 export function renderTable(state, onRowClick) {
   const rows = rankedRows(state);
   const tbody = document.querySelector("#rank-table tbody");
-  tbody.innerHTML = rows.map(r => `<tr data-loc="${r.loc_id}" class="${r.loc_id === state.selectedLocId ? "selected" : ""}">
+  // Re-rendering replaces the rows, which would drop keyboard focus. Remember whether a row had it.
+  const active = typeof document !== "undefined" ? document.activeElement : null;
+  const hadFocus = !!(active && typeof tbody.contains === "function" && tbody.contains(active));
+  tbody.innerHTML = rows.map(r => `<tr data-loc="${r.loc_id}" tabindex="0" class="${r.loc_id === state.selectedLocId ? "selected" : ""}" aria-selected="${r.loc_id === state.selectedLocId}">
       <td class="num">${r.rank}</td>
       <td><div class="road">${r.on_road}${r.shared_boundary ? '<span class="tag">boundary</span>' : ""}</div><div class="span">${r.from_road} to ${r.to_road}</div></td>
-      <td class="num">${num(r.v_c_active)}</td><td class="num">${num(r.collisions_active, 0)}</td><td class="num">${num(r.combined_active, 1)}</td></tr>`).join("");
-  tbody.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => onRowClick(tr.dataset.loc)));
+      <td class="num">${num(r.v_c_active)}</td><td class="num">${num(r.collisions_active, 0)}</td><td class="num">${num(r.combined_active, 2)}</td></tr>`).join("");
+  tbody.querySelectorAll("tr").forEach(tr => {
+    tr.addEventListener("click", () => onRowClick(tr.dataset.loc));
+    tr.addEventListener("keydown", (e) => { if (rowKeyActivates(e)) { e.preventDefault(); onRowClick(tr.dataset.loc); } });
+  });
+  if (hadFocus && state.selectedLocId && typeof tbody.querySelector === "function") {
+    const tr = tbody.querySelector(`tr[data-loc="${state.selectedLocId}"]`);
+    if (tr) tr.focus();
+  }
   const n = rows.length, over = rows.filter(r => r.v_c_active >= 1).length, crashes = rows.reduce((a, r) => a + r.collisions_active, 0);
   document.getElementById("stats").innerHTML = [["segments", n], ["over capacity", over], ["collisions", crashes.toLocaleString()]]
     .map(([l, v]) => `<div class="stat"><div class="value">${v}</div><div class="label">${l}</div></div>`).join("");

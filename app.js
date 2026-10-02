@@ -4,10 +4,14 @@ import { addCollisionsLayer, updateCollisions } from "./layers/collisions.js";
 import { addPointsLayer } from "./layers/points.js";
 import { addSegmentsLayer, updateSegments } from "./layers/segments.js";
 import { addWardsLayer, updateWards } from "./layers/wards.js";
-import { renderLegend } from "./ui/legend.js";
-import { initControls, renderTable } from "./ui/panel.js";
+import { initHelp } from "./ui/help.js";
+import { initLegend, renderLegend } from "./ui/legend.js";
+import { hideLoading, initLoading, showLoadError } from "./ui/loading.js";
+import { initControls, initPanelToggle, renderTable } from "./ui/panel.js";
 import { attachPopup } from "./ui/popup.js";
 import { getState, setState, subscribe } from "./state.js";
+
+initLoading();   // "Loading ..." card over the map until the layers are on it
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
 const map = new mapboxgl.Map({ container: "map", style: STYLES.light, center: CENTER, zoom: ZOOM });
@@ -31,9 +35,12 @@ function addAllLayers() {
   updateWards(map, state);
   updateSegments(map, state, applyState(state));
   updateCollisions(map, state);
+  hideLoading();
 }
 
 map.on("style.load", () => { styleReady = true; addAllLayers(); });
+// A style that never arrives (bad token, blocked host) would otherwise leave a blank map behind the loading card.
+map.on("error", (e) => { if (!styleReady) showLoadError((e && e.error) || new Error("the map style did not load")); });
 
 function flyToSegment(locId) {
   const f = getRaw().segments.features.find(x => x.properties.loc_id === locId);
@@ -67,6 +74,9 @@ async function main() {
   initControls();
   addAllLayers();
   attachPopup(map, (locId) => setState({ selectedLocId: locId }));
+  initHelp(getRaw().summary && getRaw().summary.qa);
+  initPanelToggle();
+  initLegend(document.getElementById("legend"));
   subscribe(render);
   render(getState(), {});
   document.getElementById("basemap-toggle").addEventListener("click", (e) => {
@@ -78,4 +88,8 @@ async function main() {
   });
 }
 
-main().catch(err => { console.error(err); document.getElementById("stats").textContent = `Failed to load: ${err.message}`; });
+main().catch(err => {
+  console.error(err);
+  showLoadError(err);
+  document.getElementById("stats").textContent = `Failed to load: ${err.message}`;
+});
