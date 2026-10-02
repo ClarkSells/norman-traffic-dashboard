@@ -13,7 +13,16 @@ mapboxgl.accessToken = MAPBOX_TOKEN;
 const map = new mapboxgl.Map({ container: "map", style: STYLES.light, center: CENTER, zoom: ZOOM });
 map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
+// The style and the data load in parallel. Whichever finishes last adds the
+// layers. Registering the style listener before the data fetch matters: on a
+// hosted copy the style usually wins, and a listener attached after the fact
+// would never fire.
+let styleReady = false;
+let dataReady = false;
+
 function addAllLayers() {
+  if (!styleReady || !dataReady) return;
+  if (map.getLayer("segments-line")) return;   // already added for this style
   const raw = getRaw(), state = getState();
   addWardsLayer(map, raw.wards);
   addCollisionsLayer(map, raw.collisions, state);
@@ -21,7 +30,10 @@ function addAllLayers() {
   addPointsLayer(map, raw.points);
   updateWards(map, state);
   updateSegments(map, state, applyState(state));
+  updateCollisions(map, state);
 }
+
+map.on("style.load", () => { styleReady = true; addAllLayers(); });
 
 function flyToSegment(locId) {
   const f = getRaw().segments.features.find(x => x.properties.loc_id === locId);
@@ -51,9 +63,9 @@ function render(state, patch) {
 
 async function main() {
   await loadAll();
+  dataReady = true;
   initControls();
-  map.on("style.load", addAllLayers);
-  if (map.isStyleLoaded()) addAllLayers();
+  addAllLayers();
   attachPopup(map, (locId) => setState({ selectedLocId: locId }));
   subscribe(render);
   render(getState(), {});
@@ -61,6 +73,7 @@ async function main() {
     const next = getState().basemap === "light" ? "satellite" : "light";
     setState({ basemap: next });
     e.target.textContent = next === "light" ? "Satellite" : "Streets";
+    styleReady = false;
     map.setStyle(STYLES[next]);   // layers are re-added on the next style.load
   });
 }
