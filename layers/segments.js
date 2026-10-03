@@ -61,6 +61,7 @@ export function setSegmentsTheme(map, name) {
   map.setPaintProperty("segments-casing", "line-color", theme["map-casing"]);
   map.setPaintProperty("segments-shared", "line-color", theme.ink);
   map.setPaintProperty("segments-selected-casing", "line-color", theme["selection-halo"]);
+  map.setPaintProperty("segments-selected-gap", "line-color", theme["map-casing"]);
   if (lastState) map.setPaintProperty("segments-casing", "line-opacity", casingOpacityExpression(lastState, theme["map-casing-opacity"]));
 }
 
@@ -82,6 +83,11 @@ export function addSegmentsLayer(map, segments, { reducedMotion = false } = {}) 
   map.addLayer({ id: "segments-selected-casing", type: "line", source: "segments-selected",
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": theme["selection-halo"], "line-width": widthExpression(6), "line-opacity": 0.9, "line-blur": 0.6 } });
+  // A ring in the surface color between the halo and the line keeps the frame readable on the darkest class, where
+  // ink against the ramp's dark end is under 2 to 1.
+  map.addLayer({ id: "segments-selected-gap", type: "line", source: "segments-selected",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": theme["map-casing"], "line-width": widthExpression(2.5), "line-opacity": 1 } });
   // The ghost carries the previous color and opacity expressions during a crossfade, then sits at opacity 0.
   map.addLayer({ id: "segments-line-ghost", type: "line", source: "segments",
     layout: { "line-cap": "round", "line-join": "round" },

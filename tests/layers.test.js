@@ -46,15 +46,16 @@ const feat = (id, extra = {}) => ({ type: "Feature", geometry: { type: "LineStri
 const segs = { type: "FeatureCollection", features: [feat("52500-1"), feat("52500-2", { in_ward: 0, metric_value: null })] };
 const m2 = fakeMap();
 addSegmentsLayer(m2, segs);
-assert.deepEqual(m2.layers.map(l => l.id), ["segments-casing", "segments-selected-casing", "segments-line-ghost", "segments-line", "segments-shared", "segments-selected"], "the selection halo sits under the data line; the pulse sits on top");
-assert.deepEqual(m2.layers[3].paint["line-color-transition"], { duration: 350 }, "paint transitions around 350 ms");
+assert.deepEqual(m2.layers.map(l => l.id), ["segments-casing", "segments-selected-casing", "segments-selected-gap", "segments-line-ghost", "segments-line", "segments-shared", "segments-selected"], "the selection halo and its paper gap sit under the data line; the pulse sits on top");
+assert.deepEqual(m2.layers[4].paint["line-color-transition"], { duration: 350 }, "paint transitions around 350 ms");
 assert.equal(m2.layers[1].paint["line-color"], "#16150f", "the selection frame is ink, not paper, so the class color inside stays visible");
+assert.equal(m2.layers[2].paint["line-color"], "#fbfaf7", "a paper gap ring sits between the halo and the line");
 const m2r = fakeMap(); addSegmentsLayer(m2r, segs, { reducedMotion: true });
-assert.deepEqual(m2r.layers[3].paint["line-color-transition"], { duration: 0 }, "reduced motion: paint transitions are instant");
-assert.equal(m2r.layers[5].layout.visibility, "none", "reduced motion: the pulse layer is hidden from the start");
+assert.deepEqual(m2r.layers[4].paint["line-color-transition"], { duration: 0 }, "reduced motion: paint transitions are instant");
+assert.equal(m2r.layers[6].layout.visibility, "none", "reduced motion: the pulse layer is hidden from the start");
 assert.equal(m2.sources.segments.promoteId, "loc_id");
 assert.equal(m2.sources["segments-selected"].lineMetrics, true, "selection source has line metrics for line-progress");
-assert.equal(m2.layers[5].source, "segments-selected");
+assert.equal(m2.layers[6].source, "segments-selected");
 const w = widthExpression();
 assert.equal(w[0], "interpolate"); assert.deepEqual(w[2], ["zoom"]); assert.equal(w[4][2][1], "vpd_max", "width depends on zoom and on VPD");
 assert.ok(w[4][w[4].length - 1] < w[w.length - 1][w[w.length - 1].length - 1], "wider at high zoom");
@@ -92,7 +93,7 @@ setHover(m2, null); assert.equal(m2.fs["segments:52500-2"].hover, false);
 // pulse gradient: stops strictly increase and the light sits at p
 for (const p of [0, 0.1, 0.5, 0.9, 1]) { const g = pulseGradient(p); const stops = g.slice(3).filter((_, i) => i % 2 === 0); for (let i = 1; i < stops.length; i++) assert.ok(stops[i] > stops[i - 1], `stops increase at p=${p}`); assert.ok(g.includes("rgba(255,255,255,0.95)")); }
 setSegmentsTheme(m2, "dark");
-assert.equal(m2.paint["segments-casing.line-color"], "#ffffff", "satellite: brighter casing"); assert.equal(m2.paint["segments-casing.line-opacity"][2], 0.95); assert.equal(m2.paint["segments-selected-casing.line-color"], "#ffffff");
+assert.equal(m2.paint["segments-casing.line-color"], "#ffffff", "satellite: brighter casing"); assert.equal(m2.paint["segments-casing.line-opacity"][2], 0.95); assert.equal(m2.paint["segments-selected-casing.line-color"], "#ffffff"); assert.equal(m2.paint["segments-selected-gap.line-color"], "#ffffff");
 setSegmentsTheme(m2, "light");
 console.log("segments layer checks passed");
 
