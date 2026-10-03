@@ -1,6 +1,6 @@
 import { BREAKS, RAMP } from "../config.js";
 import { THEMES } from "../theme.js";
-import { DUR, tween } from "../motion.js";
+import { DUR, tween, linear } from "../motion.js";
 
 // Lighter copy of a hex color for the hover state.
 export function brighten(hex, amount = 0.3) {
@@ -212,4 +212,108 @@ export function updateSegments(map, state, data) {
   }
   selected = state.selectedLocId;
   lastState = { metric: state.metric, ward: state.ward, includeCollectors: state.includeCollectors };
+}
+
+// ---- Card 1.9: scene emphasis (design section 9) ----
+
+// Applies the crossfade-style opacity scalar k on top of the current state, reusing the same
+// expressions updateSegments writes (lineOpacityExpression / casingOpacityExpression). Scenes use
+// it to sink the whole network under a heat surface or a caption; k=1 restores the full expression.
+export function setSegmentsOpacity(map, k = 1) {
+  const state = lastState || { metric: "combined", ward: null, includeCollectors: false };
+  if (!map.getLayer) return;
+  if (map.getLayer("segments-line")) map.setPaintProperty("segments-line", "line-opacity", lineOpacityExpression(state, k));
+  if (map.getLayer("segments-casing")) map.setPaintProperty("segments-casing", "line-opacity", casingOpacityExpression(state, theme["map-casing-opacity"] * k));
+}
+
+// A 1.4 s line-width pulse on segments-selected: 1.0x to 1.6x and back, twice, then the original
+// width expression is restored. Every feature in the selection source pulses together; when the
+// segments source data is reachable the named locIds are copied into it first so several segments
+// can pulse at once. Under reduced motion it is a no-op. Returns a cancel that restores at once.
+export function pulse(map, locIds, { reduced = false, tween: tweenImpl } = {}) {
+  const noop = () => {};
+  if (reduced || !map.getLayer || !map.getLayer("segments-selected")) return noop;
+  const base = (map.getPaintProperty && map.getPaintProperty("segments-selected", "line-width")) || widthExpression(2);
+  let prior = null;
+  const selSrc = map.getSource && map.getSource("segments-selected");
+  const segsSrc = map.getSource && map.getSource("segments");
+  if (selSrc && segsSrc && segsSrc.data && Array.isArray(segsSrc.data.features) && locIds && locIds.length) {
+    const feats = segsSrc.data.features.filter(f => f.properties && locIds.includes(f.properties.loc_id));
+    if (feats.length) {
+      prior = selSrc.data || null;
+      selSrc.setData({ type: "FeatureCollection", features: feats });
+    }
+  }
+  const tw = tweenImpl || tween;
+  let finished = false;
+  const restore = () => {
+    if (finished) return;
+    finished = true;
+    map.setPaintProperty("segments-selected", "line-width", base);
+    if (prior && selSrc) selSrc.setData(prior);
+  };
+  const cancelTween = tw({
+    duration: 1400, ease: linear,
+    onUpdate: (t) => {
+      if (finished) return;
+      const k = 1 + 0.6 * Math.abs(Math.sin(2 * Math.PI * t));
+      map.setPaintProperty("segments-selected", "line-width", ["*", k, base]);
+    },
+    onDone: restore,
+  });
+  return () => { if (typeof cancelTween === "function") cancelTween(); restore(); };
+}
+
+// ---- Ward mask: a paper veil over everything outside the ward, so the ward reads as a stage ----
+
+export const WARD_MASK_SOURCE = "ward-mask";
+export const WARD_MASK_LAYER = "ward-mask";
+
+function ringArea(r) {
+  let a = 0;
+  for (let i = 0; i < r.length - 1; i++) a += r[i][0] * r[i + 1][1] - r[i + 1][0] * r[i][1];
+  return a / 2;
+}
+// GeoJSON right-hand rule: exterior rings counterclockwise, holes clockwise.
+function orient(r, ccw) { return (ringArea(r) > 0) === ccw ? r : [...r].reverse(); }
+function exteriorRings(geom) {
+  if (!geom) return [];
+  if (geom.type === "Polygon") return [geom.coordinates[0]];
+  if (geom.type === "MultiPolygon") return geom.coordinates.map(p => p[0]);
+  return [];
+}
+function unionBbox(wardsFc) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const walk = (c) => {
+    if (typeof c[0] === "number") { minX = Math.min(minX, c[0]); maxX = Math.max(maxX, c[0]); minY = Math.min(minY, c[1]); maxY = Math.max(maxY, c[1]); }
+    else for (const d of c) walk(d);
+  };
+  for (const f of (wardsFc && wardsFc.features) || []) if (f.geometry) walk(f.geometry.coordinates);
+  return isFinite(minX) ? [minX, minY, maxX, maxY] : null;
+}
+
+// The veil is one polygon: an outer ring the size of the wards union extent (padded, or a large
+// world bbox when no collection is given) with the ward polygon cut out as a hole. 45 percent of
+// the explore light paper; the caller may restyle fill-color for present/dusk. The layer is added
+// once and re-masking only swaps the data.
+export function addWardMask(map, wardFeature, wardsFc) {
+  const bb = unionBbox(wardsFc) || [-180, -85, 180, 85];
+  const padX = Math.max((bb[2] - bb[0]) * 0.2, 0.01), padY = Math.max((bb[3] - bb[1]) * 0.2, 0.01);
+  const [minX, minY, maxX, maxY] = [bb[0] - padX, bb[1] - padY, bb[2] + padX, bb[3] + padY];
+  const outer = orient([[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY], [minX, minY]], true);
+  const holes = exteriorRings(wardFeature && wardFeature.geometry).map(r => orient(r, false));
+  const data = { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [outer, ...holes] } }] };
+  const src = map.getSource && map.getSource(WARD_MASK_SOURCE);
+  if (src) { src.setData(data); return; }
+  map.addSource(WARD_MASK_SOURCE, { type: "geojson", data });
+  const layer = { id: WARD_MASK_LAYER, type: "fill", source: WARD_MASK_SOURCE,
+    paint: { "fill-color": "#f6f4ee", "fill-opacity": 0.45 } };
+  // Under the segment lines, so the data stays crisp while the basemap outside the ward is veiled.
+  if (map.getLayer && map.getLayer("segments-casing")) map.addLayer(layer, "segments-casing");
+  else map.addLayer(layer);
+}
+
+export function clearWardMask(map) {
+  if (map.getLayer && map.getLayer(WARD_MASK_LAYER) && map.removeLayer) map.removeLayer(WARD_MASK_LAYER);
+  if (map.getSource && map.getSource(WARD_MASK_SOURCE) && map.removeSource) map.removeSource(WARD_MASK_SOURCE);
 }

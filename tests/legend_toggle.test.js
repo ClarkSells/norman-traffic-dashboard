@@ -1,43 +1,53 @@
 // Run from the repo root: node dashboard/tests/legend_toggle.test.js
-// The legend title is a button that folds the legend; narrow screens start folded. Fake DOM in the style of panel.test.js.
+// The compact legend is a pill: folded it shows the metric swatch row; a click on the title expands the full legend.
 import assert from "node:assert/strict";
+import { El } from "./fake_dom.js";
 const { initLegend, renderLegend } = await import("../ui/legend.js");
 
-class El {
-  constructor() { this.listeners = {}; this.innerHTML = ""; this.classes = new Set(); this.attrs = {};
-    this.classList = { add: (c) => this.classes.add(c), contains: (c) => this.classes.has(c), toggle: (c) => { this.classes.has(c) ? this.classes.delete(c) : this.classes.add(c); return this.classes.has(c); } }; }
-  addEventListener(ev, fn) { (this.listeners[ev] ||= []).push(fn); }
-  setAttribute(k, v) { this.attrs[k] = v; }
-  fire(ev, e) { for (const fn of this.listeners[ev] || []) fn(e); }
-}
 const state = { metric: "combined", los: "E", yearMin: 2021, yearMax: 2025 };
+const toggleButton = () => { const b = new El("button"); b.classes.add("legend-toggle"); return b; };
+const outside = () => new El("span");
 
-// Desktop: open by default, the title is a real button announcing its state.
-const wide = new El();
+// Compact pill: folded by default, swatch row markup present, the toggle announces its state.
+const pill = new El("div", "legend");
+initLegend(pill, { compact: true });
+renderLegend(pill, state);
+assert.ok(pill.classes.has("compact"), "compact class marks the pill");
+assert.ok(pill.classes.has("collapsed"), "the pill starts folded");
+assert.ok(pill.innerHTML.includes('<button type="button" class="legend-toggle" aria-expanded="false">Combined score, LOS E, crashes 2021 to 2025</button>'), "toggle announces collapsed");
+assert.ok(pill.innerHTML.includes('class="ramp"') && (pill.innerHTML.match(/<i style="background:#/g) || []).length === 5, "metric swatch row rides in the pill");
+
+// A click on the title expands to the full legend; a second click folds it back.
+const btn = toggleButton();
+pill.fire("click", { target: outside() });
+assert.ok(pill.classes.has("collapsed"), "clicks outside the title are ignored");
+pill.fire("click", { target: btn });
+assert.ok(!pill.classes.has("collapsed"), "title click expands the pill");
+assert.equal(btn.attrs["aria-expanded"], "true");
+assert.ok(pill.innerHTML.includes("crash not on a counted segment"), "full legend content is the renderLegend output");
+pill.fire("click", { target: btn });
+assert.ok(pill.classes.has("collapsed") && btn.attrs["aria-expanded"] === "false", "second click folds it again");
+
+// The fold survives a re-render with a new metric.
+renderLegend(pill, { ...state, metric: "v_c" });
+assert.ok(pill.innerHTML.includes('aria-expanded="false">Volume / capacity'), "re-render keeps the folded state");
+
+// No options at all: still the compact pill (app.js calls initLegend(el) until Wave 2 rewires it).
+const dflt = new El("div", "legend");
+initLegend(dflt);
+renderLegend(dflt, state);
+assert.ok(dflt.classes.has("compact") && dflt.classes.has("collapsed"), "default options give the folded compact pill");
+
+// Legacy boolean callers: false stays open, true starts folded.
+const wide = new El("div", "legend");
 initLegend(wide, false);
 renderLegend(wide, state);
-assert.ok(!wide.classes.has("collapsed"), "open on wide screens");
-assert.ok(wide.innerHTML.includes('<button type="button" class="legend-toggle" aria-expanded="true">Combined score, LOS E, crashes 2021 to 2025</button>'), "title is a button");
-assert.ok(wide.innerHTML.includes('class="ramp"') && wide.innerHTML.includes("crash not on a counted segment"), "legend body still rendered");
-
-// A click on the title folds it; a click elsewhere does nothing; the state survives a re-render.
-const titleBtn = new El(); titleBtn.closest = (sel) => sel === ".legend-toggle" ? titleBtn : null;
-const other = new El(); other.closest = () => null;
-wide.fire("click", { target: other });
-assert.ok(!wide.classes.has("collapsed"), "clicks outside the title are ignored");
-wide.fire("click", { target: titleBtn });
-assert.ok(wide.classes.has("collapsed"), "title click folds the legend");
-assert.equal(titleBtn.attrs["aria-expanded"], "false");
-renderLegend(wide, { ...state, metric: "v_c" });
-assert.ok(wide.innerHTML.includes('aria-expanded="false">Volume / capacity'), "re-render keeps the folded state");
-wide.fire("click", { target: titleBtn });
-assert.ok(!wide.classes.has("collapsed") && titleBtn.attrs["aria-expanded"] === "true", "second click opens it again");
-
-// Narrow screens start folded so the map stays visible.
-const narrow = new El();
+assert.ok(!wide.classes.has("collapsed"), "legacy false: open");
+assert.ok(wide.innerHTML.includes('aria-expanded="true">Combined score, LOS E, crashes 2021 to 2025</button>'));
+const narrow = new El("div", "legend");
 initLegend(narrow, true);
 renderLegend(narrow, state);
-assert.ok(narrow.classes.has("collapsed"), "folded by default on narrow screens");
+assert.ok(narrow.classes.has("collapsed"), "legacy true: folded");
 assert.ok(narrow.innerHTML.includes('aria-expanded="false"'));
 
 // The old plain-object element used by popup_legend.test.js still works.

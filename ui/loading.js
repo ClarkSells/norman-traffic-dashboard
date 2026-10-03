@@ -1,10 +1,15 @@
 // Loading overlay over the map. Shown while the style and the geojson download,
 // hidden once the layers are on the map, turned into an error card if a fetch fails.
-const APPROX_MB = 4;
+// Copy is staged and calm; the bar is determinate once the first byte arrives.
+import { FACTS } from "../facts.js";
 
-export function loadingMessage() {
-  return `Loading the map and about ${APPROX_MB} MB of segment and crash data. This can take a few seconds on a slow connection.`;
-}
+const STAGES = {
+  map: "Preparing the map",
+  segments: `Placing ${FACTS.segments} segments`,
+  crashes: "Loading five years of crash records",
+};
+
+let stage = "map";
 
 export function errorMessage(err) {
   const detail = err && err.message ? err.message : String(err || "unknown error");
@@ -13,22 +18,32 @@ export function errorMessage(err) {
 
 function el(id) { return typeof document === "undefined" ? null : document.getElementById(id); }
 
-// Progress text for the loading card: a percentage when the total is known, otherwise a byte count.
-export function progressMessage(p) {
-  if (!p || !p.loaded) return loadingMessage();
-  const mb = (p.loaded / 1048576).toFixed(1);
-  if (p.ratio != null) return `Loading segment and crash data, ${Math.round(p.ratio * 100)} percent of ${(p.total / 1048576).toFixed(1)} MB.`;
-  return `Loading segment and crash data, ${mb} MB so far.`;
+// Sets which stage of the load the card is talking about. Unknown stages are ignored.
+export function setStage(next) {
+  if (!STAGES[next]) return;
+  stage = next;
+  const text = el("loading-text"); if (text) text.textContent = STAGES[stage];
 }
 
-// Feeds the thin progress bar under the top bar. Indeterminate when the total is unknown.
+// Feeds the thin progress bar under the top bar. Indeterminate only before the
+// first byte arrives; afterwards determinate, with the fill tracking the byte
+// ratio when the total is known.
 export function setProgress(p) {
   const bar = el("progress"); if (!bar) return;
   bar.hidden = false;
   const fill = el("progress-fill");
-  if (p && p.ratio != null) { bar.classList.remove("indeterminate"); if (fill && fill.style) fill.style.width = `${Math.round(p.ratio * 100)}%`; bar.setAttribute("aria-valuenow", String(Math.round(p.ratio * 100))); }
-  else { bar.classList.add("indeterminate"); bar.removeAttribute("aria-valuenow"); }
-  const text = el("loading-text"); if (text) text.textContent = progressMessage(p);
+  const started = !!(p && p.loaded > 0);
+  if (started) {
+    bar.classList.remove("indeterminate");
+    if (p.ratio != null) {
+      const pct = Math.round(p.ratio * 100);
+      if (fill && fill.style) fill.style.width = `${pct}%`;
+      bar.setAttribute("aria-valuenow", String(pct));
+    }
+  } else {
+    bar.classList.add("indeterminate");
+    bar.removeAttribute("aria-valuenow");
+  }
 }
 
 export function finishProgress() {
@@ -45,8 +60,10 @@ export function showLoading() {
   const panel = el("panel"); if (panel && panel.classList) panel.classList.add("skeleton");
   box.classList.remove("error");
   box.setAttribute("role", "status");
-  const text = el("loading-text"); if (text) text.textContent = loadingMessage();
   const btn = el("loading-reload"); if (btn) btn.hidden = true;
+  const bar = el("progress");
+  if (bar) { bar.classList.add("indeterminate"); bar.removeAttribute("aria-valuenow"); const fill = el("progress-fill"); if (fill && fill.style) fill.style.width = "0%"; }
+  setStage("map");
 }
 
 export function hideLoading() {

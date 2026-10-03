@@ -1,6 +1,6 @@
 // Run from the repo root: node dashboard/tests/motion.test.js
 import assert from "node:assert/strict";
-import { DUR, animateNumber, capMoves, clamp01, duration, easeInOutCubic, easeOutCubic, flipPlan, lerp, measureRows, playFlip, resetCameraOptions, segmentCameraOptions, tween, wardCameraOptions } from "../motion.js";
+import { DUR, animateNumber, capMoves, clamp01, duration, easeInOutCubic, easeOutCubic, flipPlan, lerp, measureRows, playFlip, tween } from "../motion.js";
 
 // Easings
 assert.equal(easeOutCubic(0), 0); assert.equal(easeOutCubic(1), 1); assert.ok(easeOutCubic(0.5) > 0.5, "ease out arrives early");
@@ -56,11 +56,5 @@ assert.equal(n, 2); assert.equal(els.get("a").style.transform, "translate(0px, -
 pending[0](); assert.equal(els.get("a").style.transform, ""); assert.ok(els.get("a").style.transition.includes("350ms"));
 assert.equal(playFlip({ moves: [{ key: "a", dx: 0, dy: 1 }] }, els, { reduced: true }), 0, "reduced motion: nothing moves");
 
-// Camera option sets
-const w = wardCameraOptions(false); assert.equal(w.fit.pitch, 30); assert.equal(w.fit.duration, 700); assert.ok(w.settle.bearing !== w.fit.bearing, "the ward move settles after the fit");
-assert.equal(wardCameraOptions(true).fit.duration, 0); assert.equal(wardCameraOptions(true).settle.duration, 0);
-const s = segmentCameraOptions(-12, false); assert.equal(s.pitch, 45); assert.equal(s.bearing, -12); assert.equal(s.duration, 700);
-assert.equal(segmentCameraOptions(0, true).duration, 0);
-assert.deepEqual(resetCameraOptions([-97.43, 35.225], 11.6, false), { center: [-97.43, 35.225], zoom: 11.6, pitch: 0, bearing: 0, duration: 700 });
-assert.equal(resetCameraOptions([0, 0], 1, true).duration, 0);
+// Camera option sets live in camera.js now (see tests/camera.test.js).
 console.log("motion checks passed");

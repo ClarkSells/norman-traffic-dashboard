@@ -88,6 +88,42 @@ export function initControls() {
   const sw = document.getElementById("show-collectors");
   sw.addEventListener("change", (e) => setState({ includeCollectors: !!e.target.checked }));
   syncControls(getState());
+  initSettings();
+}
+
+// Climbs from a control's inner element to its .control wrapper so the wrapper can move as one block.
+function controlHost(el) {
+  let host = el;
+  while (host && host.parentNode && !(host.classList && host.classList.contains("control"))) host = host.parentNode;
+  return host;
+}
+
+// The quiet Settings disclosure: LOS, year range and Include collectors move behind it, next to the
+// Crash density (state.heat) and Traffic flow (state.flow) switches. Returns a setter like the other toggles.
+export function initSettings() {
+  if (settingsSet) return settingsSet;
+  const toggle = document.getElementById("settings-toggle"), settings = document.getElementById("settings");
+  if (!toggle || !settings) return null;
+  for (const id of ["los-toggle", "year-min", "show-collectors"]) {
+    const inner = document.getElementById(id);
+    if (!inner) continue;
+    const host = controlHost(inner);
+    if (host && host !== settings && host.parentNode !== settings && typeof settings.appendChild === "function") settings.appendChild(host);
+  }
+  const set = (open) => {
+    settings.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.classList.toggle("open", open);
+  };
+  set(false);
+  toggle.addEventListener("click", () => set(settings.hidden));
+  for (const [id, key] of [["heat-toggle", "heat"], ["flow-toggle", "flow"]]) {
+    const sw = document.getElementById(id);
+    if (sw) sw.addEventListener("change", (e) => setState({ [key]: !!(e.target ? e.target.checked : sw.checked) }));
+  }
+  syncControls(getState());
+  settingsSet = set;
+  return set;
 }
 
 // Reflects state into the controls. Used after a hash restore, a tour step or a reset.
@@ -107,6 +143,11 @@ export function syncControls(state) {
   if (label) label.textContent = state.yearMin === state.yearMax ? `${state.yearMin} only` : `${state.yearMin} to ${state.yearMax}`;
   const sw = document.getElementById("show-collectors");
   if (sw) { sw.checked = !!state.includeCollectors; sw.setAttribute("aria-checked", String(!!state.includeCollectors)); }
+  // heat and flow arrive in state with Wave 2; read them tolerantly (heat defaults on, flow defaults off).
+  const heat = document.getElementById("heat-toggle");
+  if (heat) { const on = state.heat !== false; heat.checked = on; heat.setAttribute("aria-checked", String(on)); }
+  const flow = document.getElementById("flow-toggle");
+  if (flow) { const on = state.flow === true; flow.checked = on; flow.setAttribute("aria-checked", String(on)); }
   const basemap = document.getElementById("basemap-toggle");
   if (basemap) { basemap.setAttribute("aria-pressed", String(state.basemap === "satellite")); basemap.textContent = state.basemap === "satellite" ? "Streets" : "Satellite"; }
 }
@@ -128,6 +169,31 @@ export function initPanelToggle() {
 // Enter or Space on a focused row acts like a click. Other keys fall through.
 export function rowKeyActivates(e) { return e.key === "Enter" || e.key === " " || e.key === "Spacebar"; }
 
+// Moves the tab stop and the focus between rows. Arrows step, Home and End jump; the target scrolls into view.
+function setRoving(loc) {
+  rovingLoc = loc;
+  for (const [id, tr] of rowsByLoc) tr.tabIndex = id === loc ? 0 : -1;
+}
+
+function moveRowFocus(fromLoc, key) {
+  const tbody = document.querySelector("#rank-table tbody");
+  if (!tbody || !tbody.children) return;
+  const list = tbody.children.filter(c => c.dataset && c.dataset.loc);
+  if (!list.length) return;
+  const idx = Math.max(0, list.findIndex(c => c.dataset.loc === fromLoc));
+  const next = key === "Home" ? 0 : key === "End" ? list.length - 1 : key === "ArrowDown" ? Math.min(list.length - 1, idx + 1) : Math.max(0, idx - 1);
+  const target = list[next];
+  if (!target) return;
+  setRoving(target.dataset.loc);
+  if (typeof target.focus === "function") target.focus();
+  if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "nearest", behavior: "auto" });
+}
+
+function rowKey(e, locId, onRowClick) {
+  if (rowKeyActivates(e)) { e.preventDefault(); onRowClick(locId); return; }
+  if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") { e.preventDefault(); moveRowFocus(locId, e.key); }
+}
+
 export function rowCells(r, state, maxScore) {
   const share = maxScore > 0 && r.metric_value != null ? Math.max(0, Math.min(1, r.metric_value / maxScore)) : 0;
   const scoreText = state.metric === "v_c" ? num(r.v_c_active) : state.metric === "collisions" ? int(r.collisions_active) : num(r.combined_active);
@@ -146,6 +212,8 @@ export function emptyMessage(state) {
 
 const rowsByLoc = new Map();
 let hoverLoc = null;
+let rovingLoc = null;      // the row that holds the tab stop (roving tabindex)
+let settingsSet = null;    // initSettings runs once; repeated calls return the same setter
 
 // Renders the ranked table with keyed rows (one <tr> per loc_id is reused across renders so focus and hover survive).
 // hooks: { onHover(locId|null), beforeUpdate(), afterUpdate(added, removed) } are optional.
@@ -166,9 +234,10 @@ export function renderTable(state, onRowClick, hooks = {}) {
     let tr = rowsByLoc.get(r.loc_id);
     if (!tr) {
       tr = document.createElement("tr");
-      tr.dataset.loc = r.loc_id; tr.tabIndex = 0;
+      tr.dataset.loc = r.loc_id; tr.tabIndex = -1;
+      tr.setAttribute("role", "button");
       tr.addEventListener("click", () => onRowClick(r.loc_id));
-      tr.addEventListener("keydown", (e) => { if (rowKeyActivates(e)) { e.preventDefault(); onRowClick(r.loc_id); } });
+      tr.addEventListener("keydown", (e) => rowKey(e, r.loc_id, onRowClick));
       tr.addEventListener("mouseenter", () => { if (hooks.onHover) hooks.onHover(r.loc_id); });
       tr.addEventListener("mouseleave", () => { if (hooks.onHover) hooks.onHover(null); });
       rowsByLoc.set(r.loc_id, tr);
@@ -197,6 +266,13 @@ export function renderTable(state, onRowClick, hooks = {}) {
   }
   if (hooks.afterUpdate) hooks.afterUpdate(added, removed, rowsByLoc);
 
+  // Roving tabindex: the selected row holds the tab stop, else the last focused row, else the first row.
+  if (state.selectedLocId && rowsByLoc.has(state.selectedLocId)) rovingLoc = state.selectedLocId;
+  if (!rovingLoc || !rowsByLoc.has(rovingLoc)) rovingLoc = rows.length ? rows[0].loc_id : null;
+  if (rovingLoc) setRoving(rovingLoc);
+  // The selected row stays pinned visible.
+  if (state.selectedLocId) { const tr = rowsByLoc.get(state.selectedLocId); if (tr && typeof tr.scrollIntoView === "function") tr.scrollIntoView({ block: "nearest", behavior: "auto" }); }
+
   const empty = document.getElementById("table-empty");
   if (empty) {
     if (rows.length === 0) {
@@ -211,6 +287,14 @@ export function renderTable(state, onRowClick, hooks = {}) {
   return rows;
 }
 
+// One mono line under the controls, e.g. "177 segments · 5,121 crashes 2021 to 2025 · top: W Main St".
+// Driven by the same summarize() result as the stat tiles; the tiles keep their ids but the line is the visual.
+export function statsLine(state, summary) {
+  const n = summary.n;
+  const window = state.yearMin === state.yearMax ? `in ${state.yearMin}` : `${state.yearMin} to ${state.yearMax}`;
+  return `${int(n)} segment${n === 1 ? "" : "s"} · ${int(summary.crashes)} crashes ${window} · top: ${summary.top ? summary.top.on_road : "none"}`;
+}
+
 export function renderStats(state, summary, animateNumber) {
   const put = (id, value, formatter) => {
     const el = document.getElementById(id); if (!el) return;
@@ -221,6 +305,17 @@ export function renderStats(state, summary, animateNumber) {
   const top = document.getElementById("stat-top"), topLabel = document.getElementById("stat-top-label");
   if (top) top.textContent = summary.top ? `${summary.top.on_road}, ${summary.top.from_road} to ${summary.top.to_road}` : "none";
   if (topLabel) topLabel.textContent = summary.top ? `top segment by ${METRIC_WORD[state.metric] || state.metric}` : "top segment";
+  let line = document.getElementById("stats-line");
+  if (!line && typeof document.createElement === "function") {
+    const stats = document.getElementById("stats");
+    if (stats && typeof stats.appendChild === "function") {
+      line = document.createElement("div");
+      line.setAttribute("id", "stats-line");
+      line.setAttribute("class", "stats-line");
+      stats.appendChild(line);
+    }
+  }
+  if (line) line.textContent = statsLine(state, summary);
 }
 
 export function renderBriefing(state, summary) {

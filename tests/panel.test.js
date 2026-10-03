@@ -1,11 +1,11 @@
 // Run from the repo root: node dashboard/tests/panel.test.js
 import assert from "node:assert/strict";
-import { installFakeDocument } from "./fake_dom.js";
+import { installFakeDocument, El } from "./fake_dom.js";
 import { setRaw } from "../data.js";
 import { getState, setState } from "../state.js";
 
 const { el, button } = installFakeDocument();
-const { briefingLine, briefingTitle, clampPatchYears, clampYears, emptyMessage, initControls, rangeFill, renderTable, rowCells, syncControls } = await import("../ui/panel.js");
+const { briefingLine, briefingTitle, clampPatchYears, clampYears, emptyMessage, initControls, initSettings, rangeFill, renderTable, rowCells, statsLine, syncControls } = await import("../ui/panel.js");
 
 const seg = (loc, wards, cls, vpd, byYear) => ({ type: "Feature", geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] },
   properties: { loc_id: loc, on_road: "Main", from_road: "x", to_road: "y", wards, shared_boundary: wards.length > 1, functional_class: cls, vpd_max: vpd, capacity_C: 22000, capacity_E: 34200, collisions_by_year: byYear } });
@@ -29,6 +29,10 @@ assert.ok(cells.includes(">0.50<") && cells.includes(">10<") && cells.includes("
 const wardBox = el("ward-toggle"); const wardBtns = ["", "1", "2", "3", "4", "5", "6", "7", "8"].map(v => button(wardBox, "ward", v));
 const metricBox = el("metric-toggle"); const metricBtns = ["combined", "v_c", "collisions"].map(v => button(metricBox, "metric", v));
 const losBox = el("los-toggle"); const losBtns = ["E", "C"].map(v => button(losBox, "los", v));
+// The secondary controls live in .control wrappers; the settings disclosure re-parents those wrappers at runtime.
+const wrapLos = new El("div"); wrapLos.classList.add("control"); wrapLos.appendChild(losBox);
+const wrapYears = new El("div"); wrapYears.classList.add("control"); wrapYears.appendChild(el("year-min"));
+const wrapColl = new El("label"); wrapColl.classList.add("control"); wrapColl.appendChild(el("show-collectors"));
 initControls();
 assert.equal(el("year-min").min, "2019", "slider extent widens to every year in the data"); assert.equal(el("year-max").max, "2023");
 assert.equal(getState().yearMin, 2021); assert.equal(getState().yearMax, 2023, "default window clamped to the data years");
@@ -53,7 +57,36 @@ assert.equal(el("show-collectors").getAttribute("aria-checked"), "true");
 assert.equal(el("year-label").textContent, "2022 to 2023");
 syncControls({ ...getState(), yearMin: 2023, yearMax: 2023 }); assert.equal(el("year-label").textContent, "2023 only");
 
+// Settings disclosure: quiet by default, opens on the toggle, holds LOS, years and collectors.
+assert.ok(typeof initSettings === "function", "initSettings exported");
+assert.equal(el("settings").hidden, true, "settings closed by default");
+assert.equal(el("settings-toggle").getAttribute("aria-expanded"), "false");
+const settingsKids = el("settings").children;
+assert.ok(settingsKids.includes(wrapLos) && settingsKids.includes(wrapYears) && settingsKids.includes(wrapColl), "LOS, year range and Include collectors move behind the settings disclosure");
+el("settings-toggle").fire("click");
+assert.equal(el("settings").hidden, false, "toggle opens the disclosure");
+assert.equal(el("settings-toggle").getAttribute("aria-expanded"), "true");
+el("settings-toggle").fire("click");
+assert.equal(el("settings").hidden, true, "second click closes it");
+// Crash density (heat) and Traffic flow switches write state, with tolerant defaults (state.heat !== false, state.flow === true).
+assert.equal(el("heat-toggle").checked, true, "crash density defaults on");
+assert.equal(el("heat-toggle").getAttribute("aria-checked"), "true");
+assert.equal(el("flow-toggle").checked, false, "traffic flow defaults off");
+el("heat-toggle").checked = false; el("heat-toggle").fire("change");
+assert.equal(getState().heat, false, "heat switch writes state.heat");
+el("flow-toggle").checked = true; el("flow-toggle").fire("change");
+assert.equal(getState().flow, true, "flow switch writes state.flow");
+syncControls(getState());
+assert.equal(el("heat-toggle").getAttribute("aria-checked"), "false");
+assert.equal(el("flow-toggle").getAttribute("aria-checked"), "true", "sync reflects state.flow into the switch");
+syncControls({ ...getState(), heat: undefined, flow: undefined });
+assert.equal(el("heat-toggle").checked, true, "missing state.heat reads as on");
+assert.equal(el("flow-toggle").checked, false, "missing state.flow reads as off");
+
 // Table and stats
+assert.equal(statsLine({ metric: "combined", yearMin: 2021, yearMax: 2025 }, { n: 177, crashes: 5121, top: { on_road: "W Main St" } }), "177 segments · 5,121 crashes 2021 to 2025 · top: W Main St", "stats line matches the design format");
+assert.equal(statsLine({ metric: "combined", yearMin: 2023, yearMax: 2023 }, { n: 1, crashes: 4, top: { on_road: "Main" } }), "1 segment · 4 crashes in 2023 · top: Main", "singular segment and single year window");
+assert.equal(statsLine({ metric: "combined", yearMin: 2021, yearMax: 2025 }, { n: 0, crashes: 0, top: null }), "0 segments · 0 crashes 2021 to 2025 · top: none", "empty list still reads as a sentence");
 setState({ ward: null, metric: "combined", los: "E", yearMin: 2021, yearMax: 2023, includeCollectors: false, selectedLocId: null });
 const rows = renderTable(getState(), () => {});
 assert.deepEqual(rows.map(r => r.loc_id), ["A", "B"]);
@@ -61,6 +94,7 @@ const tbody = document.querySelector("#rank-table tbody");
 assert.deepEqual(tbody.children.map(c => c.dataset.loc), ["A", "B"], "one row per segment, in rank order");
 assert.equal(el("stat-segments").textContent, "2"); assert.equal(el("stat-crashes").textContent, "4", "crashes in window only");
 assert.ok(el("stat-top").textContent.startsWith("Main, x to y"));
+assert.equal(el("stats-line").textContent, "2 segments · 4 crashes 2021 to 2023 · top: Main", "stats line driven by the same summary as the tiles");
 assert.equal(el("briefing-title").textContent, "All wards");
 assert.equal(el("briefing-line").textContent, "2 segments, ranked by combined score, crashes 2021 to 2023");
 assert.equal(el("table-empty").hidden, true);
@@ -78,4 +112,5 @@ assert.equal(el("table-empty").hidden, false);
 assert.ok(el("table-empty").innerHTML.includes("No arterial segments to show in Ward 5") && el("table-empty").innerHTML.includes('data-action="Include collectors"'));
 assert.equal(tbody.children.length, 0, "rows for other wards are removed");
 assert.equal(el("stat-top").textContent, "none");
+assert.equal(el("stats-line").textContent, "0 segments · 0 crashes 2021 to 2023 · top: none", "stats line handles the empty list");
 console.log("panel checks passed");

@@ -1,7 +1,11 @@
-// Present mode player: a pure reducer for the tour state and a thin DOM binding around it.
-export const AUTOPLAY_MS = 9000;
+// Present mode player (C.10): a pure reducer for the tour state plus the glue that drives the C.9
+// present chrome. The player owns scene order, autoplay timing and keyboard; ui/present.js owns every
+// pixel, including pausing while the pointer is over the caption card.
+export const AUTOPLAY_MS = 9000; // legacy default; per-scene scene.autoplayMs is the real duration now
 
 export const initialTour = { active: false, index: 0, total: 0, autoplay: false, saved: null };
+
+const clamp01 = (t) => Math.max(0, Math.min(1, t));
 
 // Pure. Actions: enter {total, saved, index?}, next, prev, goto {index}, toggleAutoplay, exit.
 export function tourReduce(s, action) {
@@ -24,6 +28,8 @@ export function keyAction(key, inField = false) {
   if (key === "Escape") return { type: "exit" };
   if (key === "Home") return { type: "goto", index: 0 };
   if (key === "End") return { type: "goto", index: Infinity };
+  if (key === "a" || key === "A") return { type: "toggleAutoplay" };
+  if (key === "f" || key === "F") return { type: "fullscreen" };
   return null;
 }
 
@@ -33,67 +39,118 @@ export function swipeAction(dx, dy, minPx = 48) {
   return dx < 0 ? { type: "next" } : { type: "prev" };
 }
 
+// Legacy progress dots; the C.9 chrome renders its own segmented bar. Kept for one release.
 export function dotsHtml(index, total) {
   let h = "";
   for (let i = 0; i < total; i++) h += `<button type="button" class="tour-dot${i === index ? " active" : ""}" data-index="${i}" role="tab" aria-selected="${i === index}" aria-label="Step ${i + 1} of ${total}"></button>`;
   return h;
 }
 
-// DOM binding. opts: { steps, applyStep(step, prev), onEnter(saved) , onExit(saved) } returns { dispatch, getState }.
+// The player. opts: {
+//   scenes: C.2 scene list,
+//   applyScene(scene, prev): drives map/camera/layers; may return a promise,
+//   onEnter(saved), onExit(saved),
+//   present: the C.9 chrome { show, hide, setProgress, setControlsVisible, onAction },
+//   timers: injectable { now, setInterval, clearInterval } so tests can drive autoplay time,
+// }
+// Returns { dispatch, getState }.
 export function initTourPlayer(opts) {
+  const scenes = opts.scenes || [];
+  const present = opts.present || null;
+  const T = opts.timers || {};
+  const now = T.now || (() => Date.now());
+  const setIv = T.setInterval || ((fn, ms) => setInterval(fn, ms));
+  const clearIv = T.clearInterval || ((id) => clearInterval(id));
+
   let s = { ...initialTour };
-  let timer = null;
-  const el = (id) => document.getElementById(id);
-  const render = () => {
-    const box = el("tour"); if (!box) return;
-    box.hidden = !s.active;
-    const layout = el("layout"); if (layout && layout.classList) layout.classList.toggle("presenting", s.active);
-    const present = el("present-toggle"); if (present) present.setAttribute("aria-pressed", String(s.active));
+  let tick = null;
+  let applying = null; // in-flight applyScene promise; the countdown waits for it
+
+  const stopTick = () => { if (tick != null) { clearIv(tick); tick = null; } };
+  const progress = (fraction) => { if (present && present.setProgress) present.setProgress(s.index, s.total, fraction); };
+
+  // (Re)start the 100 ms autoplay heartbeat for the current scene. The duration is the scene's own
+  // autoplayMs; null (title and closing) means the scene never advances on its own.
+  const startTick = () => {
+    stopTick();
     if (!s.active) return;
-    const step = opts.steps[s.index];
-    const put = (id, text) => { const n = el(id); if (n) n.textContent = text; };
-    put("tour-step", `${s.index + 1} of ${s.total}`); put("tour-title", step.title); put("tour-caption", step.caption);
-    const dots = el("tour-dots"); if (dots) dots.innerHTML = dotsHtml(s.index, s.total);
-    const prev = el("tour-prev"), next = el("tour-next"); if (prev) prev.disabled = s.index === 0; if (next) next.disabled = s.index === s.total - 1;
-    const auto = el("tour-autoplay"); if (auto) { auto.checked = s.autoplay; auto.setAttribute("aria-checked", String(s.autoplay)); }
-    if (layout && layout.classList) layout.classList.toggle("tour-panel", !!step.showPanel);
+    progress(0);
+    if (!s.autoplay) return;
+    const scene = scenes[s.index];
+    const ms = scene && scene.autoplayMs != null ? scene.autoplayMs : null;
+    if (ms == null || s.index >= s.total - 1) return;
+    const t0 = now();
+    tick = setIv(() => {
+      const f = clamp01((now() - t0) / ms);
+      progress(f);
+      if (f >= 1) dispatch({ type: "next" });
+    }, 100);
   };
-  const schedule = () => {
-    if (timer) { clearTimeout(timer); timer = null; }
-    if (s.active && s.autoplay && s.index < s.total - 1) timer = setTimeout(() => dispatch({ type: "next" }), opts.autoplayMs || AUTOPLAY_MS);
+  // applyScene may fly the camera; the next autoplay tick is scheduled only once it settles.
+  const afterApply = (r) => {
+    if (r && typeof r.then === "function") { applying = r; r.then(() => { if (applying === r) { applying = null; startTick(); } }); }
+    else startTick();
   };
+
+  const toggleFullscreen = () => {
+    if (typeof document === "undefined" || !document.documentElement) return;
+    if (document.fullscreenElement) { if (typeof document.exitFullscreen === "function") document.exitFullscreen(); }
+    else if (typeof document.documentElement.requestFullscreen === "function") document.documentElement.requestFullscreen();
+  };
+
   const dispatch = (action) => {
+    if (!action) return s;
+    if (action.type === "fullscreen") { toggleFullscreen(); return s; }
     const prev = s;
     s = tourReduce(s, action);
     if (s === prev) return s;
-    if (action.type === "enter") { if (opts.onEnter) opts.onEnter(s.saved); }
-    if (s.active && (!prev.active || prev.index !== s.index || action.type === "enter")) opts.applyStep(opts.steps[s.index], prev.active ? opts.steps[prev.index] : null);
-    if (!s.active && prev.active && opts.onExit) opts.onExit(prev.saved);
-    render(); schedule();
+    stopTick();
+    if (action.type === "enter" && opts.onEnter) opts.onEnter(s.saved);
+    if (s.active && (!prev.active || prev.index !== s.index || action.type === "enter")) {
+      const scene = scenes[s.index];
+      const prevScene = prev.active ? scenes[prev.index] : null;
+      if (present && present.show) present.show(scene, { prev: prevScene });
+      afterApply(opts.applyScene ? opts.applyScene(scene, prevScene) : null);
+    } else if (!s.active && prev.active) {
+      applying = null;
+      if (present && present.hide) present.hide();
+      if (opts.onExit) opts.onExit(prev.saved);
+    } else if (!applying) {
+      startTick();
+    }
     return s;
   };
-  const wire = (id, action) => { const n = el(id); if (n) n.addEventListener("click", () => dispatch(action)); };
-  wire("tour-prev", { type: "prev" }); wire("tour-next", { type: "next" }); wire("tour-exit", { type: "exit" });
-  const auto = el("tour-autoplay"); if (auto) auto.addEventListener("change", () => dispatch({ type: "toggleAutoplay" }));
-  const dots = el("tour-dots"); if (dots) dots.addEventListener("click", (e) => { const b = e.target.closest ? e.target.closest(".tour-dot") : null; if (b) dispatch({ type: "goto", index: Number(b.dataset.index) }); });
+
+  // Chrome actions: "next" | "prev" | "exit" | "autoplay" | "replay" | "explore" | { goto: index }.
+  if (present && present.onAction) {
+    present.onAction((a) => {
+      if (a === "next") dispatch({ type: "next" });
+      else if (a === "prev") dispatch({ type: "prev" });
+      else if (a === "exit" || a === "explore") dispatch({ type: "exit" });
+      else if (a === "autoplay") dispatch({ type: "toggleAutoplay" });
+      else if (a === "replay") dispatch({ type: "goto", index: 0 });
+      else if (a && typeof a === "object" && Number.isFinite(a.goto)) dispatch({ type: "goto", index: a.goto });
+    });
+  }
+
   if (typeof document !== "undefined" && document.addEventListener) {
     document.addEventListener("keydown", (e) => {
       if (!s.active) return;
       const t = e.target, tag = t && t.tagName ? t.tagName.toLowerCase() : "";
       const inField = tag === "input" || tag === "select" || tag === "textarea" || (t && t.isContentEditable);
       const a = keyAction(e.key, inField && e.key !== "Escape");
-      if (a) { e.preventDefault(); dispatch(a); }
+      if (a) { if (e.preventDefault) e.preventDefault(); dispatch(a); }
     });
-    // Swipe left and right on the caption card or the map to step
+    // Swipe left and right on the map to step
     let start = null;
-    document.addEventListener("pointerdown", (e) => { if (s.active && e.isPrimary) start = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+    document.addEventListener("pointerdown", (e) => { if (s.active && e.isPrimary) start = { x: e.clientX, y: e.clientY, t: now() }; });
     document.addEventListener("pointerup", (e) => {
       if (!s.active || !start) return;
-      const a = swipeAction(e.clientX - start.x, e.clientY - start.y), quick = Date.now() - start.t < 1500;
+      const a = swipeAction(e.clientX - start.x, e.clientY - start.y), quick = now() - start.t < 1500;
       start = null;
       if (a && quick) dispatch(a);
     });
   }
-  render();
+
   return { dispatch, getState: () => s };
 }

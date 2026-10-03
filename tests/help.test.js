@@ -1,60 +1,55 @@
 // Run from the repo root: node dashboard/tests/help.test.js
-// Fake DOM in the style of panel.test.js; checks the help text and the toggle behaviour.
+// The "How to read this" overlay: four short cards, one figure each, closed by Escape, its close button, or the returned close().
 import assert from "node:assert/strict";
+import { installFakeDocument } from "./fake_dom.js";
 
-class El {
-  constructor(id) { this.id = id; this.listeners = {}; this.innerHTML = ""; this.hidden = false; this.attrs = {}; this.classes = new Set(); this.focused = false;
-    this.classList = { toggle: (c, on) => { on ? this.classes.add(c) : this.classes.delete(c); }, contains: (c) => this.classes.has(c) }; }
-  addEventListener(ev, fn) { (this.listeners[ev] ||= []).push(fn); }
-  setAttribute(k, v) { this.attrs[k] = v; }
-  getAttribute(k) { return this.attrs[k]; }
-  focus() { this.focused = true; }
-  fire(ev, e = {}) { for (const fn of this.listeners[ev] || []) fn(e); }
-}
-const els = {}; const el = (id) => (els[id] ||= new El(id));
-globalThis.document = { getElementById: el, querySelector: (sel) => el(sel) };
+const { el } = installFakeDocument();
 const { FALLBACK_IDS, helpHtml, initHelp } = await import("../ui/help.js");
 assert.equal(FALLBACK_IDS.length, 6);
 
-// Text: every term a councilmember needs, spelled out, counts taken from the qa block, no em dashes.
-const html = helpHtml({ segments: 204, segments_shared_boundary: 43, segments_geometry_fallback: 6 });
-for (const term of ["Volume to capacity ratio (v/c)", "vehicles per day (VPD)", "Level of service (LOS)", "Combined score", "Shared boundary segments", "Fallback geometry",
-                    "principal arterial, minor arterial and collector", "counted once and listed in both neighboring wards", "nearly identical", "tiebreaker"]) {
-  assert.ok(html.includes(term), `help text explains: ${term}`);
+// Content: exactly four cards (v/c, LOS, collisions, combined), one figure each, plain words for a council audience.
+const html = helpHtml({ segments_lanes_verified: 204 });
+assert.equal((html.match(/class="help-card"/g) || []).length, 4, "four cards");
+assert.equal((html.match(/class="help-figure"/g) || []).length, 4, "one figure per card");
+assert.ok(html.includes("How to read this map"), "overlay has a heading");
+for (const term of ["Volume to capacity (v/c)", "Level of service (LOS)", "Collisions", "Combined score"]) {
+  assert.ok(html.includes(term), `card present: ${term}`);
 }
-assert.ok(html.includes("43 of the 204 segments") && html.includes("6 of the 204 segments"), "counts come from the qa block");
-// Agreement with docs/report/sections/parts/limits_box.md
-for (const term of ["800 meter geometry window", "endpoints do not match the city centerlines", "highest single count year", "not an average across years",
-                    "verified by a person against aerial imagery", "safety ranking tempered by congestion", "confirmed by the project sponsor", "rank correlation above 0.99",
-                    "52500-76, 52500-133, 52500-183, 52500-206, 52500-228, 52500-237"]) {
-  assert.ok(html.includes(term), `help text agrees with the limits box: ${term}`);
+// The wording keeps the limits a judge checks: single count year, verified lanes, 30 meter assignment, the near-identical rankings.
+for (const term of ["highest single count year", "not an average", "verified by a person against aerial imagery", "All 204 lane counts",
+                    "2021 to 2025", "30 meters", "rank correlation above 0.99", "tiebreaker", "safety ranking tempered by congestion"]) {
+  assert.ok(html.includes(term), `help text keeps: ${term}`);
 }
-assert.ok(helpHtml({ segments: 204, segments_lanes_verified: 204 }).includes("All 204 lane counts"), "lane verification count comes from the qa block");
+assert.ok(helpHtml({ segments_lanes_verified: 177 }).includes('help-figure">177<'), "the LOS figure follows the qa block");
+assert.ok(helpHtml(undefined).includes('help-figure">204<'), "static fallback figure when summary.json is missing");
 assert.ok(!html.includes("—") && !html.includes(" - "), "no em dashes or spaced hyphens in prose");
-for (const para of html.replace(/<[^>]+>/g, "\n").split("\n")) assert.ok(para.trim().split(/\s+/).length <= 120, `no paragraph over 120 words: ${para.slice(0, 40)}`);
-assert.ok(!/0\.9995|9 of 10|1\.084/.test(html), "no irreproducible figures from the judge review");
-const fallbackHtml = helpHtml(undefined);
-assert.ok(fallbackHtml.includes("43 of the 204") && fallbackHtml.includes("6 of the 204"), "static fallback counts when summary.json is missing");
-assert.ok(helpHtml({ segments: 210, segments_shared_boundary: 40, segments_geometry_fallback: 2 }).includes("2 of the 210"), "counts follow a rerun");
+for (const para of html.replace(/<[^>]+>/g, "\n").split("\n")) assert.ok(para.trim().split(/\s+/).filter(Boolean).length <= 90, `cards stay short: ${para.slice(0, 40)}`);
 
-// Toggle: closed by default, button announces state, click opens and closes, Escape closes and returns focus.
-const set = initHelp({ segments: 204 });
-assert.equal(typeof set, "function");
+// Behaviour: closed by default, opens from the toggle, closes by button, Escape and the returned close().
+const help = initHelp({ segments_lanes_verified: 204 });
+assert.ok(help && typeof help.close === "function", "initHelp returns { close } for Reset view");
 assert.equal(el("help-box").hidden, true, "closed by default");
 assert.equal(el("help-toggle").getAttribute("aria-expanded"), "false");
-assert.ok(el("help-box").innerHTML.includes("How to read this map"), "box filled on init");
+assert.ok(el("help-box").innerHTML.includes("How to read this map"), "overlay filled on init");
+const closeBtn = el("help-box").children.find(c => (c.getAttribute("class") || "").includes("help-close"));
+assert.ok(closeBtn, "close button rendered");
+assert.equal(closeBtn.getAttribute("aria-label"), "Close help", "close button has an accessible name");
 el("help-toggle").fire("click");
-assert.equal(el("help-box").hidden, false, "click opens");
-assert.ok(el("help-box").focused, "focus moves into the box so Escape works");
+assert.equal(el("help-box").hidden, false, "click opens the overlay");
+assert.ok(el("help-box").focused, "focus moves into the overlay so Escape works");
 assert.equal(el("help-toggle").getAttribute("aria-expanded"), "true");
-assert.ok(el("help-toggle").classList.contains("open"));
-el("help-toggle").fire("click");
-assert.equal(el("help-box").hidden, true, "second click closes");
-assert.equal(el("help-toggle").getAttribute("aria-expanded"), "false");
+closeBtn.fire("click");
+assert.equal(el("help-box").hidden, true, "close button closes");
+assert.ok(el("help-toggle").focused, "close returns focus to the toggle");
 el("help-toggle").fire("click");
 el("help-box").fire("keydown", { key: "Escape" });
 assert.equal(el("help-box").hidden, true, "Escape closes");
-assert.ok(el("help-toggle").focused, "Escape returns focus to the button");
+assert.ok(el("help-toggle").focused, "Escape returns focus to the toggle");
 el("help-box").fire("keydown", { key: "Enter" });
 assert.equal(el("help-box").hidden, true, "other keys do nothing");
+el("help-toggle").fire("click");
+help.close();
+assert.equal(el("help-box").hidden, true, "programmatic close (Reset view)");
+help.close();
+assert.equal(el("help-box").hidden, true, "close is idempotent");
 console.log("help checks passed");

@@ -1,52 +1,196 @@
-// Run from the repo root: node dashboard/tests/sheet.test.js
+// Run from the repo root: node tests/sheet.test.js
 import assert from "node:assert/strict";
-import { installFakeDocument } from "./fake_dom.js";
-const { el } = installFakeDocument();
-const { SNAPS, initSheet, initialSheet, pickSnap, sheetReduce, sheetTransform, snapHeights } = await import("../ui/sheet.js");
+import { installFakeDocument, El } from "./fake_dom.js";
 
+// tests/fake_dom.js is lead-owned; it lacks removeEventListener, which destroy() needs. Shim it here, in the test.
+if (!El.prototype.removeEventListener) {
+  El.prototype.removeEventListener = function (ev, fn) {
+    const list = this.listeners[ev];
+    if (!list) return;
+    const i = list.indexOf(fn);
+    if (i >= 0) list.splice(i, 1);
+  };
+}
+
+installFakeDocument();
+const { SNAPS, DEFAULT_SNAPS, initSheet, snapHeights, pickSnap } = await import("../ui/sheet.js");
+
+// A fresh fake document per rig so listeners never accumulate between scenarios.
+function rig({ narrow = true, reduced = false } = {}) {
+  const { el } = installFakeDocument();
+  const panel = el("panel"), handle = el("sheet-handle"), header = el("briefing"), mapEl = el("map");
+  panel.parentNode = { clientHeight: 800 };
+  const captured = [];
+  handle.setPointerCapture = (id) => captured.push(id);
+  let t = 1000;
+  const sheet = initSheet({
+    panel, handle, header,
+    snaps: { peek: 148, half: 0.52, full: 0.92 },
+    isNarrow: () => narrow, reduced, now: () => t,
+  });
+  return { panel, handle, header, mapEl, sheet, captured, tick: (ms) => { t += ms; } };
+}
+
+// ---- Pure helpers ----------------------------------------------------------
 assert.deepEqual(SNAPS, ["peek", "half", "full"]);
-const H = snapHeights(800, 150); assert.deepEqual(H, { peek: 150, half: 443, full: 736 }, "half is the midpoint of peek and full when that beats 55 percent");
-assert.deepEqual(snapHeights(800, 50), { peek: 50, half: 440, full: 736 }, "otherwise 55 percent");
-assert.equal(snapHeights(100, 150).peek, 100, "peek never exceeds the viewport");
-assert.deepEqual(snapHeights(604, 276), { peek: 276, half: 416, full: 556 }, "a 390 by 664 phone gets evenly spaced snaps");
-// Nearest snap on a slow release, one step on a flick
+assert.deepEqual(DEFAULT_SNAPS, { peek: 148, half: 0.52, full: 0.92 }, "design snap points: peek px, half and full fractions of viewport height");
+assert.deepEqual(snapHeights(800), { peek: 148, half: 416, full: 736 }, "half is 52 vh, full is 92 vh");
+assert.deepEqual(snapHeights(844), { peek: 148, half: 439, full: 776 }, "an iPhone 14 viewport");
+assert.deepEqual(snapHeights(800, { peek: 100, half: 0.5, full: 0.9 }), { peek: 100, half: 400, full: 720 }, "custom snaps are honored");
+assert.equal(snapHeights(100).peek, 100, "peek never exceeds the viewport");
+assert.deepEqual(snapHeights(200), { peek: 148, half: 148, full: 184 }, "half never drops below peek");
+// Nearest snap on a slow release, one step on a flick (velocity < 0 = flick up).
+const H = snapHeights(800);
 assert.equal(pickSnap(200, 0, H), "peek"); assert.equal(pickSnap(420, 0, H), "half"); assert.equal(pickSnap(700, 0, H), "full");
-assert.equal(pickSnap(200, -1, H), "half", "flick up from peek goes to half"); assert.equal(pickSnap(460, -1, H), "full");
-assert.equal(pickSnap(460, 1, H), "peek", "flick down from half goes to peek"); assert.equal(pickSnap(150, 1, H), "peek");
+assert.equal(pickSnap(568, 0, H), "half", "just under the half/full midpoint settles to half");
+assert.equal(pickSnap(580, 0, H), "full", "just past the half/full midpoint settles to full");
+assert.equal(pickSnap(200, -1, H), "half", "flick up from peek goes to half");
+assert.equal(pickSnap(460, -1, H), "full"); assert.equal(pickSnap(460, 1, H), "peek", "flick down from half goes to peek");
 
-// Reducer: pure, drag follows the pointer, release snaps
-let s = { ...initialSheet, viewportH: 800, peekH: 150 };
-assert.equal(sheetReduce(s, { type: "move", y: 10 }), s, "move without a drag is a no-op");
-s = sheetReduce(s, { type: "down", y: 700 }); assert.equal(s.dragging, true); assert.equal(s.height, 150);
-s = sheetReduce(s, { type: "move", y: 500 }); assert.equal(s.height, 350, "dragging up grows the visible height");
-assert.equal(sheetTransform(s), "translateY(calc(100% - 350px))");
-s = sheetReduce(s, { type: "move", y: -1000 }); assert.equal(s.height, 736, "cannot drag past full");
-s = sheetReduce(s, { type: "up", y: 500, dt: 800 }); assert.equal(s.dragging, false); assert.equal(s.snap, "half", "slow release snaps to the nearest point"); assert.equal(s.height, null);
-assert.equal(sheetTransform(s), "translateY(calc(100% - 443px))");
-s = sheetReduce(s, { type: "down", y: 400 }); s = sheetReduce(s, { type: "up", y: 330, dt: 50 }); assert.equal(s.snap, "full", "a quick flick up moves one step");
-s = sheetReduce(s, { type: "down", y: 100 }); s = sheetReduce(s, { type: "up", y: 170, dt: 50 }); assert.equal(s.snap, "half", "a quick flick down moves one step");
-s = sheetReduce(s, { type: "set", snap: "peek" }); assert.equal(s.snap, "peek"); assert.equal(sheetReduce(s, { type: "set", snap: "nope" }), s);
-s = sheetReduce(s, { type: "cycle" }); assert.equal(s.snap, "half"); s = sheetReduce(s, { type: "cycle" }); assert.equal(s.snap, "full"); s = sheetReduce(s, { type: "cycle" }); assert.equal(s.snap, "peek");
-s = sheetReduce(s, { type: "resize", viewportH: 390, peekH: 120 }); assert.equal(s.viewportH, 390); assert.equal(sheetTransform(s), "translateY(calc(100% - 120px))");
-const frozen = Object.freeze({ ...s }); sheetReduce(frozen, { type: "cycle" }); assert.equal(frozen.snap, "peek", "input state is not mutated");
+// ---- DOM binding: three snaps, aria, snapTo --------------------------------
+{
+  const { panel, handle, sheet } = rig();
+  assert.equal(typeof sheet.snapTo, "function"); assert.equal(typeof sheet.current, "function"); assert.equal(typeof sheet.destroy, "function");
+  assert.ok(panel.classList.contains("sheet"), "panel becomes a sheet on a narrow screen");
+  assert.equal(panel.dataset.snap, "peek");
+  assert.equal(panel.style.transform, "translateY(calc(100% - 148px))", "peek shows 148 px of panel");
+  assert.equal(sheet.current(), "peek");
+  assert.equal(handle.style.touchAction, "none", "the handle never lets the map take the gesture");
+  assert.equal(handle.getAttribute("aria-expanded"), "false", "collapsed at peek");
 
-// DOM binding: only active on narrow screens; pointer events drive it; keyboard cycles
-const panel = el("panel"), handle = el("sheet-handle"), header = el("briefing"), stats = el("stats");
-header.offsetHeight = 80; handle.offsetHeight = 20; stats.offsetHeight = 24; panel.parentNode = { clientHeight: 800 };
-const snaps = [];
-let narrow = true;
-const sheet = initSheet({ panel, handle, header, peekEls: [handle, header, stats], isNarrow: () => narrow, onSnap: (snap, n) => snaps.push([snap, n]) });
-assert.ok(panel.classList.contains("sheet")); assert.equal(panel.dataset.snap, "peek"); assert.equal(panel.style.transform, "translateY(calc(100% - 128px))", "peek height = handle + header + stats, measured against the layout box");
-assert.ok(handle.getAttribute("aria-label").includes("Now peek"));
-handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 1, target: handle });
-assert.ok(panel.classList.contains("sheet-dragging"));
-handle.fire("pointermove", { clientY: 400 }); assert.equal(panel.style.transform, "translateY(calc(100% - 428px))");
-handle.fire("pointerup", { clientY: 400 }); assert.equal(sheet.getState().snap, "half"); assert.ok(!panel.classList.contains("sheet-dragging"));
-handle.fire("keydown", { key: "Enter" }); assert.equal(sheet.getState().snap, "full");
-handle.fire("keydown", { key: "ArrowDown" }); assert.equal(sheet.getState().snap, "half");
-handle.fire("keydown", { key: "ArrowUp" }); assert.equal(sheet.getState().snap, "full");
-assert.deepEqual(snaps.at(-1), ["full", true]);
-narrow = false; sheet.dispatch({ type: "set", snap: "peek" });
-assert.ok(!panel.classList.contains("sheet")); assert.equal(panel.style.transform, "", "wide screens: no transform, the panel is a column again");
-handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 1, target: handle }); assert.equal(sheet.getState().dragging, false, "no drag on wide screens");
+  sheet.snapTo("half");
+  assert.equal(sheet.current(), "half");
+  assert.equal(panel.dataset.snap, "half");
+  assert.equal(panel.style.transform, "translateY(calc(100% - 416px))");
+  assert.equal(handle.getAttribute("aria-expanded"), "true", "expanded past peek");
+
+  sheet.snapTo("full");
+  assert.equal(panel.style.transform, "translateY(calc(100% - 736px))");
+  assert.equal(handle.getAttribute("aria-expanded"), "true");
+
+  sheet.snapTo("peek");
+  assert.equal(sheet.current(), "peek");
+  assert.equal(handle.getAttribute("aria-expanded"), "false");
+
+  sheet.snapTo("nope");
+  assert.equal(sheet.current(), "peek", "unknown snap names are ignored");
+  assert.equal(panel.style.transform, "translateY(calc(100% - 148px))");
+  sheet.destroy();
+}
+
+// ---- Tap toggles peek and half ---------------------------------------------
+{
+  const { handle, sheet, captured, tick } = rig();
+  const down = handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 1 });
+  assert.equal(down.prevented, true, "pointerdown is preventDefault-ed so the map never pans");
+  assert.deepEqual(captured, [1], "the handle captures the pointer");
+  tick(80);
+  handle.fire("pointerup", { clientY: 697, pointerId: 1 });
+  assert.equal(sheet.current(), "half", "a tap from peek opens to half");
+
+  handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 2 });
+  tick(80);
+  handle.fire("pointerup", { clientY: 700, pointerId: 2 });
+  assert.equal(sheet.current(), "peek", "a second tap toggles back to peek");
+
+  handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 3 });
+  tick(500);
+  handle.fire("pointerup", { clientY: 700, pointerId: 3 });
+  assert.equal(sheet.current(), "peek", "a long press without movement is not a tap and settles back");
+  sheet.destroy();
+}
+
+// ---- Drag: live transform, nearest-snap settle, flick ----------------------
+{
+  const { panel, handle, header, mapEl, sheet, tick } = rig();
+  handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 1 });
+  assert.ok(panel.classList.contains("sheet-dragging"));
+  // The map element has no pointermove listener and firing one there changes nothing.
+  assert.ok(!(mapEl.listeners.pointermove && mapEl.listeners.pointermove.length), "no pointermove listener on the map");
+  mapEl.fire("pointermove", { clientY: 100 });
+  assert.equal(panel.style.transform, "translateY(calc(100% - 148px))", "a pointermove on the map does not move the sheet");
+  handle.fire("pointermove", { clientY: 400 });
+  assert.equal(panel.style.transform, "translateY(calc(100% - 448px))", "the drag follows the pointer live");
+  tick(1000);
+  handle.fire("pointerup", { clientY: 400 });
+  assert.equal(sheet.current(), "half", "a slow release snaps to the nearest point");
+  assert.ok(!panel.classList.contains("sheet-dragging"));
+
+  // Drag beyond the halfway point between half and full settles to full.
+  handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 2 });
+  handle.fire("pointermove", { clientY: 200 });
+  tick(1000);
+  handle.fire("pointerup", { clientY: 200 });
+  assert.equal(sheet.current(), "full", "dragging past the midpoint settles to full");
+
+  // A quick flick up from full-height drag zone moves one step in its direction.
+  sheet.snapTo("half");
+  handle.fire("pointerdown", { isPrimary: true, clientY: 300, pointerId: 3 });
+  tick(30);
+  handle.fire("pointerup", { clientY: 200 });
+  assert.equal(sheet.current(), "full", "a flick up from half lands on full");
+
+  // The briefing header is a drag surface too.
+  header.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 4 });
+  header.fire("pointermove", { clientY: 900 });
+  tick(400);
+  header.fire("pointerup", { clientY: 900 });
+  assert.equal(sheet.current(), "half", "dragging the header down from full settles to the nearest snap");
+
+  // A non-primary pointer never starts a drag.
+  handle.fire("pointerdown", { isPrimary: false, clientY: 700, pointerId: 9 });
+  handle.fire("pointermove", { clientY: 100 });
+  assert.equal(panel.style.transform, "translateY(calc(100% - 416px))", "non-primary pointers are ignored");
+  sheet.destroy();
+}
+
+// ---- Keyboard: single-pointer-free alternative (WCAG 2.5.7) ----------------
+{
+  const { handle, sheet } = rig();
+  handle.fire("keydown", { key: "Enter" });
+  assert.equal(sheet.current(), "half");
+  handle.fire("keydown", { key: " " });
+  assert.equal(sheet.current(), "full");
+  handle.fire("keydown", { key: "Enter" });
+  assert.equal(sheet.current(), "peek", "Enter cycles through the snaps");
+  handle.fire("keydown", { key: "ArrowUp" });
+  assert.equal(sheet.current(), "half");
+  handle.fire("keydown", { key: "ArrowUp" });
+  assert.equal(sheet.current(), "full");
+  handle.fire("keydown", { key: "ArrowDown" });
+  assert.equal(sheet.current(), "half", "arrow keys step through the snaps");
+  sheet.destroy();
+}
+
+// ---- Wide screens, reduced motion, destroy ---------------------------------
+{
+  const { panel, handle, sheet } = rig({ narrow: false });
+  assert.ok(!panel.classList.contains("sheet"), "wide screens keep the panel as a column");
+  assert.equal(panel.style.transform, "", "no transform on wide screens");
+  sheet.snapTo("half");
+  assert.equal(sheet.current(), "half");
+  assert.equal(panel.dataset.snap, "half");
+  assert.equal(panel.style.transform, "", "snapTo never transforms the wide layout");
+  sheet.destroy();
+}
+{
+  const { panel, sheet } = rig({ reduced: true });
+  sheet.snapTo("full");
+  assert.equal(sheet.current(), "full");
+  assert.equal(panel.style.transform, "translateY(calc(100% - 736px))", "reduced motion lands on the snap instantly");
+  sheet.destroy();
+}
+{
+  const { panel, handle, header, sheet } = rig();
+  sheet.destroy();
+  sheet.destroy(); // idempotent
+  handle.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 1 });
+  handle.fire("pointermove", { clientY: 100 });
+  handle.fire("pointerup", { clientY: 100 });
+  handle.fire("keydown", { key: "Enter" });
+  header.fire("pointerdown", { isPrimary: true, clientY: 700, pointerId: 2 });
+  assert.equal(sheet.current(), "peek", "destroy removes every listener");
+  assert.equal(panel.style.transform, "translateY(calc(100% - 148px))");
+  assert.ok(!panel.classList.contains("sheet-dragging"));
+}
 console.log("sheet checks passed");

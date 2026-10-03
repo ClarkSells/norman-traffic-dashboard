@@ -21,14 +21,15 @@ assert.equal(getState().metric, "v_c");
 assert.deepEqual(btns.map(b => b.getAttribute("aria-pressed")), ["false", "true", "false"], "aria-pressed tracks the active metric");
 assert.ok(btns[1].classList.contains("active") && !btns[0].classList.contains("active"));
 
-// Table rows: focusable, Enter and Space activate, other keys do not, focus survives the re-render.
+// Table rows: button role, roving tabindex, Enter and Space activate, arrows and Home/End move focus, focus survives the re-render.
 assert.ok(rowKeyActivates({ key: "Enter" }) && rowKeyActivates({ key: " " }) && !rowKeyActivates({ key: "ArrowDown" }) && !rowKeyActivates({ key: "Tab" }));
 setState({ metric: "combined", ward: null, selectedLocId: null });
 let clicked = [], hovered = [];
 const onRow = (loc) => { clicked.push(loc); setState({ selectedLocId: loc }); renderTable(getState(), onRow, { onHover: (l) => hovered.push(l) }); };
 renderTable(getState(), onRow, { onHover: (l) => hovered.push(l) });
 const tbody = document.querySelector("#rank-table tbody");
-assert.ok(tbody.children.every(tr => tr.tabIndex === 0), "every row is reachable by Tab");
+assert.ok(tbody.children.every(tr => tr.getAttribute("role") === "button"), "rows are announced as buttons");
+assert.deepEqual(tbody.children.map(tr => tr.tabIndex), [0, -1], "roving tabindex keeps one row in the tab order");
 assert.equal(tbody.children[0].getAttribute("aria-selected"), "false", "rows announce selection");
 const rowB = tbody.children[1];
 rowB.focus();
@@ -37,12 +38,27 @@ assert.deepEqual(clicked, ["B"], "Enter on a focused row selects it");
 assert.equal(ev.prevented, true, "default key action suppressed");
 assert.ok(rowElement("B").classList.contains("selected") && rowElement("B").getAttribute("aria-selected") === "true", "selected row marked after re-render");
 assert.equal(document.activeElement && document.activeElement.dataset.loc, "B", "focus stays on the selected row");
-tbody.children[0].fire("keydown", { key: "ArrowDown" });
-assert.deepEqual(clicked, ["B"], "other keys do not select");
-tbody.children[0].fire("keydown", { key: " " });
-assert.deepEqual(clicked, ["B", "A"], "Space also selects");
-tbody.children[0].fire("click");
-assert.deepEqual(clicked, ["B", "A", "A"], "mouse click still works");
+assert.ok(rowElement("B").scrolled, "selected row is scrolled into view");
+assert.deepEqual(tbody.children.map(tr => tr.tabIndex), [-1, 0], "selection roves the tab stop to the selected row");
+
+// Arrow keys move focus without selecting; Home and End jump.
+rowB.fire("keydown", { key: "ArrowUp" });
+assert.deepEqual(clicked, ["B"], "arrow keys do not select");
+assert.equal(document.activeElement.dataset.loc, "A", "ArrowUp moves to the previous row");
+assert.deepEqual(tbody.children.map(tr => tr.tabIndex), [0, -1], "tabindex roves with focus");
+tbody.children[0].fire("keydown", { key: "End" });
+assert.equal(document.activeElement.dataset.loc, "B", "End jumps to the last row");
+tbody.children[1].fire("keydown", { key: "Home" });
+assert.equal(document.activeElement.dataset.loc, "A", "Home jumps to the first row");
+const dn = tbody.children[0].fire("keydown", { key: "ArrowDown" });
+assert.equal(dn.prevented, true, "arrow keys suppress the default scroll");
+assert.equal(document.activeElement.dataset.loc, "B", "ArrowDown moves to the next row");
+tbody.children[1].fire("keydown", { key: "ArrowDown" });
+assert.equal(document.activeElement.dataset.loc, "B", "ArrowDown stops at the last row");
+tbody.children[1].fire("keydown", { key: " " });
+assert.deepEqual(clicked, ["B", "B"], "Space also selects");
+tbody.children[1].fire("click");
+assert.deepEqual(clicked, ["B", "B", "B"], "mouse click still works");
 
 // Hover sync both ways: row hover calls the hook, map hover marks and scrolls the row.
 rowElement("A").fire("mouseenter"); rowElement("A").fire("mouseleave");

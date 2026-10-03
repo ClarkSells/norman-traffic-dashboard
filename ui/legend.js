@@ -31,10 +31,19 @@ export function renderLegend(el, state) {
     </div>`;
 }
 
-// The legend title folds the legend away. On narrow screens it starts folded so the map stays visible.
-export function initLegend(el, narrow) {
-  const isNarrow = narrow != null ? narrow : (typeof matchMedia === "function" && matchMedia("(max-width: 800px)").matches);
-  if (isNarrow) el.classList.add("collapsed");
+// The compact legend is a pill: folded it shows the title and the metric swatch row; a click on the
+// title expands the full renderLegend content. `renderLegend` keeps the fold across re-renders by
+// reading the "collapsed" class. Legacy boolean callers (initLegend(el, narrow)) still work.
+export function initLegend(el, opts) {
+  if (!el || !el.classList) return;
+  const options = typeof opts === "boolean" ? { collapsed: opts } : (opts || {});
+  const compact = options.compact !== false;
+  if (compact) el.classList.add("compact");
+  const startCollapsed = options.collapsed != null ? !!options.collapsed : compact;
+  el.classList.toggle("collapsed", startCollapsed);
+  // init can run after the first renderLegend (app.js order): sync the rendered toggle's state.
+  const rendered = typeof el.querySelector === "function" ? el.querySelector(".legend-toggle") : null;
+  if (rendered && rendered.setAttribute) rendered.setAttribute("aria-expanded", String(!startCollapsed));
   el.addEventListener("click", (e) => {
     const btn = e.target && e.target.closest ? e.target.closest(".legend-toggle") : null;
     if (!btn) return;

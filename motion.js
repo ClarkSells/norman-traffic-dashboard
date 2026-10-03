@@ -100,14 +100,4 @@ export function playFlip(plan, rowsByKey, { reduced = false, raf, duration: ms =
   return plan.moves.length;
 }
 
-// Camera option sets. Pure: they return the options the app hands to Mapbox.
-export function wardCameraOptions(reduced) {
-  return { fit: { padding: 48, pitch: 30, bearing: -14, duration: duration(DUR.camera, reduced) },
-           settle: { pitch: 28, bearing: -6, duration: duration(450, reduced) } };
-}
-export function segmentCameraOptions(bearing, reduced) {
-  return { pitch: 45, bearing, maxZoom: 15.6, padding: 140, duration: duration(DUR.camera, reduced) };
-}
-export function resetCameraOptions(center, zoom, reduced) {
-  return { center, zoom, pitch: 0, bearing: 0, duration: duration(DUR.camera, reduced) };
-}
+// Camera option sets moved to camera.js (card 1.5): establish, dollyToSegment, fitWard, aerial, orbit, drift.
