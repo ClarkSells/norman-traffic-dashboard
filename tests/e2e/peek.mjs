@@ -1,0 +1,20 @@
+// Quick look: node tests/e2e/peek.mjs <width> <height> <name> [hash] [js to run after load]
+import { createRequire } from "node:module";
+const { chromium } = createRequire(import.meta.url)("/opt/node-tools/node_modules/playwright");
+import { mkdirSync } from "node:fs";
+import { SCRATCH, serve, stubMapbox, waitForLayers, watchConsole } from "./harness.js";
+const [w = 1440, h = 900, name = "peek", hash = "", js = ""] = process.argv.slice(2);
+mkdirSync(SCRATCH, { recursive: true });
+const { srv, url } = await serve(8766);
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: Number(w), height: Number(h) } });
+await stubMapbox(page);
+const errors = watchConsole(page);
+await page.goto(url + hash);
+await waitForLayers(page);
+if (js) await page.evaluate(js);
+await page.waitForTimeout(900);
+const out = `${SCRATCH}/${name}_${w}x${h}.png`;
+await page.screenshot({ path: out });
+console.log("saved", out, "console errors:", errors.filter(e => !e.includes("ERR_CERT")));
+await browser.close(); srv.close();

@@ -1,53 +1,118 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Norman Segment Priorities</title>
+  <meta name="description" content="Congestion, crashes and a combined score for every counted street segment in Norman, by council ward.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="title">Norman traffic count segments</div>
-    <div class="subtitle">v/c, collisions and combined score by council ward</div>
-    <div class="topbar-right"><button id="basemap-toggle" class="btn" type="button">Satellite</button></div>
+    <div class="brand">
+      <div class="title">Norman street segment priorities</div>
+      <div class="subtitle">Congestion, crashes and a combined score for every counted segment, by council ward</div>
+    </div>
+    <div class="topbar-right">
+      <button id="present-toggle" class="btn" type="button" aria-pressed="false" title="Scripted walkthrough: arrow keys step, Esc exits">Present</button>
+      <button id="panel-toggle" class="btn panel-toggle" type="button" aria-expanded="true" aria-controls="panel">Hide list</button>
+      <button id="basemap-toggle" class="btn" type="button" aria-pressed="false">Satellite</button>
+    </div>
   </header>
-  <main class="layout">
-    <aside class="panel" id="panel">
-      <section class="controls">
-        <label class="control"><span>Ward</span>
-          <select id="ward-select"><option value="">All wards</option></select>
-        </label>
-        <div class="control"><span>Color by</span>
-          <div class="segmented" id="metric-toggle">
-            <button type="button" data-metric="combined" class="active">Combined</button>
-            <button type="button" data-metric="v_c">v/c</button>
-            <button type="button" data-metric="collisions">Collisions</button>
+  <div class="progress indeterminate" id="progress" role="progressbar" aria-label="Loading data" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" id="progress-fill"></div></div>
+  <main class="layout" id="layout">
+    <aside class="panel" id="panel" aria-label="Briefing">
+      <div class="sheet-handle" id="sheet-handle" role="button" tabindex="0" aria-label="Drag to resize the panel"><span aria-hidden="true"></span></div>
+      <header class="briefing" id="briefing">
+        <div class="eyebrow">Council briefing</div>
+        <h1 class="briefing-title" id="briefing-title">All wards</h1>
+        <p class="briefing-line" id="briefing-line">Loading the ranked list.</p>
+        <div class="panel-actions">
+          <button id="help-toggle" class="btn small" type="button" aria-expanded="false" aria-controls="help-box">How to read this</button>
+          <button id="reset-view" class="btn small" type="button">Reset view</button>
+        </div>
+      </header>
+      <section class="help" id="help-box" tabindex="-1" hidden></section>
+      <section class="controls" aria-label="Controls">
+        <div class="control"><span class="control-label" id="ward-label">Ward</span>
+          <div class="segmented wards" id="ward-toggle" role="group" aria-labelledby="ward-label">
+            <button type="button" data-ward="" class="active" aria-pressed="true">All</button>
+            <button type="button" data-ward="1" aria-pressed="false">1</button>
+            <button type="button" data-ward="2" aria-pressed="false">2</button>
+            <button type="button" data-ward="3" aria-pressed="false">3</button>
+            <button type="button" data-ward="4" aria-pressed="false">4</button>
+            <button type="button" data-ward="5" aria-pressed="false">5</button>
+            <button type="button" data-ward="6" aria-pressed="false">6</button>
+            <button type="button" data-ward="7" aria-pressed="false">7</button>
+            <button type="button" data-ward="8" aria-pressed="false">8</button>
           </div>
         </div>
-        <div class="control"><span>Capacity (LOS)</span>
-          <div class="segmented" id="los-toggle">
-            <button type="button" data-los="E" class="active">E (2025 plan)</button>
-            <button type="button" data-los="C">C (2020 plan)</button>
+        <div class="control"><span class="control-label" id="metric-label">Color and rank by</span>
+          <div class="segmented" id="metric-toggle" role="group" aria-labelledby="metric-label">
+            <button type="button" data-metric="combined" class="active" aria-pressed="true">Combined</button>
+            <button type="button" data-metric="v_c" aria-pressed="false">v/c</button>
+            <button type="button" data-metric="collisions" aria-pressed="false">Crashes</button>
           </div>
         </div>
-        <div class="control years"><span>Collision years</span>
-          <select id="year-min"></select><span class="to">to</span><select id="year-max"></select>
+        <div class="control"><span class="control-label" id="los-label">Capacity at level of service (LOS)</span>
+          <div class="segmented" id="los-toggle" role="group" aria-labelledby="los-label">
+            <button type="button" data-los="E" class="active" aria-pressed="true">LOS E, 2025 plan</button>
+            <button type="button" data-los="C" aria-pressed="false">LOS C, 2020 plan</button>
+          </div>
         </div>
-        <label class="control checkbox"><input type="checkbox" id="show-collectors"> <span>Include collectors</span></label>
+        <div class="control range">
+          <span class="control-label">Collision years <output id="year-label" for="year-min year-max">2021 to 2025</output></span>
+          <div class="range-pair" id="year-range">
+            <div class="range-track"><div class="range-fill" id="year-fill"></div></div>
+            <input type="range" id="year-min" aria-label="First collision year" step="1">
+            <input type="range" id="year-max" aria-label="Last collision year" step="1">
+          </div>
+          <div class="range-ticks" id="year-ticks" aria-hidden="true"></div>
+        </div>
+        <label class="control switch"><input type="checkbox" id="show-collectors" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Include collectors</span></label>
       </section>
-      <section class="stats" id="stats"></section>
-      <section class="table-wrap">
+      <section class="stats" id="stats" aria-label="Headline numbers">
+        <div class="stat"><div class="value" id="stat-segments">0</div><div class="label">segments shown</div></div>
+        <div class="stat"><div class="value" id="stat-crashes">0</div><div class="label">crashes in window</div></div>
+        <div class="stat stat-top"><div class="value value-text" id="stat-top">none</div><div class="label" id="stat-top-label">top segment</div></div>
+      </section>
+      <section class="table-wrap" id="table-wrap">
         <table id="rank-table">
-          <thead><tr><th>#</th><th>Segment</th><th class="num">v/c</th><th class="num">Crashes</th><th class="num">Score</th></tr></thead>
+          <thead><tr><th class="num">#</th><th>Segment</th><th class="num">v/c</th><th class="num">Crashes</th><th class="num">Score</th></tr></thead>
           <tbody></tbody>
         </table>
+        <div class="empty" id="table-empty" hidden></div>
       </section>
     </aside>
     <div id="map"></div>
+    <div class="map-tooltip" id="map-tooltip" role="tooltip" hidden></div>
     <div class="legend" id="legend"></div>
+    <section class="tour" id="tour" hidden aria-label="Presentation">
+      <div class="tour-card" id="tour-card" role="region" aria-live="polite">
+        <div class="tour-step" id="tour-step">1 of 12</div>
+        <h2 class="tour-title" id="tour-title"></h2>
+        <p class="tour-caption" id="tour-caption"></p>
+        <div class="tour-actions">
+          <button id="tour-prev" class="btn small" type="button" aria-label="Previous step">Back</button>
+          <button id="tour-next" class="btn small" type="button" aria-label="Next step">Next</button>
+          <label class="tour-autoplay"><input type="checkbox" id="tour-autoplay" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Autoplay</span></label>
+          <button id="tour-exit" class="btn small tour-exit" type="button">Exit <kbd>Esc</kbd></button>
+        </div>
+      </div>
+      <div class="tour-dots" id="tour-dots" role="tablist" aria-label="Tour steps"></div>
+    </section>
+    <div class="loading" id="loading" role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loading-text">Loading the map and about 4 MB of segment and crash data.</p>
+        <button id="loading-reload" class="btn" type="button" hidden>Reload</button>
+      </div>
+    </div>
   </main>
   <script type="module" src="app.js"></script>
 </body>

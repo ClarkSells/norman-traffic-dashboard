@@ -8,6 +8,7 @@ const state = {
   includeCollectors: false,
   selectedLocId: null,
   basemap: "light",
+  reducedMotion: false,  // set from prefers-reduced-motion at startup; layers and camera read it
 };
 const listeners = new Set();
 
