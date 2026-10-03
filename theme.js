@@ -51,11 +51,17 @@ export function applyTheme(name, root) {
   return name;
 }
 
-// Primary explore/present switch: sets data-mode on the root and lets the tokens.css cascade recolor the chrome.
+// Explore vs present chrome (tokens.css keys the dark set off :root[data-mode="present"]). applyTheme's
+// inline custom properties would beat the stylesheet, so present mode strips them and lets tokens.css
+// cascade; the caller re-applies applyTheme on the way back to explore.
 export function applyMode(mode, root) {
-  const m = mode === "present" ? "present" : "explore";
   const el = root || (typeof document !== "undefined" ? document.documentElement : null);
-  if (el && el.dataset) el.dataset.mode = m;
+  const m = mode === "present" ? "present" : "explore";
+  if (!el) return m;
+  if (el.dataset) el.dataset.mode = m;
+  if (m === "present" && el.style && el.style.removeProperty) {
+    for (const k of Object.keys(THEMES.light)) el.style.removeProperty(`--${k}`);
+  }
   return m;
 }
 

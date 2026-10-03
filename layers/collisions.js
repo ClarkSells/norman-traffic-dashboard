@@ -74,14 +74,15 @@ export function addCollisionsLayer(map, collisions, state) {
   }
   meta.heatOpacity = !state || state.heat !== false ? HEAT_OPACITY : 0;
   if (!map.getSource("collisions")) map.addSource("collisions", { type: "geojson", data: collisions, generateId: true });
-  map.addLayer({ id: "collisions-heat", type: "heatmap", source: "collisions", maxzoom: CROSSFADE.to, filter: windowFilter(state),
+  map.addLayer({ id: "collisions-heat", type: "heatmap", source: "collisions", slot: "middle", maxzoom: CROSSFADE.to, filter: windowFilter(state),
     paint: { "heatmap-weight": 1, "heatmap-radius": HEAT_RADIUS, "heatmap-intensity": HEAT_INTENSITY, "heatmap-color": HEAT_COLOR,
              "heatmap-opacity": meta.heatOpacity, "heatmap-opacity-transition": T } });
-  map.addLayer({ id: "collisions-dots", type: "circle", source: "collisions", minzoom: CROSSFADE.from, filter: dotsFilter(meta),
+  map.addLayer({ id: "collisions-dots", type: "circle", source: "collisions", slot: "top", minzoom: CROSSFADE.from, filter: dotsFilter(meta),
     paint: { "circle-radius": DOTS_RADIUS,
              "circle-color": circleColor,
              "circle-stroke-color": "#fbfaf7", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 13, 0.4, 16, 1],
              "circle-opacity": DOTS_OPACITY, "circle-stroke-opacity": DOTS_OPACITY,
+             "circle-emissive-strength": 1,
              "circle-opacity-transition": T, "circle-color-transition": T } });
 }
 
@@ -93,12 +94,14 @@ export function updateCollisions(map, state) {
 }
 
 // Fades the heat layer in or out (present scene 3) with the injectable tween; 600 ms by default.
+// Guards the layer: a scene entered before the style finished loading records the intent and no-ops.
 export function setHeatVisible(map, visible, { fadeMs = 600, tween: tweenFn } = {}) {
   const meta = metaFor(map);
   const from = meta.heatOpacity, to = visible ? HEAT_OPACITY : 0;
   meta.heatOpacity = to;
+  if (!map.getLayer || !map.getLayer("collisions-heat")) return () => {};
   const tw = tweenFn || tween;
-  return tw({ duration: fadeMs, onUpdate: (p) => map.setPaintProperty("collisions-heat", "heatmap-opacity", lerp(from, to, p)) });
+  return tw({ duration: fadeMs, onUpdate: (p) => { if (map.getLayer("collisions-heat")) map.setPaintProperty("collisions-heat", "heatmap-opacity", lerp(from, to, p)); } });
 }
 
 // "all" shows the year window, "segment" narrows the dots to one loc id, "none" hides them.
@@ -106,6 +109,7 @@ export function setDotsMode(map, mode, { locId } = {}) {
   const meta = metaFor(map);
   meta.mode = mode;
   meta.locId = locId || null;
+  if (!map.getLayer || !map.getLayer("collisions-dots")) return;
   if (mode === "none") { map.setLayoutProperty("collisions-dots", "visibility", "none"); return; }
   map.setLayoutProperty("collisions-dots", "visibility", "visible");
   map.setFilter("collisions-dots", dotsFilter(meta));
@@ -114,12 +118,14 @@ export function setDotsMode(map, mode, { locId } = {}) {
 function clearReveal(map, meta) {
   if (meta.cancelReveal) { meta.cancelReveal(); meta.cancelReveal = null; }
   if (!meta.revealIds.length) return;
+  const hasSource = map.getSource && map.getSource("collisions");
   for (const id of meta.revealIds) {
+    if (!hasSource) break;
     if (typeof map.removeFeatureState === "function") map.removeFeatureState({ source: "collisions", id }, "t");
     else map.setFeatureState({ source: "collisions", id }, { t: null });
   }
   meta.revealIds = [];
-  map.setPaintProperty("collisions-dots", "circle-opacity", DOTS_OPACITY);
+  if (map.getLayer && map.getLayer("collisions-dots")) map.setPaintProperty("collisions-dots", "circle-opacity", DOTS_OPACITY);
 }
 
 // The segment's crash dots drop in over 900 ms, staggered by year (2021 first); the rest dim to 12 percent.
@@ -127,6 +133,7 @@ function clearReveal(map, meta) {
 export function revealSegmentCrashes(map, locId, { duration: ms = 900, reduced = false, tween: tweenFn } = {}) {
   const meta = metaFor(map);
   clearReveal(map, meta);
+  if (!map.getLayer || !map.getLayer("collisions-dots")) return () => {};
   const byYear = meta.crashIndex.get(locId);
   if (!byYear || !byYear.size) return () => {};
   const years = [...byYear.keys()].sort((a, b) => a - b);
@@ -144,6 +151,7 @@ export function revealSegmentCrashes(map, locId, { duration: ms = 900, reduced =
   const last = new Array(n).fill(0);
   const tw = tweenFn || tween;
   meta.cancelReveal = tw({ duration: ms, onUpdate: (p) => {
+    if (map.getLayer && !map.getLayer("collisions-dots")) return;   // a style swap wiped the layer mid-reveal
     const elapsed = p * ms;
     groups.forEach((g, i) => {
       const tv = clamp01((elapsed - delay(i)) / per);

@@ -13,7 +13,7 @@ const HOVER = ["boolean", ["feature-state", "hover"], false];
 // Count locations: small markers hidden until zoom 13, growing on hover.
 export function addPointsLayer(map, points) {
   if (!map.getSource("points")) map.addSource("points", { type: "geojson", data: points, promoteId: "loc_id" });
-  map.addLayer({ id: "count-points", type: "circle", source: "points", minzoom: 13,
+  map.addLayer({ id: "count-points", type: "circle", source: "points", slot: "top", minzoom: 13,
     // The hover growth sits inside the zoom curve: ["zoom"] is only valid as the input of a top level step or interpolate.
     paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 13, ["+", 3, ["case", HOVER, 3, 0]], 17, ["+", 5, ["case", HOVER, 3, 0]]],
              "circle-color": theme.surface, "circle-stroke-color": theme.ink,

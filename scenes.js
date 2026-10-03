@@ -75,7 +75,7 @@ export function buildScenes(raw) {
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
       layers: layers({}) },
     // 5: The combined score (orbit ends, top five called out and pulsed in rank order)
-    { id: "combined", kind: "city", title: "Back to the combined score",
+    { id: "combined", kind: "city", title: "Back to the combined score", autoplayMs: 12000,   // storyboard: 12 s
       caption: "Combined score = crashes + v/c, exactly as the brief defines it. The five highest scoring segments in the city come next, in rank order.",
       stats: TOP5.map(t => ({ label: `#${t.rank} ${t.name}`, value: t.combined })), legend: null, list: null,
       state: fullState("light", {}, { flow: true }), basemap: "light", lightPreset: "dusk",
@@ -113,7 +113,7 @@ export function buildScenes(raw) {
       camera: { kind: "ward", ward: 2 }, motion: { orbitDeg: 0, driftDeg: 0 },
       layers: layers({ mask: 2, callouts: over1Ids, pulse: over1Ids }) },
     // 13: The lane count story (satellite aerial on 52500-158, existing caption without the URL)
-    { id: "lanes", kind: "segment", title: "The lane count story",
+    { id: "lanes", kind: "segment", title: "The lane count story", autoplayMs: 14000,   // storyboard: 14 s
       caption: `All ${n(FACTS.lanes_verified)} lane counts were verified by a person against aerial imagery. W Main St carries ${main.vpd_max != null ? n(main.vpd_max) : "its highest count"} vehicles per day on ${main.lanes_final != null ? main.lanes_final : "its verified"} lanes.`,
       stats: [], legend: null, list: null, calloutText: laneCallout,
       state: fullState("satellite", { selectedLocId: "52500-158" }, { flow: true }), basemap: "satellite", lightPreset: "dusk",
@@ -127,5 +127,5 @@ export function buildScenes(raw) {
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
       layers: layers({ segmentsOpacity: 0.5 }) },
   ];
-  return scenes.map((s, i) => ({ ...s, index: i, number: i + 1, total: scenes.length, autoplayMs: AUTOPLAY[s.kind] }));
+  return scenes.map((s, i) => ({ ...s, index: i, number: i + 1, total: scenes.length, autoplayMs: s.autoplayMs !== undefined ? s.autoplayMs : AUTOPLAY[s.kind] }));
 }

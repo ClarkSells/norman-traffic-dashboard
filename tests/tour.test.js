@@ -153,8 +153,10 @@ scenes.forEach((sc, i) => {
   if (i === 0 || i === 14) assert.equal(sc.autoplayMs, null, `scene ${i} is manual (title and closing never auto advance)`);
   else assert.ok(Number.isFinite(sc.autoplayMs) && sc.autoplayMs > 0, `scene ${i} has an autoplay duration`);
 });
-assert.ok(scenes.slice(1, 6).every(sc => sc.autoplayMs === SCENE_TIMING.city), "city scenes run 10 s");
+assert.ok(scenes.slice(1, 5).every(sc => sc.autoplayMs === SCENE_TIMING.city), "city scenes 1 to 4 run 10 s");
+assert.equal(scenes[5].autoplayMs, 12000, "the combined score scene runs the storyboard's 12 s");
 assert.ok(scenes.slice(6, 11).every(sc => sc.autoplayMs === SCENE_TIMING.segment), "segment scenes run 12 s");
 assert.ok(scenes.slice(11, 13).every(sc => sc.autoplayMs === SCENE_TIMING.ward), "ward and LOS scenes run 14 s");
+assert.equal(scenes[13].autoplayMs, 14000, "the lane story scene runs the storyboard's 14 s");
 
 console.log(`tour scene checks passed (${source})`);

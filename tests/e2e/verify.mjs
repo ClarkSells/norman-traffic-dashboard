@@ -1,13 +1,15 @@
 // Full verification drive: node tests/e2e/verify.mjs
-// Serves dashboard/, swaps the Mapbox CDN script for the stub (api.mapbox.com is unreachable here), and drives every
-// tour step, every control, the hash round trip, the mobile sheet at 390, 768 and 844 by 390, reduced motion, a
-// keyboard-only pass and a console error check. Screenshots land in the scratch folder, never in output/.
+// Serves the repo, swaps the Mapbox CDN script for the stub, and drives the controls, the hash round trip,
+// the 15 present scenes, reduced motion, a keyboard-only pass, the mobile sheet at 390, 768 and 844 by 390,
+// and a console error check. Screenshots land in the scratch folder, never in output/.
 import { createRequire } from "node:module";
-const { chromium, devices } = createRequire(import.meta.url)("/opt/node-tools/node_modules/playwright");
+const { chromium, devices } = createRequire(import.meta.url)("playwright");
 import { mkdirSync } from "node:fs";
-import { SCRATCH, serve, stubMapbox, waitForLayers, watchConsole } from "./harness.js";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { serve, stubMapbox, waitForLayers, watchConsole } from "./harness.js";
 
-const OUT = `${SCRATCH}/verify`; mkdirSync(OUT, { recursive: true });
+const OUT = process.env.SCRATCH || join(tmpdir(), "norman-verify"); mkdirSync(OUT, { recursive: true });
 const { srv, url } = await serve(8771, { gzip: true });
 const browser = await chromium.launch();
 const results = []; let failures = 0;
@@ -28,6 +30,7 @@ async function open(ctxOpts, hash = "") {
   await shot(page, "01_desktop_citywide");
   check("desktop loads with the layers and no loading card", await page.evaluate(() => document.getElementById("loading").hidden && !document.getElementById("panel").classList.contains("skeleton")));
   check("stat tiles show 177 primary segments and 5,121 crashes", await page.evaluate(() => document.getElementById("stat-segments").textContent === "177" && document.getElementById("stat-crashes").textContent === "5,121"));
+  check("stats line reads segments, crashes and the top segment in one mono line", await page.evaluate(() => { const l = document.getElementById("stats-line"); return !!l && /177 segments · 5,121 crashes 2021 to 2025 · top: /.test(l.textContent); }), await page.evaluate(() => (document.getElementById("stats-line") || {}).textContent || "missing"));
   for (const w of ["1", "2", "3", "4", "5", "6", "7", "8", ""]) {
     await page.click(`#ward-toggle button[data-ward="${w}"]`); await settle(page, 900);
     const s = await state(page); const n = await page.evaluate(() => document.querySelectorAll("#rank-table tbody tr:not(.leaving)").length);
@@ -41,6 +44,10 @@ async function open(ctxOpts, hash = "") {
     const ghost = await page.evaluate(() => { const m = window.__dash.map; const g = m.getPaintProperty("segments-line-ghost", "line-opacity"), l = m.getPaintProperty("segments-line", "line-opacity"); return [g && g[1], l && l[1]]; });
     check(`metric ${m}: crossfade finished (ghost 0, line 1)`, ghost[0] === 0 && ghost[1] === 1, JSON.stringify(ghost));
   }
+  // LOS, years and collectors live behind the quiet Settings disclosure (design section 4)
+  check("settings disclosure starts closed with LOS, years and collectors inside", await page.evaluate(() => document.getElementById("settings").hidden && document.getElementById("settings").contains(document.getElementById("los-toggle"))));
+  await page.click("#settings-toggle"); await settle(page, 200);
+  check("settings disclosure opens", await page.evaluate(() => !document.getElementById("settings").hidden && document.getElementById("settings-toggle").getAttribute("aria-expanded") === "true"));
   await page.click('#los-toggle button[data-los="C"]'); await settle(page);
   check("LOS C raises v/c in the first row", (await state(page)).los === "C" && (await page.textContent("#briefing-line")).includes("capacity at LOS C"));
   const vcC = await page.textContent("#rank-table tbody tr td:nth-child(3)");
@@ -57,8 +64,18 @@ async function open(ctxOpts, hash = "") {
   await page.click("#show-collectors + .switch-track"); await settle(page, 700);
   check("collectors switch adds rows (204 total)", (await state(page)).includeCollectors === true && (await page.textContent("#stat-segments")) === "204");
   await page.click("#show-collectors + .switch-track"); await settle(page, 700);
+  // Crash density and Traffic flow switches (C.1 heat/flow)
+  const heat0 = await page.evaluate(() => window.__dash.map.getPaintProperty("collisions-heat", "heatmap-opacity"));
+  await page.click("#heat-toggle + .switch-track"); await settle(page, 900);
+  const heat1 = await page.evaluate(() => window.__dash.map.getPaintProperty("collisions-heat", "heatmap-opacity"));
+  check("crash density switch fades the heat layer out", heat0 === 0.45 && heat1 === 0 && (await state(page)).heat === false, `${heat0} -> ${heat1}`);
+  await page.click("#heat-toggle + .switch-track"); await settle(page, 900);
+  await page.click("#flow-toggle + .switch-track"); await settle(page, 400);
+  check("traffic flow switch starts the flow layers", (await state(page)).flow === true && await page.evaluate(() => window.__dash.map.getLayoutProperty("segments-flow-mid", "visibility") === "visible"));
+  await page.click("#flow-toggle + .switch-track"); await settle(page, 300);
+  // help overlay
   await page.click("#help-toggle"); await settle(page, 200);
-  check("help box opens and spells out the terms", await page.evaluate(() => !document.getElementById("help-box").hidden && document.getElementById("help-box").textContent.includes("vehicles per day (VPD)")));
+  check("help opens as a four card overlay", await page.evaluate(() => !document.getElementById("help-box").hidden && document.querySelectorAll("#help-box .help-card").length === 4 && document.getElementById("help-box").textContent.includes("Volume to capacity")));
   await shot(page, "03_help_open");
   await page.keyboard.press("Escape"); await settle(page, 200);
   check("help box closes on Escape and the page did not scroll", await page.evaluate(() => document.getElementById("help-box").hidden && scrollY === 0));
@@ -91,10 +108,10 @@ async function open(ctxOpts, hash = "") {
   await shot(page, "05_deeplink_restored");
   await page.click("#reset-view"); await settle(page, 900);
   const c2 = await cam(page); check("reset view returns to citywide flat", (await state(page)).ward === null && c2.pitch === 0 && c2.bearing === 0 && Math.abs(c2.zoom - 11.6) < 0.01, JSON.stringify(c2));
-  // satellite: dark chrome, brighter casing, layers re-added
+  // satellite: dark chrome, brighter casing, layers re-added through the crossfade
   await page.click("#basemap-toggle"); await page.waitForFunction(() => document.documentElement.dataset.theme === "dark" && window.__dash.map.getLayer("segments-line")); await settle(page, 600);
-  const sat = await page.evaluate(() => ({ theme: document.documentElement.dataset.theme, casing: window.__dash.map.getPaintProperty("segments-casing", "line-color"), label: document.getElementById("basemap-toggle").textContent, hidden: window.__dash.map.getLayoutProperty("poi-label", "visibility"), road: window.__dash.map.getLayoutProperty("road-label", "visibility"), layers: ["wards-fill", "collisions-heat", "segments-line", "count-points"].every(id => !!window.__dash.map.getLayer(id)) }));
-  check("satellite flips to dark chrome with a white casing, POI labels hidden, road labels kept, layers re-added", sat.theme === "dark" && sat.casing === "#ffffff" && sat.label === "Streets" && sat.hidden === "none" && sat.road !== "none" && sat.layers, JSON.stringify(sat));
+  const sat = await page.evaluate(() => ({ theme: document.documentElement.dataset.theme, casing: window.__dash.map.getPaintProperty("segments-casing", "line-color"), label: document.getElementById("basemap-toggle").textContent, poiOff: window.__dash.map._config["basemap.showPointOfInterestLabels"] === false, roadOn: window.__dash.map._config["basemap.showRoadLabels"] === true, layers: ["wards-fill", "collisions-heat", "segments-line", "count-points"].every(id => !!window.__dash.map.getLayer(id)) }));
+  check("satellite flips to dark chrome with a white casing, POI labels configured off, road labels kept, layers re-added", sat.theme === "dark" && sat.casing === "#ffffff" && sat.label === "Streets" && sat.poiOff && sat.roadOn && sat.layers, JSON.stringify(sat));
   await shot(page, "06_satellite_dark");
   await page.click("#basemap-toggle"); await page.waitForFunction(() => document.documentElement.dataset.theme === "light" && window.__dash.map.getLayer("segments-line")); await settle(page, 400);
   check("back to light theme", await page.evaluate(() => document.documentElement.dataset.theme === "light"));
@@ -105,37 +122,38 @@ async function open(ctxOpts, hash = "") {
   await ctx.close();
 }
 
-// ---------- Tour: every step ----------
+// ---------- Present mode: all 15 scenes ----------
 {
   const { ctx, page, errors } = await open({ viewport: { width: 1440, height: 900 } });
-  const steps = await page.evaluate(async () => { const { buildTour } = await import("/tour.js"); const { getRaw } = await import("/data.js"); return buildTour(getRaw()).map(s => ({ id: s.id, title: s.title, caption: s.caption, state: s.state, basemap: s.basemap, showPanel: !!s.showPanel, popup: s.popup || null })); });
-  check("tour has 12 steps", steps.length === 12);
+  const scenes = await page.evaluate(async () => { const { buildScenes } = await import("/scenes.js"); const { getRaw } = await import("/data.js"); return buildScenes(getRaw()).map(s => ({ id: s.id, kind: s.kind, title: s.title, caption: s.caption, state: s.state, basemap: s.basemap })); });
+  check("the storyboard builds 15 scenes", scenes.length === 15);
   const camBefore = await cam(page); const stateBefore = await state(page);
-  await page.click("#present-toggle"); await settle(page, 1200);
-  check("Present enters the tour: panel folded, card and dots visible, legend stays", await page.evaluate(() => document.getElementById("layout").classList.contains("presenting") && !document.getElementById("tour").hidden && document.querySelectorAll(".tour-dot").length === 12 && getComputedStyle(document.getElementById("legend")).display !== "none" && getComputedStyle(document.getElementById("panel")).opacity === "0"));
-  for (let i = 0; i < steps.length; i++) {
+  await page.click("#present-toggle"); await settle(page, 2000);
+  check("Present enters scene 0: full bleed, chrome on, panel and legend gone, 15 progress segments", await page.evaluate(() => document.getElementById("layout").classList.contains("presenting") && !document.getElementById("present").hidden && document.querySelectorAll(".present-segment").length === 15 && getComputedStyle(document.getElementById("legend")).display === "none" && getComputedStyle(document.getElementById("panel")).opacity === "0" && getComputedStyle(document.querySelector(".topbar")).display === "none" && document.documentElement.dataset.mode === "present"));
+  const settleFor = (kind) => kind === "segment" ? 3000 : kind === "ward" ? 2200 : 2000;
+  for (let i = 0; i < scenes.length; i++) {
     if (i > 0) { await page.keyboard.press(i % 2 ? "ArrowRight" : "Space"); }
-    if (steps[i].basemap === "satellite") await page.waitForFunction(() => document.documentElement.dataset.theme === "dark" && window.__dash.map.getLayer("segments-line"));
-    await settle(page, 1300);
+    await settle(page, settleFor(scenes[i].kind));
     const st = await state(page);
-    const ui = await page.evaluate(() => ({ step: document.getElementById("tour-step").textContent, title: document.getElementById("tour-title").textContent, caption: document.getElementById("tour-caption").textContent, active: document.querySelector(".tour-dot.active").dataset.index, popup: !!document.querySelector(".mapboxgl-popup .popup h4"), panelShown: getComputedStyle(document.getElementById("panel")).opacity === "1", hash: location.hash, theme: document.documentElement.dataset.theme }));
-    const s = steps[i];
-    const stateOk = ["ward", "metric", "los", "yearMin", "yearMax", "includeCollectors", "selectedLocId"].every(k => st[k] === s.state[k]);
-    check(`tour step ${i + 1} (${s.id}): caption, state, dots, hash, popup, panel`, ui.step === `${i + 1} of 12` && ui.title === s.title && ui.caption === s.caption && ui.active === String(i) && stateOk && ui.hash.endsWith(`tour=${i + 1}`) && (!s.popup || ui.popup) && ui.panelShown === s.showPanel && ui.theme === (s.basemap === "satellite" ? "dark" : "light"), JSON.stringify({ ui, st }));
+    const ui = await page.evaluate(() => ({ count: document.getElementById("present-scene-count").textContent, title: document.getElementById("present-title").textContent, caption: document.getElementById("present-caption").textContent, popup: !!document.querySelector(".mapboxgl-popup .popup h4"), hash: location.hash, mode: document.documentElement.dataset.mode, sel: document.querySelector('.present-segment[aria-selected="true"]') != null }));
+    const s = scenes[i];
+    const stateOk = ["ward", "metric", "los", "yearMin", "yearMax", "includeCollectors", "selectedLocId", "basemap", "heat", "flow", "presenting"].every(k => st[k] === s.state[k]);
+    check(`scene ${i} (${s.id}): count, title, caption, state, hash, no popup`, ui.count === `Scene ${i + 1} of 15` && ui.title === s.title && ui.caption === s.caption && stateOk && ui.hash.endsWith(`tour=${i}`) && !ui.popup && ui.mode === "present" && ui.sel, JSON.stringify({ ui, st: { ward: st.ward, metric: st.metric, los: st.los, basemap: st.basemap, heat: st.heat, flow: st.flow } }));
     const c = await cam(page);
-    if (i === 0) check("step 1 camera is citywide flat", c.pitch === 0 && c.bearing === 0, JSON.stringify(c));
-    if (s.popup) check(`step ${i + 1} camera pitched on the segment`, c.pitch >= 40, JSON.stringify(c));
-    await shot(page, `tour_${String(i + 1).padStart(2, "0")}_${s.id}`);
+    if (i === 0) check("scene 0 camera is the establish framing (pitch 55)", c.pitch === 55, JSON.stringify(c));
+    if (s.kind === "segment") check(`scene ${i} camera pitched on the segment`, c.pitch >= 55, JSON.stringify(c));
+    if (s.kind === "ward") check(`scene ${i} camera is the ward stage (pitch 42)`, c.pitch === 42, JSON.stringify(c));
+    await shot(page, `scene_${String(i).padStart(2, "0")}_${s.id}`);
   }
-  await page.keyboard.press("ArrowLeft"); await settle(page, 1200);
-  check("Left arrow goes back a step", (await page.textContent("#tour-step")) === "11 of 12");
-  await page.click("#tour-autoplay + .switch-track"); await settle(page, 100);
-  check("autoplay toggle turns on", await page.evaluate(() => document.getElementById("tour-autoplay").checked));
-  await page.click("#tour-autoplay + .switch-track");
-  await page.keyboard.press("Escape"); await page.waitForFunction(() => document.documentElement.dataset.theme === "light" && window.__dash.map.getLayer("segments-line")); await settle(page, 1200);
+  await page.keyboard.press("ArrowLeft"); await settle(page, 2000);
+  check("Left arrow goes back a scene", (await page.textContent("#present-scene-count")) === "Scene 14 of 15");
+  await page.click("#present-autoplay + .switch-track"); await settle(page, 100);
+  check("autoplay toggle turns on", await page.evaluate(() => document.getElementById("present-autoplay").checked));
+  await page.click("#present-autoplay + .switch-track");
+  await page.keyboard.press("Escape"); await settle(page, 1500);
   const stAfter = await state(page), camAfter = await cam(page);
   check("Esc exits and restores the previous state and camera", !(await page.evaluate(() => document.getElementById("layout").classList.contains("presenting"))) && stAfter.ward === stateBefore.ward && stAfter.metric === stateBefore.metric && stAfter.basemap === "light" && Math.abs(camAfter.zoom - camBefore.zoom) < 0.05 && camAfter.pitch === camBefore.pitch, JSON.stringify({ camBefore, camAfter }));
-  check("tour pass: no console errors", errors().length === 0, errors().join(" | "));
+  check("present pass: no console errors", errors().length === 0, errors().join(" | "));
   await ctx.close();
 }
 
@@ -149,6 +167,11 @@ async function open(ctxOpts, hash = "") {
   await page.click('tr[data-loc="52500-178"]'); await settle(page, 300);
   const rm = await page.evaluate(() => ({ grad: JSON.stringify(window.__dash.map.getPaintProperty("segments-selected", "line-gradient")), vis: window.__dash.map.getLayoutProperty("segments-selected", "visibility"), tr: (window.__dash.map.getPaintProperty("segments-line", "line-opacity-transition") || {}).duration, transforms: [...document.querySelectorAll("#rank-table tbody tr")].filter(tr => tr.style.transform).length, dur: getComputedStyle(document.documentElement).getPropertyValue("--t-mid").trim() }));
   check("reduced motion: pulse layer hidden, paint transitions 0, no FLIP transforms, CSS durations 0", rm.grad.includes('0,"rgba(255,255,255,0)",1,"rgba(255,255,255,0)"') && rm.vis === "none" && rm.tr === 0 && rm.transforms === 0 && rm.dur === "0ms", JSON.stringify(rm));
+  // The tour still works as a slide show: enter, step, exit, all instant.
+  await page.click("#present-toggle"); await settle(page, 600);
+  await page.keyboard.press("ArrowRight"); await settle(page, 600);
+  check("reduced motion: the present show still steps", (await page.textContent("#present-scene-count")) === "Scene 2 of 15" && await page.evaluate(() => window.__dash.map.getLayoutProperty("segments-flow-lo", "visibility") !== "visible"), await page.textContent("#present-scene-count"));
+  await page.keyboard.press("Escape"); await settle(page, 600);
   await shot(page, "07_reduced_motion");
   check("reduced motion pass: no console errors", errors().length === 0, errors().join(" | "));
   await ctx.close();
@@ -163,6 +186,7 @@ async function open(ctxOpts, hash = "") {
   check("keyboard: help opens from the keyboard", await page.evaluate(() => !document.getElementById("help-box").hidden));
   await page.focus("#help-box"); await page.keyboard.press("Escape"); await settle(page, 200);
   check("keyboard: Escape closes help and returns focus to the button", await page.evaluate(() => document.getElementById("help-box").hidden && document.activeElement === document.getElementById("help-toggle")));
+  await page.click("#settings-toggle"); await settle(page, 150);
   await page.focus("#year-max"); await page.keyboard.press("ArrowLeft"); await settle(page, 400);
   check("keyboard: arrow keys move the year handle", (await state(page)).yearMax === 2024);
   await page.focus("#rank-table tbody tr"); await page.keyboard.press("Enter"); await settle(page, 900);
@@ -172,9 +196,9 @@ async function open(ctxOpts, hash = "") {
   const vis = await page.evaluate(() => { const el = document.activeElement; const cs = getComputedStyle(el); return { tag: el.tagName, outline: cs.outlineStyle, width: cs.outlineWidth }; });
   check("keyboard: focus-visible ring on the focused row", vis.tag === "TR" && vis.outline !== "none" && vis.width !== "0px", JSON.stringify(vis));
   await shot(page, "08_keyboard_focus");
-  await page.focus("#present-toggle"); await page.keyboard.press("Enter"); await settle(page, 1000);
-  await page.keyboard.press("ArrowRight"); await settle(page, 800);
-  check("keyboard: Present and arrow keys drive the tour", (await page.textContent("#tour-step")) === "2 of 12");
+  await page.focus("#present-toggle"); await page.keyboard.press("Enter"); await settle(page, 2000);
+  await page.keyboard.press("ArrowRight"); await settle(page, 2000);
+  check("keyboard: Present and arrow keys drive the scenes", (await page.textContent("#present-scene-count")) === "Scene 2 of 15");
   await page.keyboard.press("Escape"); await settle(page, 800);
   check("keyboard pass: no console errors", errors().length === 0, errors().join(" | "));
   await ctx.close();
@@ -201,19 +225,18 @@ async function open(ctxOpts, hash = "") {
   await page.tap('tr[data-loc="52500-158"]'); await settle(page, 900);
   check("390: tapping a row selects it", (await state(page)).selectedLocId === "52500-158");
   await page.evaluate(() => window.__dash.sheet.dispatch({ type: "set", snap: "peek" })); await settle(page, 400);
-  await page.tap("#present-toggle"); await settle(page, 1000);
+  await page.tap("#present-toggle"); await settle(page, 2000);
+  check("390: present on a phone shows the caption sheet and hides the panel", await page.evaluate(() => !document.getElementById("present").hidden && document.getElementById("panel").getBoundingClientRect().top >= innerHeight - 4 && !!document.getElementById("present-card").getBoundingClientRect().height));
   await page.touchscreen.tap(300, 400); // noop tap, then swipe
-  await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 300, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 120, clientY: 404, isPrimary: true })); }); await settle(page, 900);
-  check("390: swipe left advances the tour", (await page.textContent("#tour-step")) === "2 of 12");
-  await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 100, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 300, clientY: 396, isPrimary: true })); }); await settle(page, 900);
-  check("390: swipe right goes back", (await page.textContent("#tour-step")) === "1 of 12");
-  await page.evaluate(() => window.__dash.tour.dispatch({ type: "goto", index: 9 })); await settle(page, 1200);
-  check("390: ward step shows the sheet at half height during the tour", await page.evaluate(() => document.getElementById("layout").classList.contains("tour-panel") && document.getElementById("panel").getBoundingClientRect().top < innerHeight - 200));
-  await shot(page, "12_m390_tour10");
-  await page.tap("#tour-exit"); await settle(page, 900);
-  // geolocate: the stub control fires a position near W Main St
-  await page.evaluate(() => { const f = window.__dash.map.getSource("segments").data.features.find(x => x.properties.loc_id === "52500-158"); const mid = f.geometry.coordinates[Math.floor(f.geometry.coordinates.length / 2)]; window.__stubGeolocation = { coords: { longitude: mid[0] + 0.0004, latitude: mid[1] + 0.0003, accuracy: 10 } }; document.querySelector(".mapboxgl-ctrl-geolocate").click(); }); await settle(page, 1000);
-  check("geolocate selects the nearest segment within 300 m (W Main St)", (await state(page)).selectedLocId === "52500-158", (await state(page)).selectedLocId);
+  await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 300, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 120, clientY: 404, isPrimary: true })); }); await settle(page, 2200);
+  check("390: swipe left advances the scene", (await page.textContent("#present-scene-count")) === "Scene 2 of 15");
+  await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 100, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 300, clientY: 396, isPrimary: true })); }); await settle(page, 2200);
+  check("390: swipe right goes back", (await page.textContent("#present-scene-count")) === "Scene 1 of 15");
+  await page.evaluate(() => window.__dash.tour.dispatch({ type: "goto", index: 11 })); await settle(page, 2500);
+  check("390: the ward scene keeps the phone caption layout, no operating panel", await page.evaluate(() => document.getElementById("layout").classList.contains("presenting") && document.getElementById("panel").getBoundingClientRect().top >= innerHeight - 4 && !document.getElementById("present-list").hidden), await page.evaluate(() => document.getElementById("present-scene-count").textContent));
+  await shot(page, "12_m390_ward_scene");
+  await page.evaluate(() => document.getElementById("present-exit").click()); await settle(page, 1200);
+  check("390: exiting present restores the explore sheet", await page.evaluate(() => !document.getElementById("layout").classList.contains("presenting") && document.getElementById("panel").getBoundingClientRect().top < innerHeight));
   check("390 pass: no console errors", errors().length === 0, errors().join(" | "));
   await ctx.close();
 
@@ -225,9 +248,9 @@ async function open(ctxOpts, hash = "") {
   const l = await land.page.evaluate(() => ({ sheet: document.getElementById("panel").classList.contains("sheet"), mapH: document.getElementById("map").clientHeight, top: document.getElementById("panel").getBoundingClientRect().top, vh: innerHeight }));
   check("844 by 390: sheet peek leaves at least 180 px of map above it", l.sheet && l.mapH - (l.vh - l.top) >= 0 && l.top >= 180, JSON.stringify(l));
   await shot(land.page, "14_m844x390");
-  await land.page.goto(url + "#tour=10"); await waitForLayers(land.page); await settle(land.page, 1200);
-  check("844 by 390: tour ward step puts the panel on the right", await land.page.evaluate(() => document.getElementById("panel").getBoundingClientRect().left > innerWidth * 0.4));
-  await shot(land.page, "15_m844x390_tour10");
+  await land.page.goto(url + "#tour=11"); await waitForLayers(land.page); await settle(land.page, 2500);
+  check("844 by 390: the ward scene deep link enters present with the panel off canvas", await land.page.evaluate(() => document.getElementById("layout").classList.contains("presenting") && !document.getElementById("present").hidden && document.getElementById("panel").getBoundingClientRect().left <= 0 && document.getElementById("panel").getBoundingClientRect().top >= innerHeight - 4));
+  await shot(land.page, "15_m844x390_ward_scene");
   check("844 by 390 pass: no console errors", land.errors().length === 0, land.errors().join(" | ")); await land.ctx.close();
 }
 

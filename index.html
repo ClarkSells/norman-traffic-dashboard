@@ -15,6 +15,7 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="present.css">
 </head>
 <body>
   <header class="topbar">
@@ -102,22 +103,7 @@
     </aside>
     <div id="map"></div>
     <div class="map-tooltip" id="map-tooltip" role="tooltip" hidden></div>
-    <div class="status-line" id="status-line" aria-live="off"></div>
     <div class="legend" id="legend"></div>
-    <section class="tour" id="tour" hidden aria-label="Presentation">
-      <div class="tour-card" id="tour-card" role="region" aria-live="polite">
-        <div class="tour-step" id="tour-step">1 of 12</div>
-        <h2 class="tour-title" id="tour-title"></h2>
-        <p class="tour-caption" id="tour-caption"></p>
-        <div class="tour-actions">
-          <button id="tour-prev" class="btn small" type="button" aria-label="Previous step">Back</button>
-          <button id="tour-next" class="btn small" type="button" aria-label="Next step">Next</button>
-          <label class="tour-autoplay"><input type="checkbox" id="tour-autoplay" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Autoplay</span></label>
-          <button id="tour-exit" class="btn small tour-exit" type="button">Exit <kbd>Esc</kbd></button>
-        </div>
-      </div>
-      <div class="tour-dots" id="tour-dots" role="tablist" aria-label="Tour steps"></div>
-    </section>
     <section class="present" id="present" hidden aria-label="Presentation">
       <div class="present-eyebrow">
         <span id="present-eyebrow">CITY OF NORMAN · STREET SEGMENT PRIORITIES</span>

@@ -28,7 +28,7 @@ export function hashToPatch(hash) {
     else if (k === "collectors") patch.includeCollectors = v === "1" || v === "true";
     else if (k === "sel") { if (/^[\w-]+$/.test(v)) patch.selectedLocId = v; }
     else if (k === "basemap" && (v === "light" || v === "satellite")) patch.basemap = v;
-    else if (k === "tour") { const n = Number(v); if (Number.isInteger(n) && n >= 1) tour = n; }
+    else if (k === "tour") { const n = Number(v); if (Number.isInteger(n) && n >= 0) tour = n; }
   }
   return { patch, tour };
 }

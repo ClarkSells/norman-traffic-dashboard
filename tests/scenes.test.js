@@ -79,12 +79,14 @@ for (const s of scenes) {
   }
 }
 
-// autoplayMs: null only for title and closing; SCENE_TIMING by kind everywhere else
+// autoplayMs: null only for title and closing; SCENE_TIMING by kind everywhere else, except the two
+// scenes the storyboard times explicitly (scene 5 "combined" 12 s, scene 13 "lanes" 14 s).
+const STORYBOARD_TIMING = { combined: 12000, lanes: 14000 };
 assert.equal(scenes[0].autoplayMs, null, "title is manual");
 assert.equal(scenes[14].autoplayMs, null, "closing is manual");
 for (const s of scenes) {
-  const want = s.kind === "title" || s.kind === "closing" ? null : SCENE_TIMING[s.kind];
-  assert.equal(s.autoplayMs, want, `${s.id}: autoplay from SCENE_TIMING.${s.kind}`);
+  const want = s.kind === "title" || s.kind === "closing" ? null : (STORYBOARD_TIMING[s.id] || SCENE_TIMING[s.kind]);
+  assert.equal(s.autoplayMs, want, `${s.id}: autoplay ${want}`);
   assert.ok(typeof s.autoplayMs === "number" || s.kind === "title" || s.kind === "closing", `${s.id}: only title and closing are manual`);
 }
 

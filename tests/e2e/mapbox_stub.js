@@ -115,7 +115,7 @@
     setStyle(url, first) {
       this._styleLoaded = false; this._layers = []; this._sources = {}; this._fs = {}; this._styleUrl = url;
       const satellite = /satellite/.test(String(url));
-      this._style = { name: satellite ? "Mapbox Satellite Streets" : "Mapbox Light", imports: undefined, layers: [
+      this._style = { name: satellite ? "Mapbox Standard Satellite" : "Mapbox Standard", imports: [{ url }], layers: [
         { id: "background", type: "background" }, { id: "road-primary", type: "line", "source-layer": "road" },
         { id: "poi-label", type: "symbol", "source-layer": "poi_label", layout: { visibility: "visible" } }, { id: "transit-label", type: "symbol", "source-layer": "transit_stop_label", layout: { visibility: "visible" } },
         { id: "road-label", type: "symbol", "source-layer": "road", layout: { visibility: "visible" } }, { id: "settlement-label", type: "symbol", "source-layer": "place_label", layout: { visibility: "visible" } },

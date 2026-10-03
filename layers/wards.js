@@ -21,12 +21,13 @@ export function addWardsLayer(map, wards, { reducedMotion = false } = {}) {
   if (!map.getSource("wards")) map.addSource("wards", { type: "geojson", data: wards });
   if (!map.getSource("ward-centroids")) map.addSource("ward-centroids", { type: "geojson", data: wardCentroids(wards) });
   // Subtle fill for the active ward only (a filter picks the ward, a constant opacity fades it in and out).
-  map.addLayer({ id: "wards-fill", type: "fill", source: "wards", filter: ["==", ["get", "Ward_num"], -1],
+  // Slot "bottom": the ward tint sits under the roads like a zoning map (design section 2).
+  map.addLayer({ id: "wards-fill", type: "fill", source: "wards", slot: "bottom", filter: ["==", ["get", "Ward_num"], -1],
     paint: { "fill-color": fillColor, "fill-opacity": 0, "fill-opacity-transition": T } });
-  map.addLayer({ id: "wards-line", type: "line", source: "wards",
+  map.addLayer({ id: "wards-line", type: "line", source: "wards", slot: "bottom",
     paint: { "line-color": theme["ward-line"], "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.6, 14, 1.2], "line-opacity": 0.9, "line-opacity-transition": T } });
   // Labels at client-computed centroids. The selected ward's label is filtered away and the others fade.
-  map.addLayer({ id: "wards-label", type: "symbol", source: "ward-centroids",
+  map.addLayer({ id: "wards-label", type: "symbol", source: "ward-centroids", slot: "top",
     layout: { "text-field": ["get", "name"], "text-size": ["interpolate", ["linear"], ["zoom"], 10, 12, 14, 18], "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
               "text-letter-spacing": 0.05, "text-allow-overlap": true },
     paint: { "text-color": theme["ward-label"], "text-halo-color": theme["ward-halo"], "text-halo-width": 1.4, "text-opacity": 1, "text-opacity-transition": T } });

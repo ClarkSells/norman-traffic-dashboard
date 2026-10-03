@@ -48,7 +48,8 @@ export function popupFor(locId, state) {
   return { html: popupHtml(p, rankWithin(st, locId), st), lngLat: mid, feature: f };
 }
 
-export function attachPopup(map, onSelect) {
+export function attachPopup(map, onSelect, enabled) {
+  const canOpen = typeof enabled === "function" ? enabled : () => true;
   const popup = new mapboxgl.Popup({ closeButton: true, maxWidth: "340px", offset: 10 });
   const open = (locId, lngLat) => {
     const built = popupFor(locId);
@@ -57,11 +58,13 @@ export function attachPopup(map, onSelect) {
     return popup;
   };
   map.on("click", "segments-line", (e) => {
+    if (!canOpen()) return;   // presentation never uses the popup (audit A5)
     const f = e.features[0];
     open(f.properties.loc_id, e.lngLat);
     onSelect(f.properties.loc_id);
   });
   map.on("click", "count-points", (e) => {
+    if (!canOpen()) return;
     const f = e.features[0];
     open(f.properties.loc_id, e.lngLat);
     onSelect(f.properties.loc_id);

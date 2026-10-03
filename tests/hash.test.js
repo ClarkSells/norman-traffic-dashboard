@@ -18,8 +18,8 @@ for (const st of [full, { ...full, ward: 8, metric: "collisions", los: "C", year
 }
 // Malformed or hostile input is ignored key by key
 assert.deepEqual(hashToPatch("").patch, {}); assert.equal(hashToPatch("").tour, null);
-assert.deepEqual(hashToPatch("#ward=9&metric=nope&los=X&years=abc&sel=<script>&tour=0&basemap=mars").patch, {});
-assert.equal(hashToPatch("#tour=0").tour, null);
+assert.deepEqual(hashToPatch("#ward=9&metric=nope&los=X&years=abc&sel=<script>&tour=-1&basemap=mars").patch, {});
+assert.equal(hashToPatch("#tour=0").tour, 0, "tour is the 0 based scene index; 0 is the title scene");
 assert.deepEqual(hashToPatch("#ward=all&years=2025-2021").patch, { ward: null, yearMin: 2021, yearMax: 2025 }, "ward=all clears, reversed years are swapped");
 assert.deepEqual(hashToPatch("ward=3").patch, { ward: 3 }, "leading # optional");
 assert.deepEqual(hashToPatch("#collectors=true").patch, { includeCollectors: true });

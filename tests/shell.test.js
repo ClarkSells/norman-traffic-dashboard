@@ -9,7 +9,9 @@ import { getState, setState, subscribe } from "../state.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(here, "..", "index.html"), "utf8");
 for (const id of ["map", "panel", "layout", "ward-toggle", "metric-toggle", "los-toggle", "year-min", "year-max", "year-label", "year-fill", "year-ticks", "show-collectors", "stats", "rank-table", "table-empty", "legend", "basemap-toggle",
-                  "help-toggle", "help-box", "loading", "loading-text", "loading-reload", "panel-toggle", "progress", "progress-fill", "present-toggle", "sheet-handle", "briefing", "tour", "tour-card", "tour-title", "tour-caption", "tour-prev", "tour-next", "tour-exit", "tour-autoplay", "tour-dots", "briefing-title", "briefing-line", "reset-view", "stat-segments", "stat-crashes", "stat-top", "map-tooltip"]) {
+                  "help-toggle", "help-box", "loading", "loading-text", "loading-reload", "panel-toggle", "progress", "progress-fill", "present-toggle", "sheet-handle", "briefing", "briefing-title", "briefing-line", "reset-view", "stat-segments", "stat-crashes", "stat-top", "map-tooltip",
+                  "settings-toggle", "settings", "heat-toggle", "flow-toggle", "map-north", "map-recenter",
+                  "present", "present-eyebrow", "present-scene-count", "present-card", "present-title", "present-caption", "present-stats", "present-legend", "present-list", "present-progress", "present-controls", "present-prev", "present-next", "present-autoplay", "present-exit", "present-closing", "present-replay", "present-explore"]) {
   assert.ok(html.includes(`id="${id}"`), `index.html is missing #${id}`);
 }
 assert.ok(html.includes("mapbox-gl.js") && html.includes('type="module" src="app.js"'), "mapbox script and module entry present");
@@ -20,7 +22,7 @@ assert.equal((html.match(/aria-pressed="true"/g) || []).length, 3, "one pressed 
 assert.equal((html.match(/data-ward="/g) || []).length, 9, "All plus eight wards");
 assert.ok(html.includes('type="range" id="year-min"') && html.includes('type="range" id="year-max"'), "two handle year range");
 assert.ok(html.includes("fonts.googleapis.com") && html.includes("IBM+Plex+Mono") && !html.includes("Fraunces"), "one monospace face loaded");
-assert.ok(html.includes('id="status-line"'), "status line present");
+assert.ok(html.includes('id="map-north"') && html.includes('id="map-recenter"'), "north arrow and recenter buttons present");
 assert.ok(html.includes("mapbox-gl-js/v3."), "Mapbox GL JS v3 from the CDN");
 assert.ok(html.includes('role="switch"'), "collectors toggle is a switch");
 assert.ok(!/—/.test(html), "no em dashes in UI strings");
@@ -44,5 +46,5 @@ assert.ok(cfg.STYLES.light.startsWith("mapbox://") && cfg.STYLES.satellite.start
 let seen = null; const off = subscribe((s, patch) => { seen = patch; });
 setState({ metric: "v_c" });
 assert.equal(getState().metric, "v_c"); assert.deepEqual(seen, { metric: "v_c" }); off();
-assert.deepEqual(Object.keys(getState()).sort(), ["basemap", "includeCollectors", "los", "metric", "reducedMotion", "selectedLocId", "ward", "yearMax", "yearMin"]);
+assert.deepEqual(Object.keys(getState()).sort(), ["basemap", "flow", "heat", "includeCollectors", "los", "metric", "presenting", "reducedMotion", "selectedLocId", "ward", "yearMax", "yearMin"]);
 console.log("shell checks passed");

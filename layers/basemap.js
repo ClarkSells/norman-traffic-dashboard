@@ -17,6 +17,13 @@ const LABEL_CONFIG = {
 
 export function isStandardStyle(style) { return !!(style && style.imports && style.imports.length); }
 
+// getStyle() THROWS "Style is not done loading" in GL JS v3 when the style has not loaded yet
+// (it does not return null), so every caller goes through this guard.
+function safeStyle(map) {
+  if (!map || !map.getStyle) return null;
+  try { return map.getStyle(); } catch { return null; }
+}
+
 function isSatelliteStyle(style) {
   const url = style && style.imports && style.imports[0] && style.imports[0].url;
   if (url) return /satellite/.test(String(url));
@@ -28,7 +35,7 @@ function setConfig(map, key, value) { map.setConfigProperty("basemap", key, valu
 // Applies the design's Standard config. No-op on non Standard styles (classic styles, or a map
 // whose style has not loaded yet). lightPreset comes from the caller ("dusk" present, "day" explore).
 export function configureStandard(map, { lightPreset, presenting } = {}) {
-  const style = map.getStyle ? map.getStyle() : null;
+  const style = safeStyle(map);
   if (!isStandardStyle(style)) return;
   for (const [key, value] of Object.entries(LABEL_CONFIG)) setConfig(map, key, value);
   if (lightPreset) setConfig(map, "lightPreset", lightPreset);
@@ -39,7 +46,7 @@ export function configureStandard(map, { lightPreset, presenting } = {}) {
 }
 
 export function setLightPreset(map, preset) {
-  const style = map.getStyle ? map.getStyle() : null;
+  const style = safeStyle(map);
   if (!isStandardStyle(style) || !preset) return;
   setConfig(map, "lightPreset", preset);
 }
@@ -81,14 +88,21 @@ export function switchBasemap(map, next, { lightPreset, presenting, onReady, twe
     map.once("style.load", () => {
       configureStandard(map, { lightPreset, presenting });
       if (onReady) onReady();
-      map.once("idle", () => {
+      // The selection pulse and the flow loop keep repainting forever, so a perfect idle may never
+      // come; bound the wait and fade the overlay regardless.
+      let settled = false;
+      const proceed = () => {
+        if (settled) return;
+        settled = true;
         if (!overlay || !fadeMs) { if (overlay) overlay.remove(); resolve(); return; }
         tweenFn({
           duration: fadeMs,
           onUpdate: (t) => { overlay.style.opacity = String(1 - t); },
           onDone: () => { overlay.remove(); resolve(); },
         });
-      });
+      };
+      map.once("idle", proceed);
+      setTimeout(proceed, 5000);
     });
     map.setStyle(url);
   });
@@ -99,7 +113,7 @@ export function switchBasemap(map, next, { lightPreset, presenting, onReady, twe
 const HIDE_SOURCE_LAYERS = new Set(["poi_label", "transit_stop_label", "airport_label", "natural_label", "natural_point_label", "natural_line_label", "water_point_label", "water_line_label", "housenum_label"]);
 
 export function tuneBasemap(map, theme) {
-  const style = map.getStyle ? map.getStyle() : null;
+  const style = safeStyle(map);
   if (!style) return { mode: "none", hidden: [] };
   if (isStandardStyle(style)) {
     map.setConfigProperty("basemap", "showPointOfInterestLabels", false);

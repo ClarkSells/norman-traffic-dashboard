@@ -78,38 +78,40 @@ export function addSegmentsLayer(map, segments, { reducedMotion = false } = {}) 
   // One feature source for the selection, with lineMetrics so line-progress works for the pulse.
   if (!map.getSource("segments-selected")) map.addSource("segments-selected", { type: "geojson", data: { type: "FeatureCollection", features: [] }, lineMetrics: true });
   const base = { ward: null, includeCollectors: false, metric: "combined" };
-  map.addLayer({ id: "segments-casing", type: "line", source: "segments",
+  map.addLayer({ id: "segments-casing", type: "line", source: "segments", slot: "top",
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": theme["map-casing"], "line-width": widthExpression(3), "line-opacity": casingOpacityExpression(base, theme["map-casing-opacity"]),
              "line-color-transition": T, "line-opacity-transition": T } });
   // The selection frame: an ink halo drawn under the data line, so the selected segment keeps its class color
   // and the halo stays visible under reduced motion, when the pulse layer above is hidden.
-  map.addLayer({ id: "segments-selected-casing", type: "line", source: "segments-selected",
+  map.addLayer({ id: "segments-selected-casing", type: "line", source: "segments-selected", slot: "top",
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": theme["selection-halo"], "line-width": widthExpression(6), "line-opacity": 0.9, "line-blur": 0.6 } });
   // A ring in the surface color between the halo and the line keeps the frame readable on the darkest class, where
   // ink against the ramp's dark end is under 2 to 1.
-  map.addLayer({ id: "segments-selected-gap", type: "line", source: "segments-selected",
+  map.addLayer({ id: "segments-selected-gap", type: "line", source: "segments-selected", slot: "top",
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": theme["map-casing"], "line-width": widthExpression(2.5), "line-opacity": 1 } });
   // The ghost carries the previous color and opacity expressions during a crossfade, then sits at opacity 0.
-  map.addLayer({ id: "segments-line-ghost", type: "line", source: "segments",
+  map.addLayer({ id: "segments-line-ghost", type: "line", source: "segments", slot: "top",
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": lineColorForState(base), "line-width": widthExpression(0), "line-opacity": lineOpacityExpression(base, 0) } });
-  map.addLayer({ id: "segments-line", type: "line", source: "segments",
+  map.addLayer({ id: "segments-line", type: "line", source: "segments", slot: "top",
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": lineColorForState(base),
              "line-width": widthExpression(["case", HOVER, 2, 0]),
-             "line-opacity": lineOpacityExpression(base, 1), "line-color-transition": T, "line-opacity-transition": T } });
-  map.addLayer({ id: "segments-shared", type: "line", source: "segments", filter: ["==", ["get", "shared_boundary"], true],
+             "line-opacity": lineOpacityExpression(base, 1), "line-color-transition": T, "line-opacity-transition": T,
+             // emissive so the orange ramp is not darkened by the dusk scene light in present (cheatsheet section 2)
+             "line-emissive-strength": 1 } });
+  map.addLayer({ id: "segments-shared", type: "line", source: "segments", slot: "top", filter: ["==", ["get", "shared_boundary"], true],
     layout: { "line-cap": "butt" },
     paint: { "line-color": theme.ink, "line-width": 1, "line-dasharray": [2, 2], "line-offset": ["interpolate", ["linear"], ["zoom"], 10, 3, 16, 9],
              "line-opacity": ["case", inWardExpression(null), 0.6, 0.1], "line-opacity-transition": T } });
   // The travelling light, on top of everything. A gradient replaces line-color, so this layer carries no color of
   // its own; under reduced motion it is hidden outright instead of resting transparent.
-  map.addLayer({ id: "segments-selected", type: "line", source: "segments-selected",
+  map.addLayer({ id: "segments-selected", type: "line", source: "segments-selected", slot: "top",
     layout: { "line-cap": "round", "line-join": "round", visibility: reducedMotion ? "none" : "visible" },
-    paint: { "line-color": "#ffffff", "line-width": widthExpression(2), "line-opacity": 0.9, "line-gradient": pulseGradient(-1) } });
+    paint: { "line-color": "#ffffff", "line-width": widthExpression(2), "line-opacity": 0.9, "line-gradient": pulseGradient(-1), "line-emissive-strength": 1 } });
   lastState = null;
 }
 
@@ -256,6 +258,7 @@ export function pulse(map, locIds, { reduced = false, tween: tweenImpl } = {}) {
     duration: 1400, ease: linear,
     onUpdate: (t) => {
       if (finished) return;
+      if (!map.getLayer || !map.getLayer("segments-selected")) return;   // a style swap wiped the layer mid-pulse
       const k = 1 + 0.6 * Math.abs(Math.sin(2 * Math.PI * t));
       map.setPaintProperty("segments-selected", "line-width", ["*", k, base]);
     },

@@ -9,6 +9,9 @@ const state = {
   selectedLocId: null,
   basemap: "light",
   reducedMotion: false,  // set from prefers-reduced-motion at startup; layers and camera read it
+  heat: true,            // crash density surface (explore default on; scenes own it in present)
+  flow: false,           // traffic flow animation (explore default off; scenes own it in present)
+  presenting: false,     // true while a present-mode scene is on screen
 };
 const listeners = new Set();
 

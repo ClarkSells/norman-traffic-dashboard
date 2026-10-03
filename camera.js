@@ -52,17 +52,22 @@ function lengthMi(coords) {
   return m / METERS_PER_MILE;
 }
 
-// fitBounds, or jumpTo the equivalent camera under reduced motion.
-function fitOrJump(map, bounds, { padding, pitch, bearing, duration: ms, reduced }) {
-  if (!reduced) { map.fitBounds(bounds, { padding, pitch, bearing, duration: ms }); return; }
+// City and ward fits: cameraForBounds gives the flat fit for the padded box; easeTo then applies the
+// scene's pitch. fitBounds with a pitch fits the tilted trapezoid instead, which zooms so far out the
+// city reads as a stamp on the metro map (the first real renderer pass showed the whole OKC metro).
+function fitOrJump(map, bounds, { padding, pitch, bearing, duration: ms, reduced, zoomBias = 0 }) {
   const cam = map.cameraForBounds(bounds, { padding, bearing });
-  if (!cam) { map.fitBounds(bounds, { padding, pitch, bearing, duration: 0 }); return; }
-  map.jumpTo({ center: cam.center, zoom: cam.zoom, pitch, bearing });
+  if (!cam) { map.fitBounds(bounds, { padding, pitch, bearing, duration: reduced ? 0 : ms }); return; }
+  const target = { center: cam.center, zoom: cam.zoom + zoomBias, pitch, bearing };
+  if (reduced) map.jumpTo(target);
+  else map.easeTo({ ...target, duration: ms });
 }
 
 // Establish: the whole city. Union of the ward bounds, pitch 55, bearing -18, 1600 ms.
+// The flat fit is biased half a zoom level in: at pitch 55 the horizon takes half the frame and the
+// wards read too small at the exact fit (first real renderer pass), so the fit is a starting point.
 export function establish(map, wardsFc, { padding, pitch = 55, bearing = -18, duration: ms = 1600, reduced } = {}) {
-  fitOrJump(map, collectionBounds(wardsFc), { padding, pitch, bearing, duration: ms, reduced });
+  fitOrJump(map, collectionBounds(wardsFc), { padding, pitch, bearing, duration: ms, reduced, zoomBias: 0.5 });
 }
 
 // Fit ward: the ward polygon framed as a stage, pitch 42, bearing -10, 1800 ms.

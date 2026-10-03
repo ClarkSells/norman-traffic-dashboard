@@ -108,6 +108,7 @@ export function startFlow(map, { stepMsByLayer, now, raf, caf, hidden } = {}) {
     if (!isHidden() && time - lastRun >= 50) {
       lastRun = time;
       FLOW_LAYERS.forEach((id, i) => {
+        if (map.getLayer && !map.getLayer(id)) return;   // a style swap wiped the layers mid-loop
         const seq = seqs[i];
         const s = Math.floor(time / stepMs[i]) % seq.length;
         if (s !== lastStep[i]) {

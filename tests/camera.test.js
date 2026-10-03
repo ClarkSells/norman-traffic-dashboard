@@ -51,26 +51,30 @@ assert.deepEqual(presentationPadding({ width: 390, height: 800 }, { width: 340, 
 assert.deepEqual(presentationPadding({ width: 900, height: 800, isPhone: true }, null),
   { top: 72, right: 24, bottom: 344, left: 24 }, "explicit isPhone wins over width");
 
-// establish: fitBounds over the union of the wards with the padding passed in.
+// establish: the union bounds of the wards go through cameraForBounds, then easeTo carries the
+// flat fit to the scene's pitch (fitBounds at pitch would fit the tilted trapezoid and zoom out too far).
 {
   const map = makeMap();
   establish(map, wards, { padding: pad });
-  const c = last(map, "fitBounds");
-  assert.ok(c, "establish fits bounds");
-  assert.deepEqual(c.bounds, [[-97.5, 35.1], [-97.3, 35.3]], "union bounds of every ward");
-  assert.equal(c.opts.padding, pad, "padding passed through");
-  assert.equal(c.opts.pitch, 55); assert.equal(c.opts.bearing, -18); assert.equal(c.opts.duration, 1600);
+  const cf = last(map, "cameraForBounds");
+  assert.ok(cf, "establish asks for the bounds camera");
+  assert.deepEqual(cf.bounds, [[-97.5, 35.1], [-97.3, 35.3]], "union bounds of every ward");
+  assert.equal(cf.opts.padding, pad, "padding passed through");
+  const e = last(map, "easeTo");
+  assert.ok(e, "establish eases to the fitted camera");
+  assert.equal(e.opts.pitch, 55); assert.equal(e.opts.bearing, -18); assert.equal(e.opts.duration, 1600);
+  assert.deepEqual(e.opts.center, [-97.44, 35.22], "center from cameraForBounds");
 }
 {
   const map = makeMap();
   establish(map, wards, { padding: pad, pitch: 50, bearing: -8, duration: 900 });
-  const c = last(map, "fitBounds");
-  assert.equal(c.opts.pitch, 50); assert.equal(c.opts.bearing, -8); assert.equal(c.opts.duration, 900);
+  const e = last(map, "easeTo");
+  assert.equal(e.opts.pitch, 50); assert.equal(e.opts.bearing, -8); assert.equal(e.opts.duration, 900);
 }
 {
   const map = makeMap();
   establish(map, wards, { padding: pad, reduced: true });
-  assert.equal(last(map, "fitBounds"), undefined, "reduced: no animated fit");
+  assert.equal(last(map, "easeTo"), undefined, "reduced: no animated move");
   const j = last(map, "jumpTo");
   assert.ok(j, "reduced: jumpTo the fitted camera");
   assert.deepEqual(j.opts.center, [-97.44, 35.22], "center from cameraForBounds");
@@ -110,19 +114,20 @@ assert.deepEqual(presentationPadding({ width: 900, height: 800, isPhone: true },
   assert.ok(Math.abs(j.opts.bearing - bearingAcrossScreen(segment.geometry.coordinates)) < 1e-9);
 }
 
-// fitWard: fitBounds of the ward polygon, caption aware padding, reduced jumps.
+// fitWard: the ward polygon's own bounds through cameraForBounds, easeTo carries the pitch, reduced jumps.
 {
   const map = makeMap();
   fitWard(map, ward, { padding: pad });
-  const c = last(map, "fitBounds");
-  assert.deepEqual(c.bounds, [[-97.5, 35.1], [-97.4, 35.2]], "the ward's own bounds");
-  assert.equal(c.opts.padding, pad);
-  assert.equal(c.opts.pitch, 42); assert.equal(c.opts.bearing, -10); assert.equal(c.opts.duration, 1800);
+  const cf = last(map, "cameraForBounds");
+  assert.deepEqual(cf.bounds, [[-97.5, 35.1], [-97.4, 35.2]], "the ward's own bounds");
+  assert.equal(cf.opts.padding, pad);
+  const e = last(map, "easeTo");
+  assert.equal(e.opts.pitch, 42); assert.equal(e.opts.bearing, -10); assert.equal(e.opts.duration, 1800);
 }
 {
   const map = makeMap();
   fitWard(map, ward, { padding: pad, reduced: true });
-  assert.equal(last(map, "fitBounds"), undefined);
+  assert.equal(last(map, "easeTo"), undefined);
   const j = last(map, "jumpTo");
   assert.ok(j); assert.equal(j.opts.pitch, 42); assert.equal(j.opts.bearing, -10);
 }

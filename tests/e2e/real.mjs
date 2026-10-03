@@ -21,8 +21,8 @@ import { watchConsole } from "./harness.js";
 
 // --- Scene loop config ------------------------------------------------------
 // Card 2.1 (Wave 2) repoints these two values at the 15-scene present mode:
-const SCENE_COUNT = 12;                     // today: 12-step tour, scenes 0..11; Wave 2: 15 scenes, 0..14
-const NEXT_SCENE_SELECTOR = "#tour-next";   // today: tour stepper; Wave 2: "#present-next"
+const SCENE_COUNT = 15;                     // Wave 2: 15 scenes, 0..14 (scenes.js buildScenes)
+const NEXT_SCENE_SELECTOR = "#present-next";   // Wave 2: the present chrome stepper
 
 const EXPLORE_STATES = [
   { name: "citywide", hash: "#metric=combined&los=E&years=2021-2025" },
