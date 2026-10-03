@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import assert from "node:assert/strict";
-import { applyState, deriveProps, rankedRows, setRaw, years } from "../data.js";
+import { applyState, combineProgress, deriveProps, rankWithin, rankedRows, readWithProgress, setRaw, summarize, yearExtent, years } from "../data.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const seg = (loc, wards, cls, vpd, capC, capE, byYear) => ({
@@ -41,6 +41,20 @@ assert.deepEqual(rankedRows({ ...base, includeCollectors: true }).map(r => r.loc
 assert.deepEqual(rankedRows({ ...base, metric: "v_c" }).map(r => r.loc_id), ["A", "B", "C"]);
 assert.equal(applyState(base).features.length, 4, "applyState keeps every feature");
 assert.equal(applyState(base).features[0].properties.metric_value, a.combined_active);
+assert.deepEqual(yearExtent(), { min: 2016, max: 2025 }, "extent covers every year in the data and the default window");
+const rw = rankWithin(base, "C");
+assert.deepEqual(rw, { ward: 1, wardRank: 2, wardOf: 2, cityRank: 3, cityOf: 3, listed: true }, "shared C ranks in its primary ward 1 and citywide");
+assert.equal(rankWithin({ ...base, ward: 2 }, "C").ward, 2, "ward rank follows the selected ward when it contains the segment");
+assert.equal(rankWithin(base, "D").listed, false, "collector is scored but not listed");
+assert.equal(rankWithin(base, "nope"), null);
+const sm = summarize(base); assert.equal(sm.n, 3); assert.equal(sm.crashes, 4); assert.equal(sm.top.loc_id, "A"); assert.ok(Math.abs(sm.maxScore - sm.top.combined_active) < 1e-12);
+// progress helpers
+assert.deepEqual(combineProgress({ a: { loaded: 10, total: 100 }, b: { loaded: 40, total: 100 } }), { loaded: 50, total: 200, ratio: 0.25 });
+assert.deepEqual(combineProgress({ a: { loaded: 10, total: 100 }, b: { loaded: 40, total: null } }), { loaded: 50, total: null, ratio: null }, "unknown length anywhere: indeterminate");
+const chunks = [new TextEncoder().encode('{"a":'), new TextEncoder().encode("1}")]; let i = 0; const seen = [];
+const res = { headers: { get: (k) => (k === "Content-Length" ? "7" : null) }, body: { getReader: () => ({ read: async () => (i < chunks.length ? { done: false, value: chunks[i++] } : { done: true }) }) } };
+assert.equal(await readWithProgress(res, (l, t) => seen.push([l, t])), '{"a":1}'); assert.deepEqual(seen, [[5, 7], [7, 7]], "byte progress against Content-Length");
+assert.equal(await readWithProgress({ headers: { get: () => null }, text: async () => "xy" }, (l, t) => seen.push([l, t])), "xy"); assert.deepEqual(seen.at(-1), [2, null], "no stream: text fallback");
 console.log("data.js mini checks passed");
 
 const real = join(here, "..", "data", "segments.geojson");
