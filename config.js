@@ -2,9 +2,26 @@
 export const MAPBOX_TOKEN = "pk.eyJ1IjoiY25lZWt5MSIsImEiOiJjbXVyamNweHIwOHA5MnpwcGlwemcwcmF1In0.X_AlQ66e9n-BYRLb1CgbLg";
 
 export const STYLES = {
-  light: "mapbox://styles/mapbox/light-v11",
-  satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+  standard: "mapbox://styles/mapbox/standard",
+  satellite: "mapbox://styles/mapbox/standard-satellite",
+  // `light` is kept as an alias of `standard` for one release (hash key `basemap=light`).
+  light: "mapbox://styles/mapbox/standard",
 };
+
+export const PRESETS = { explore: "day", present: "dusk" };
+
+export const FLOW = {
+  bands: [8000, 18000],
+  stepMs: { free: 45, moderate: 70, congested: 110 },
+  vcBands: [0.5, 0.8],
+};
+
+export const SCENE_TIMING = { city: 10000, segment: 12000, ward: 14000 };
+
+export const COLL = { year: "y", cat: "c", loc: "l" };
+
+// Union bounds of data/wards.geojson, [[west, south], [east, north]].
+export const CITY_BOUNDS = [[-97.54741, 35.14546], [-97.17692, 35.34832]];
 
 export const DATA = {
   segments: "data/segments.geojson",

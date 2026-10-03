@@ -7,9 +7,13 @@
   <meta name="description" content="Congestion, crashes and a combined score for every counted street segment in Norman, by council ward.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/ibmplexsans/v23/zYXzKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1syxeKYY.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/ibmplexserif/v20/jizAREVNn1dOx-zrZ2X3pZvkTi3s-CI0q1s.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n1i8q1w.woff2">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
+  <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -75,6 +79,13 @@
           <div class="range-ticks" id="year-ticks" aria-hidden="true"></div>
         </div>
         <label class="control switch"><input type="checkbox" id="show-collectors" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Include collectors</span></label>
+        <div class="control"><span class="control-label" id="settings-label">More</span>
+          <button id="settings-toggle" class="btn small" type="button" aria-expanded="false" aria-controls="settings">Settings</button>
+        </div>
+        <section class="settings" id="settings" aria-labelledby="settings-label" hidden>
+          <label class="control switch"><input type="checkbox" id="heat-toggle" role="switch" aria-checked="true"><span class="switch-track" aria-hidden="true"></span><span>Crash density</span></label>
+          <label class="control switch"><input type="checkbox" id="flow-toggle" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Traffic flow</span></label>
+        </section>
       </section>
       <section class="stats" id="stats" aria-label="Headline numbers">
         <div class="stat"><div class="value" id="stat-segments">0</div><div class="label">segments shown</div></div>
@@ -107,6 +118,32 @@
       </div>
       <div class="tour-dots" id="tour-dots" role="tablist" aria-label="Tour steps"></div>
     </section>
+    <section class="present" id="present" hidden aria-label="Presentation">
+      <div class="present-eyebrow">
+        <span id="present-eyebrow">CITY OF NORMAN · STREET SEGMENT PRIORITIES</span>
+        <span id="present-scene-count"></span>
+      </div>
+      <div class="present-card raised" id="present-card" role="region" aria-live="polite">
+        <h2 class="present-title" id="present-title"></h2>
+        <p class="present-caption" id="present-caption"></p>
+        <div class="present-stats" id="present-stats"></div>
+        <div class="present-legend" id="present-legend"></div>
+        <div class="present-list" id="present-list"></div>
+        <div class="present-closing" id="present-closing" hidden>
+          <button id="present-replay" class="btn" type="button">Replay</button>
+          <button id="present-explore" class="btn" type="button">Explore the dashboard</button>
+        </div>
+      </div>
+      <div class="present-progress" id="present-progress" role="tablist" aria-label="Scenes"></div>
+      <div class="present-controls" id="present-controls">
+        <button id="present-prev" class="btn" type="button" aria-label="Previous scene">Back</button>
+        <button id="present-next" class="btn" type="button" aria-label="Next scene">Next</button>
+        <label class="present-autoplay"><input type="checkbox" id="present-autoplay" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Autoplay</span></label>
+        <button id="present-exit" class="btn" type="button">Exit <kbd>Esc</kbd></button>
+      </div>
+    </section>
+    <button id="map-north" class="map-north" type="button" hidden aria-label="Reset north">N</button>
+    <button id="map-recenter" class="map-recenter" type="button" hidden>Recenter</button>
     <div class="loading" id="loading" role="status" aria-live="polite">
       <div class="loading-card">
         <div class="spinner" aria-hidden="true"></div>

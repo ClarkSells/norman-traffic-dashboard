@@ -32,7 +32,9 @@ assert.ok(css.includes("@media (pointer: coarse)") && css.includes("min-height: 
 assert.ok(css.includes("(orientation: landscape)"), "landscape phone layout");
 assert.ok(css.includes("@media (prefers-reduced-motion: reduce)"), "reduced motion honoured");
 assert.ok(css.includes("tabular-nums"), "tabular numerals");
-assert.ok(css.includes("monospace") && !css.includes("Fraunces"), "monospace stack in the stylesheet");
+const tokens = readFileSync(join(here, "..", "tokens.css"), "utf8");
+assert.ok(tokens.includes("IBM Plex Sans") && tokens.includes("IBM Plex Serif") && tokens.includes("IBM Plex Mono"), "tokens.css defines the three Plex stacks");
+assert.ok(css.includes("var(--font-") && !css.includes("Fraunces"), "style.css consumes the font tokens, no hard coded stack");
 assert.ok(css.includes("--surface") && css.includes("--ink-muted") && css.includes("--hairline") && css.includes("--accent"), "theme tokens");
 assert.ok(css.includes('[data-theme="dark"]'), "dark chrome for the satellite basemap");
 assert.ok(css.includes(".loading[hidden] { display: none; }"), "hidden attribute wins over display:flex on the loading card");

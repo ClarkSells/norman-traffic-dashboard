@@ -1,0 +1,48 @@
+/* Design tokens: type, color, surfaces. Two sets: explore (light) and present (dark chrome over a dusk map).
+   Values from handoff/02_DESIGN_DIRECTION.md section 3. theme.js keeps writing its own values for the
+   legacy --surface etc. names; these tokens are the consulting grade set new chrome is built against. */
+:root {
+  /* Type: one superfamily. Serif for titles, Sans for UI, Mono for figures and labels. */
+  --font-serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Explore (light) */
+  --paper: #f6f4ee;
+  --surface-raised: #fffdf8;
+  --ink: #1c1b18;
+  --ink-muted: #6b6963;
+  --accent: #d45f14;
+  --hairline: #e3dfd5;
+  --focus: #2a78d6;
+
+  /* Type scale (desktop 1440) */
+  --type-scene-title: 500 36px/42px var(--font-serif);
+  --type-briefing-title: 500 26px/30px var(--font-serif);
+  --type-caption: 400 17px/26px var(--font-sans);
+  --type-body: 400 14px/21px var(--font-sans);
+  --type-button: 500 13px var(--font-sans);
+  --type-stat-value: 500 22px var(--font-mono);
+  --type-chip: 500 11px var(--font-mono);
+
+  color-scheme: light;
+}
+
+/* Present mode chrome: dark, raised surfaces blur over the dusk map. */
+:root[data-mode="present"] {
+  --paper: #121417;
+  --surface-raised: rgba(27, 30, 35, 0.92);
+  --ink: #f3f1ea;
+  --ink-muted: #a7a49c;
+  --accent: #ee7b2f;
+  --hairline: #2a2e35;
+  --focus: #86b6ef;
+  color-scheme: dark;
+}
+
+/* Raised surfaces in present mode get the blur; a single class so present.css and chrome share it. */
+:root[data-mode="present"] .raised {
+  background: var(--surface-raised);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}

@@ -1,10 +1,9 @@
-/* Norman segment priorities. Tokens come from theme.js (applyTheme writes them onto <html>); the values here are the light fallback. */
+/* Norman segment priorities. Design tokens live in tokens.css (loaded first); theme.js writes its own
+   values onto <html> at runtime; the values here are only the fallback for tokens.css gaps. */
 :root {
-  --surface: #fbfaf7; --surface-raised: #ffffff; --ink: #16150f; --ink-muted: #5f5c54; --hairline: #e4e1d8;
-  --accent: #d45f14; --accent-soft: #fbe9dc; --focus: #1c5cab; --row-hover: #f4f0e8; --row-selected: #fbe9dc;
-  --shadow: 0 8px 28px rgba(22,21,15,0.10);
-  --font-display: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-  --font-text: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  --surface: var(--paper); --accent-soft: #fbe9dc; --row-hover: #f4f0e8; --row-selected: #fbe9dc;
+  --shadow: 0 8px 28px rgba(28,27,24,0.10);
+  --font-display: var(--font-serif); --font-text: var(--font-sans); --font-num: var(--font-mono);
   --panel-w: 400px; --topbar-h: 60px; --radius: 3px;
   --t-fast: 200ms; --t-mid: 350ms; --t-slow: 500ms; --ease-out: cubic-bezier(0.22, 1, 0.36, 1); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   font-family: var(--font-text); font-size: 13px; line-height: 1.45; color: var(--ink);
@@ -57,6 +56,7 @@ tbody tr:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; 
 .panel.sliding-out { transform: translateX(-24px); opacity: 0; }
 .legend.sliding-out { transform: translateY(12px); opacity: 0; }
 
+/* panel: owned by 1.6 (everything from .briefing through .table-wrap and the mobile .panel.sheet rules) */
 /* Briefing card header */
 .briefing { padding: 18px 20px 14px; border-bottom: 1px solid var(--hairline); }
 .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
@@ -67,6 +67,8 @@ tbody tr:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; 
 
 /* Controls */
 .controls { padding: 14px 20px; display: grid; gap: 12px; border-bottom: 1px solid var(--hairline); }
+.settings { display: grid; gap: 10px; }
+.settings[hidden] { display: none; }
 .control { display: grid; gap: 6px; font-size: 12px; color: var(--ink-muted); }
 .control-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .control-label output { font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 12px; color: var(--ink); }
@@ -115,7 +117,7 @@ tbody tr:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; 
 .stats { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 0; border-bottom: 1px solid var(--hairline); }
 .stat { padding: 12px 14px 12px 20px; border-right: 1px solid var(--hairline); min-width: 0; }
 .stat:last-child { border-right: 0; }
-.stat .value { font-family: var(--font-display); font-size: 24px; line-height: 1.05; font-weight: 600; letter-spacing: -0.02em; }
+.stat .value { font-family: var(--font-num); font-size: 24px; line-height: 1.05; font-weight: 600; letter-spacing: -0.02em; }
 .stat .value-text { font-size: 12.5px; line-height: 1.25; font-weight: 500; margin-top: 3px; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .stat .label { font-size: 11px; color: var(--ink-muted); margin-top: 4px; letter-spacing: 0.02em; }
 
@@ -134,7 +136,7 @@ tbody tr.leaving { opacity: 0; pointer-events: none; }
 @keyframes rowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 tbody tr:hover, tbody tr.hover { background: var(--row-hover); }
 tbody tr.selected { background: var(--row-selected); box-shadow: inset 3px 0 0 var(--accent); }
-td .road { font-family: var(--font-display); font-weight: 600; font-size: 12.5px; line-height: 1.25; }
+td .road { font-family: var(--font-num); font-weight: 600; font-size: 12.5px; line-height: 1.25; }
 td .span { color: var(--ink-muted); font-size: 11.5px; margin-top: 1px; }
 td .tag { display: inline-block; font-family: var(--font-text); font-size: 10px; font-weight: 500; color: var(--ink-muted); border: 1px solid var(--hairline); border-radius: 2px; padding: 0 4px; margin-left: 6px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.04em; }
 td.score { position: relative; min-width: 76px; }
@@ -150,7 +152,7 @@ td.score span { position: relative; }
 #map { position: relative; min-width: 0; min-height: 0; }
 .map-tooltip { position: absolute; z-index: 4; pointer-events: none; background: var(--surface-raised); color: var(--ink); border: 1px solid var(--hairline); border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: var(--shadow); max-width: 240px; transform: translate(12px, 12px); }
 .map-tooltip[hidden] { display: none; }
-.map-tooltip .road { font-family: var(--font-display); font-size: 12.5px; font-weight: 600; }
+.map-tooltip .road { font-family: var(--font-num); font-size: 12.5px; font-weight: 600; }
 .map-tooltip .span { color: var(--ink-muted); font-size: 11px; }
 .map-tooltip .score { margin-top: 2px; }
 
@@ -196,11 +198,11 @@ td.score span { position: relative; }
 .popup .chip { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); background: var(--accent-soft); border-radius: 2px; padding: 2px 6px; }
 .popup .chip.muted { background: transparent; border: 1px solid var(--hairline); color: var(--ink-muted); }
 .popup .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-bottom: 10px; }
-.popup .cell .v { font-family: var(--font-display); font-size: 15px; font-weight: 600; line-height: 1.15; }
+.popup .cell .v { font-family: var(--font-num); font-size: 15px; font-weight: 600; line-height: 1.15; }
 .popup .cell .v small { font-family: var(--font-text); font-size: 10.5px; color: var(--ink-muted); margin-left: 3px; font-weight: 500; }
 .popup .cell .k { font-size: 10.5px; color: var(--ink-muted); letter-spacing: 0.02em; }
 .popup .score-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-top: 1px solid var(--hairline); padding-top: 8px; }
-.popup .score-row .v { font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.popup .score-row .v { font-family: var(--font-num); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 .popup .ranks { color: var(--ink-muted); font-size: 11.5px; text-align: right; }
 .popup .caveat { margin: 10px 0 0; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-size: 11.5px; line-height: 1.4; border-radius: 0 4px 4px 0; }
 .popup .caveat + .caveat { margin-top: 6px; }
