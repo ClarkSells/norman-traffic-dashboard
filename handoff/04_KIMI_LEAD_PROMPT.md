@@ -19,6 +19,18 @@ Execute the plan wave by wave:
 Rules you enforce: never let a sub-agent edit a file outside its card (check git status after every wave and revert strays); never skip a test step; only you run git; one commit per wave named "wave N: <one line>". After every wave, run the self review in Part E of the plan and print a wave summary: cards passed, cards re-run, gate numbers, and three screenshots you looked at with one sentence each on whether a consulting firm would ship that frame.
 ```
 
+## Overnight variant (no one at the keyboard)
+
+Use the same prompt with step 4 replaced by the line below, so the run does not pause for the Wave 2 walkthrough. Clark's walkthrough then happens in the morning, before Wave 4's merge, and his notes become the second fix round.
+
+```
+4. Wave 2: do card 2.1 yourself. Run verify.mjs on the stub, then real.mjs. Look at every screenshot in qa/real/ before declaring the wave done. Commit. Clark is not at the keyboard tonight: do NOT stop here. Write your wave summary to qa/wave2-summary.md and continue straight into Wave 3.
+```
+
+And step 6 ends with: "Commit. Write qa/final-summary.md listing every finding closed, every finding left open with its reason, and the three screenshots you would show a councilmember first. Then STOP. Do not merge, do not push." Clark reads the two summaries and the screenshots in the morning, does the walkthrough, writes qa/clark.md, and starts a second short session with the prompt: "Read qa/clark.md and close each item as a Wave 4 finding per handoff/03_PLAN.md card 4.1."
+
+Settings for the overnight run: do not add the `Bash(git *)` deny rule. The lead must commit once per wave, and a permission rule applies to the lead as well as the sub-agents, so a deny would stall the run at the first commit. Sub-agents are told not to run git in AGENTS.md and in every card; that is enough for a repo on a feature branch.
+
 ## Sub-agent prompt template (the lead prepends this to every card)
 
 ```
@@ -32,7 +44,7 @@ Reply using the report format at the bottom of AGENTS.md. If you cannot complete
 
 ## Kimi settings reminder
 
-`~/.kimi-code/config.toml`: `default_permission_mode = "yolo"`, `[background] max_running_tasks = 10`, `[subagent] timeout_ms = 2400000`, and a deny rule for `Bash(git *)` so sub-agents cannot commit. If the deny rule also blocks the lead's commits, remove the rule and rely on the prompt.
+`~/.kimi-code/config.toml`: `default_permission_mode = "yolo"`, `[background] max_running_tasks = 10`, `[subagent] timeout_ms = 2400000`. Skip the `Bash(git *)` deny rule when running unattended (see the overnight variant above); it blocks the lead's own commits.
 
 ## If the swarm stalls
 
