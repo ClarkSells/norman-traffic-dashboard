@@ -4,7 +4,8 @@ import { RAMP } from "../config.js";
 import { FONTS, GOOGLE_FONTS_URL, THEMES, applyTheme, contrastRatio, cssVars, themeFor } from "../theme.js";
 
 assert.ok(!["Inter", "Roboto"].includes(FONTS.display) && !["Inter", "Roboto"].includes(FONTS.text), "deliberate type choice");
-assert.ok(GOOGLE_FONTS_URL.includes("Fraunces") && GOOGLE_FONTS_URL.includes("IBM+Plex+Sans"), "both faces requested");
+assert.ok(GOOGLE_FONTS_URL.includes("IBM+Plex+Mono"), "the monospace face is requested");
+assert.ok(/Mono/.test(FONTS.text) && /Mono/.test(FONTS.display), "terminal register: monospace for text and display");
 for (const name of ["light", "dark"]) {
   const t = THEMES[name];
   for (const k of ["surface", "surface-raised", "ink", "ink-muted", "hairline", "accent"]) assert.ok(t[k], `${name} theme defines ${k}`);

@@ -21,6 +21,7 @@ import { buildTour } from "./tour.js";
 import { initTourPlayer } from "./ui/tour.js";
 import { readHash, writeHash } from "./hash.js";
 import { initSheet } from "./ui/sheet.js";
+import { renderStatus } from "./ui/status.js";
 import { nearestSegment } from "./geo.js";
 
 initLoading();   // "Loading ..." card over the map until the layers are on it
@@ -133,6 +134,22 @@ function resetView() {
   map.flyTo(resetCameraOptions(CENTER, ZOOM, getState().reducedMotion));
 }
 
+// Status line: camera and counts, refreshed on every move (one write per frame at most) and every render.
+let statusQueued = false;
+function updateStatus() {
+  if (statusQueued) return;
+  statusQueued = true;
+  const run = () => {
+    statusQueued = false;
+    const el = document.getElementById("status-line"); if (!el || !dataReady) return;
+    const c = map.getCenter(), st = getState();
+    const shown = document.querySelectorAll("#rank-table tbody tr:not(.leaving)").length, total = getRaw().segments.features.length;
+    renderStatus(el, { zoom: map.getZoom(), lng: c.lng, lat: c.lat, pitch: map.getPitch(), bearing: map.getBearing() }, shown, total, st.ward != null ? `WARD ${st.ward}` : "");
+  };
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(run); else run();
+}
+map.on("move", updateStatus);
+
 function render(state, patch) {
   const data = applyState(state);
   updateSegments(map, state, data);
@@ -141,6 +158,7 @@ function render(state, patch) {
   renderLegend(document.getElementById("legend"), state);
   renderTable(state, (locId) => selectSegment(locId), { onHover: (locId) => setHover(map, locId) });
   syncControls(state);
+  updateStatus();
   if (patch && "ward" in patch) flyToWard(state.ward);
   if (patch && "basemap" in patch) { applyTheme(themeFor(state.basemap)); applyMapTheme(themeFor(state.basemap)); }
   if (popup && popup.isOpen && popup.isOpen() && patch && !("selectedLocId" in patch)) popup.refresh();

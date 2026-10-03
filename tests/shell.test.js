@@ -19,7 +19,8 @@ assert.ok(html.includes('aria-label="First collision year"') && html.includes('a
 assert.equal((html.match(/aria-pressed="true"/g) || []).length, 3, "one pressed button per segmented control (ward, metric, LOS)");
 assert.equal((html.match(/data-ward="/g) || []).length, 9, "All plus eight wards");
 assert.ok(html.includes('type="range" id="year-min"') && html.includes('type="range" id="year-max"'), "two handle year range");
-assert.ok(html.includes("fonts.googleapis.com") && html.includes("Fraunces") && html.includes("IBM+Plex+Sans"), "display and text faces loaded");
+assert.ok(html.includes("fonts.googleapis.com") && html.includes("IBM+Plex+Mono") && !html.includes("Fraunces"), "one monospace face loaded");
+assert.ok(html.includes('id="status-line"'), "status line present");
 assert.ok(html.includes("mapbox-gl-js/v3."), "Mapbox GL JS v3 from the CDN");
 assert.ok(html.includes('role="switch"'), "collectors toggle is a switch");
 assert.ok(!/—/.test(html), "no em dashes in UI strings");
@@ -31,6 +32,7 @@ assert.ok(css.includes("@media (pointer: coarse)") && css.includes("min-height: 
 assert.ok(css.includes("(orientation: landscape)"), "landscape phone layout");
 assert.ok(css.includes("@media (prefers-reduced-motion: reduce)"), "reduced motion honoured");
 assert.ok(css.includes("tabular-nums"), "tabular numerals");
+assert.ok(css.includes("monospace") && !css.includes("Fraunces"), "monospace stack in the stylesheet");
 assert.ok(css.includes("--surface") && css.includes("--ink-muted") && css.includes("--hairline") && css.includes("--accent"), "theme tokens");
 assert.ok(css.includes('[data-theme="dark"]'), "dark chrome for the satellite basemap");
 assert.ok(css.includes(".loading[hidden] { display: none; }"), "hidden attribute wins over display:flex on the loading card");

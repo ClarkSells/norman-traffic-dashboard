@@ -2,8 +2,9 @@
 // The five step metric ramp stays in config.js (it is the report's ramp too); this file builds the chrome around it.
 import { BLUE_RAMP, MUTED, RAMP } from "./config.js";
 
-export const FONTS = { display: "Fraunces", text: "IBM Plex Sans" };
-export const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap";
+// One monospace family carries display, text and numbers: a terminal register, every digit the same width.
+export const FONTS = { display: "IBM Plex Mono", text: "IBM Plex Mono" };
+export const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap";
 
 export const THEMES = {
   light: {

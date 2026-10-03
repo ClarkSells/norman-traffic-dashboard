@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import assert from "node:assert/strict";
 const here = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(here, "..", "app.js"), "utf8");
-for (const imp of ["./config.js", "./data.js", "./layers/collisions.js", "./layers/points.js", "./layers/segments.js", "./layers/wards.js", "./ui/legend.js", "./ui/panel.js", "./ui/popup.js", "./state.js", "./ui/help.js", "./ui/loading.js", "./theme.js", "./layers/basemap.js", "./ui/tooltip.js", "./tour.js", "./ui/tour.js", "./hash.js", "./ui/sheet.js"]) {
+for (const imp of ["./config.js", "./data.js", "./layers/collisions.js", "./layers/points.js", "./layers/segments.js", "./layers/wards.js", "./ui/legend.js", "./ui/panel.js", "./ui/popup.js", "./state.js", "./ui/help.js", "./ui/loading.js", "./theme.js", "./layers/basemap.js", "./ui/tooltip.js", "./tour.js", "./ui/tour.js", "./hash.js", "./ui/sheet.js", "./ui/status.js"]) {
   assert.ok(src.includes(`from "${imp}"`), `app.js must import ${imp}`);
 }
 // Layer load race (commit 5b2003b): the style and the data load in parallel and whichever finishes last adds the layers.
@@ -41,5 +41,6 @@ assert.ok(src.includes('addEventListener("hashchange"'), "hash edits apply live"
 assert.ok(src.includes("new mapboxgl.FullscreenControl(") && src.includes("new mapboxgl.GeolocateControl("), "fullscreen and geolocate controls");
 assert.ok(src.includes("nearestSegment(") && src.includes("300)"), "locate selects the nearest segment within 300 m");
 assert.ok(src.includes("initSheet("), "bottom sheet wired");
+assert.ok(src.includes('map.on("move", updateStatus)') && src.includes("renderStatus("), "status line follows the camera");
 assert.ok(src.includes('map.on("mousemove", "segments-line"') && src.includes("showTooltip(") && src.includes("setPointHover("), "hover tooltip and point hover");
 console.log("app.js static checks passed");
