@@ -1,7 +1,8 @@
 import { BLUE_RAMP } from "../config.js";
 import { COLLISION_COLORS } from "../theme.js";
 import { DUR } from "../motion.js";
-const T = { duration: DUR.mid };
+// Paint transitions are module constants that nothing else zeroes, so they are built from the reduced motion flag.
+const transitionFor = (reducedMotion) => ({ duration: reducedMotion ? 0 : DUR.mid });
 
 // Collisions outside the selected years are filtered, not dimmed.
 export function yearFilter(state) {
@@ -17,6 +18,7 @@ export const circleColor = ["match", ["get", "cat"],
 export const CROSSFADE = { from: 12.4, to: 13.4 };
 
 export function addCollisionsLayer(map, collisions, state) {
+  const T = transitionFor(!!(state && state.reducedMotion));
   if (!map.getSource("collisions")) map.addSource("collisions", { type: "geojson", data: collisions });
   map.addLayer({ id: "collisions-heat", type: "heatmap", source: "collisions", maxzoom: 14, filter: yearFilter(state),
     paint: { "heatmap-weight": 1, "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 10, 6, 14, 20],

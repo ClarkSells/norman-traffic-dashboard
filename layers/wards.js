@@ -4,7 +4,8 @@ import { THEMES } from "../theme.js";
 import { DUR } from "../motion.js";
 
 const fillColor = ["match", ["get", "Ward_num"], ...Object.entries(WARD_COLORS).flatMap(([k, v]) => [Number(k), v]), "#cccccc"];
-const T = { duration: DUR.mid };
+// Paint transitions are module constants that nothing else zeroes, so they are built from the reduced motion flag.
+const transitionFor = (reducedMotion) => ({ duration: reducedMotion ? 0 : DUR.mid });
 let theme = THEMES.light;
 
 export function setWardsTheme(map, name) {
@@ -15,7 +16,8 @@ export function setWardsTheme(map, name) {
   map.setPaintProperty("wards-label", "text-halo-color", theme["ward-halo"]);
 }
 
-export function addWardsLayer(map, wards) {
+export function addWardsLayer(map, wards, { reducedMotion = false } = {}) {
+  const T = transitionFor(reducedMotion);
   if (!map.getSource("wards")) map.addSource("wards", { type: "geojson", data: wards });
   if (!map.getSource("ward-centroids")) map.addSource("ward-centroids", { type: "geojson", data: wardCentroids(wards) });
   // Subtle fill for the active ward only (a filter picks the ward, a constant opacity fades it in and out).

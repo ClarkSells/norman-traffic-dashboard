@@ -60,13 +60,15 @@ export function setSegmentsTheme(map, name) {
   if (!map || !map.getLayer || !map.getLayer("segments-casing")) return;
   map.setPaintProperty("segments-casing", "line-color", theme["map-casing"]);
   map.setPaintProperty("segments-shared", "line-color", theme.ink);
-  map.setPaintProperty("segments-selected-casing", "line-color", theme["map-casing"]);
+  map.setPaintProperty("segments-selected-casing", "line-color", theme["selection-halo"]);
   if (lastState) map.setPaintProperty("segments-casing", "line-opacity", casingOpacityExpression(lastState, theme["map-casing-opacity"]));
 }
 
-const T = { duration: DUR.mid };
+// Paint transitions are module constants that nothing else zeroes, so they are built from the reduced motion flag.
+const transitionFor = (reducedMotion) => ({ duration: reducedMotion ? 0 : DUR.mid });
 
-export function addSegmentsLayer(map, segments) {
+export function addSegmentsLayer(map, segments, { reducedMotion = false } = {}) {
+  const T = transitionFor(reducedMotion);
   if (!map.getSource("segments")) map.addSource("segments", { type: "geojson", data: segments, promoteId: "loc_id" });
   // One feature source for the selection, with lineMetrics so line-progress works for the pulse.
   if (!map.getSource("segments-selected")) map.addSource("segments-selected", { type: "geojson", data: { type: "FeatureCollection", features: [] }, lineMetrics: true });
@@ -75,6 +77,11 @@ export function addSegmentsLayer(map, segments) {
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": theme["map-casing"], "line-width": widthExpression(3), "line-opacity": casingOpacityExpression(base, theme["map-casing-opacity"]),
              "line-color-transition": T, "line-opacity-transition": T } });
+  // The selection frame: an ink halo drawn under the data line, so the selected segment keeps its class color
+  // and the halo stays visible under reduced motion, when the pulse layer above is hidden.
+  map.addLayer({ id: "segments-selected-casing", type: "line", source: "segments-selected",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": theme["selection-halo"], "line-width": widthExpression(6), "line-opacity": 0.9, "line-blur": 0.6 } });
   // The ghost carries the previous color and opacity expressions during a crossfade, then sits at opacity 0.
   map.addLayer({ id: "segments-line-ghost", type: "line", source: "segments",
     layout: { "line-cap": "round", "line-join": "round" },
@@ -88,11 +95,10 @@ export function addSegmentsLayer(map, segments) {
     layout: { "line-cap": "butt" },
     paint: { "line-color": theme.ink, "line-width": 1, "line-dasharray": [2, 2], "line-offset": ["interpolate", ["linear"], ["zoom"], 10, 3, 16, 9],
              "line-opacity": ["case", inWardExpression(null), 0.6, 0.1], "line-opacity-transition": T } });
-  map.addLayer({ id: "segments-selected-casing", type: "line", source: "segments-selected",
-    layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": theme["map-casing"], "line-width": widthExpression(8), "line-opacity": 0.95 } });
+  // The travelling light, on top of everything. A gradient replaces line-color, so this layer carries no color of
+  // its own; under reduced motion it is hidden outright instead of resting transparent.
   map.addLayer({ id: "segments-selected", type: "line", source: "segments-selected",
-    layout: { "line-cap": "round", "line-join": "round" },
+    layout: { "line-cap": "round", "line-join": "round", visibility: reducedMotion ? "none" : "visible" },
     paint: { "line-color": "#ffffff", "line-width": widthExpression(2), "line-opacity": 0.9, "line-gradient": pulseGradient(-1) } });
   lastState = null;
 }
@@ -143,13 +149,15 @@ export function setHover(map, locId) {
   hovered = locId;
 }
 
-// Puts the selected feature into its own source and runs the pulse (or a static bright casing under reduced motion).
+// Puts the selected feature into its own source and runs the pulse. Under reduced motion the pulse layer is hidden
+// and the ink halo under the class colored line carries the selection on its own.
 export function setSelected(map, feature, { reducedMotion = false } = {}) {
   const src = map.getSource("segments-selected");
   if (!src) return;
   src.setData({ type: "FeatureCollection", features: feature ? [feature] : [] });
   stopPulse();
   if (!feature) return;
+  if (map.setLayoutProperty && map.getLayer("segments-selected")) map.setLayoutProperty("segments-selected", "visibility", reducedMotion ? "none" : "visible");
   if (reducedMotion) map.setPaintProperty("segments-selected", "line-gradient", pulseGradient(-1));
   else startPulse(map);
 }

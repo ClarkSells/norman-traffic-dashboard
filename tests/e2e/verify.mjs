@@ -147,8 +147,8 @@ async function open(ctxOpts, hash = "") {
   const eases = await page.evaluate(() => window.__dash.map.__eases.slice(-2).map(e => e.duration));
   check("reduced motion: camera moves are instant (duration 0)", eases.every(d => d === 0), JSON.stringify(eases));
   await page.click('tr[data-loc="52500-178"]'); await settle(page, 300);
-  const rm = await page.evaluate(() => ({ grad: JSON.stringify(window.__dash.map.getPaintProperty("segments-selected", "line-gradient")), transforms: [...document.querySelectorAll("#rank-table tbody tr")].filter(tr => tr.style.transform).length, dur: getComputedStyle(document.documentElement).getPropertyValue("--t-mid").trim() }));
-  check("reduced motion: no pulse, no FLIP transforms, CSS durations 0", rm.grad.includes('0,"rgba(255,255,255,0)",1,"rgba(255,255,255,0)"') && rm.transforms === 0 && rm.dur === "0ms", JSON.stringify(rm));
+  const rm = await page.evaluate(() => ({ grad: JSON.stringify(window.__dash.map.getPaintProperty("segments-selected", "line-gradient")), vis: window.__dash.map.getLayoutProperty("segments-selected", "visibility"), tr: (window.__dash.map.getPaintProperty("segments-line", "line-opacity-transition") || {}).duration, transforms: [...document.querySelectorAll("#rank-table tbody tr")].filter(tr => tr.style.transform).length, dur: getComputedStyle(document.documentElement).getPropertyValue("--t-mid").trim() }));
+  check("reduced motion: pulse layer hidden, paint transitions 0, no FLIP transforms, CSS durations 0", rm.grad.includes('0,"rgba(255,255,255,0)",1,"rgba(255,255,255,0)"') && rm.vis === "none" && rm.tr === 0 && rm.transforms === 0 && rm.dur === "0ms", JSON.stringify(rm));
   await shot(page, "07_reduced_motion");
   check("reduced motion pass: no console errors", errors().length === 0, errors().join(" | "));
   await ctx.close();

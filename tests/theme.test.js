@@ -8,7 +8,7 @@ assert.ok(GOOGLE_FONTS_URL.includes("IBM+Plex+Mono"), "the monospace face is req
 assert.ok(/Mono/.test(FONTS.text) && /Mono/.test(FONTS.display), "terminal register: monospace for text and display");
 for (const name of ["light", "dark"]) {
   const t = THEMES[name];
-  for (const k of ["surface", "surface-raised", "ink", "ink-muted", "hairline", "accent"]) assert.ok(t[k], `${name} theme defines ${k}`);
+  for (const k of ["surface", "surface-raised", "ink", "ink-muted", "hairline", "accent", "selection-halo"]) assert.ok(t[k], `${name} theme defines ${k}`);
   assert.ok(contrastRatio(t.ink, t.surface) >= 7, `${name}: ink on surface is AAA (${contrastRatio(t.ink, t.surface).toFixed(2)})`);
   assert.ok(contrastRatio(t["ink-muted"], t.surface) >= 4.5, `${name}: muted ink on surface is AA (${contrastRatio(t["ink-muted"], t.surface).toFixed(2)})`);
   assert.ok(contrastRatio(t.ink, t["surface-raised"]) >= 7, `${name}: ink on raised surface`);

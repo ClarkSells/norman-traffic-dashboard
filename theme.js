@@ -12,13 +12,13 @@ export const THEMES = {
     hairline: "#e4e1d8", accent: RAMP[2], "accent-soft": "#fbe9dc", focus: "#1c5cab",
     "row-hover": "#f4f0e8", "row-selected": "#fbe9dc", shadow: "0 8px 28px rgba(22,21,15,0.10)",
     // map chrome drawn by the layers
-    "map-casing": "#fbfaf7", "map-casing-opacity": 0.9, "ward-line": "#7d7a72", "ward-label": "#4a4842", "ward-halo": "#fbfaf7",
+    "map-casing": "#fbfaf7", "map-casing-opacity": 0.9, "selection-halo": "#16150f", "ward-line": "#7d7a72", "ward-label": "#4a4842", "ward-halo": "#fbfaf7",
   },
   dark: {
     surface: "#15171a", "surface-raised": "#1f2227", ink: "#f3f1ea", "ink-muted": "#b3b0a7",
     hairline: "rgba(255,255,255,0.14)", accent: RAMP[0], "accent-soft": "rgba(245,158,92,0.18)", focus: "#86b6ef",
     "row-hover": "rgba(255,255,255,0.06)", "row-selected": "rgba(245,158,92,0.18)", shadow: "0 8px 28px rgba(0,0,0,0.45)",
-    "map-casing": "#ffffff", "map-casing-opacity": 0.95, "ward-line": "#e8e6df", "ward-label": "#f3f1ea", "ward-halo": "#15171a",
+    "map-casing": "#ffffff", "map-casing-opacity": 0.95, "selection-halo": "#ffffff", "ward-line": "#e8e6df", "ward-label": "#f3f1ea", "ward-halo": "#15171a",
   },
 };
 

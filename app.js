@@ -60,9 +60,9 @@ function addAllLayers() {
   const raw = getRaw(), state = getState();
   applyMapTheme(themeFor(state.basemap));
   tuneBasemap(map, themeFor(state.basemap));
-  addWardsLayer(map, raw.wards);
+  addWardsLayer(map, raw.wards, { reducedMotion: state.reducedMotion });
   addCollisionsLayer(map, raw.collisions, state);
-  addSegmentsLayer(map, applyState(state));
+  addSegmentsLayer(map, applyState(state), { reducedMotion: state.reducedMotion });
   addPointsLayer(map, raw.points);
   updateWards(map, state);
   updateSegments(map, state, applyState(state));
