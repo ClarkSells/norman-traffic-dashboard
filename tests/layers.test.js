@@ -59,6 +59,9 @@ assert.equal(m2.layers[6].source, "segments-selected");
 const w = widthExpression();
 assert.equal(w[0], "interpolate"); assert.deepEqual(w[2], ["zoom"]); assert.equal(w[4][2][1], "vpd_max", "width depends on zoom and on VPD");
 assert.ok(w[4][w[4].length - 1] < w[w.length - 1][w[w.length - 1].length - 1], "wider at high zoom");
+const wh = widthExpression(["case", ["boolean", ["feature-state", "hover"], false], 2, 0]);
+assert.deepEqual(wh[4][4], ["+", 1.2, ["case", ["boolean", ["feature-state", "hover"], false], 2, 0]], "a hover extra is added inside the zoom curve, never around it");
+assert.equal(m2.layers[4].paint["line-width"][0], "interpolate", "segments-line width is a top level zoom curve (the real library refuses a case around two zoom curves)");
 assert.equal(brighten("#000000", 0.5), "#808080"); assert.equal(brighten("#ffffff"), "#ffffff");
 assert.deepEqual(colorExpression("v_c")[1], ["coalesce", ["feature-state", "v_c"], 0], "color reads the chosen metric from feature-state");
 assert.equal(inWardExpression(null), true); assert.equal(inWardExpression(4)[0], "case"); assert.ok(JSON.stringify(inWardExpression(4)).includes('",4,"') && JSON.stringify(inWardExpression(4)).includes('["in",4,["get","wards"]]'), "ward membership handles array and JSON text forms");
@@ -117,7 +120,8 @@ assert.deepEqual(m3.filters["collisions-dots"], ["all", [">=", ["get", "year"], 
 addPointsLayer(m3, { type: "FeatureCollection", features: [] });
 assert.equal(m3.layers.at(-1).id, "count-points"); assert.equal(m3.layers.at(-1).minzoom, 13, "count points hidden until zoom 13");
 assert.equal(m3.sources.points.promoteId, "loc_id");
-assert.deepEqual(m3.layers.at(-1).paint["circle-radius"][2], ["case", ["boolean", ["feature-state", "hover"], false], 3, 0], "markers grow on hover");
+assert.equal(m3.layers.at(-1).paint["circle-radius"][0], "interpolate"); assert.deepEqual(m3.layers.at(-1).paint["circle-radius"][2], ["zoom"]);
+assert.deepEqual(m3.layers.at(-1).paint["circle-radius"][4], ["+", 3, ["case", ["boolean", ["feature-state", "hover"], false], 3, 0]], "markers grow on hover, inside the zoom curve");
 setPointHover(m3, "52500-9"); assert.equal(m3.fs["points:52500-9"].hover, true); setPointHover(m3, null); assert.equal(m3.fs["points:52500-9"].hover, false);
 console.log("collisions and points layer checks passed");
 

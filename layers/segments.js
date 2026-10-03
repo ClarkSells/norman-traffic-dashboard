@@ -39,8 +39,12 @@ export function colorExpression(metric, bright = false) {
 }
 
 // Width grows with vehicles per day and with zoom, so segments neither vanish at z11 nor flood at z16.
+// extra is a number or a feature expression (a hover case). It is added inside the zoom curve's outputs: Mapbox only
+// accepts ["zoom"] as the input of a top level step or interpolate, so wrapping two zoom curves in a case is refused
+// by the real library (the layer is never added) even though a stub accepts it.
 export function widthExpression(extra = 0) {
-  const byVpd = (lo, hi) => ["interpolate", ["linear"], ["get", "vpd_max"], 1000, lo + extra, 35000, hi + extra];
+  const plus = (v) => (typeof extra === "number" ? v + extra : ["+", v, extra]);
+  const byVpd = (lo, hi) => ["interpolate", ["linear"], ["get", "vpd_max"], 1000, plus(lo), 35000, plus(hi)];
   return ["interpolate", ["linear"], ["zoom"], 10, byVpd(1.2, 3.2), 12.5, byVpd(2.2, 6.5), 14.5, byVpd(3.5, 10), 16.5, byVpd(5, 15)];
 }
 
@@ -95,7 +99,7 @@ export function addSegmentsLayer(map, segments, { reducedMotion = false } = {}) 
   map.addLayer({ id: "segments-line", type: "line", source: "segments",
     layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": lineColorForState(base),
-             "line-width": ["case", HOVER, widthExpression(2), widthExpression(0)],
+             "line-width": widthExpression(["case", HOVER, 2, 0]),
              "line-opacity": lineOpacityExpression(base, 1), "line-color-transition": T, "line-opacity-transition": T } });
   map.addLayer({ id: "segments-shared", type: "line", source: "segments", filter: ["==", ["get", "shared_boundary"], true],
     layout: { "line-cap": "butt" },
