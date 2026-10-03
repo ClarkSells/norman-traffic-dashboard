@@ -23,6 +23,33 @@
   pointer-events: none;
 }
 
+/* Day-preset scenes (11-12): the near-white present ink is unreadable over the bright day
+   basemap (3.2-02). JS toggles .day on #present from scene.lightPreset; a top scrim covers the
+   eyebrow strip and progress, the bottom scrim deepens behind the card, and the quiet control
+   buttons get a dark surface. */
+.present.day::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 16vh;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0), color-mix(in srgb, var(--paper) 62%, transparent));
+  pointer-events: none;
+}
+.present.day::before {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), color-mix(in srgb, var(--paper) 80%, transparent));
+}
+.present.day .btn {
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+.present.day .btn:hover {
+  background: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+.present.day .present-autoplay {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
 /* Eyebrow: top left, 24 px inset, mono 11 uppercase at 70 percent ink, scene count to its right. */
 .present-eyebrow {
   position: absolute;
@@ -66,6 +93,25 @@
   margin: 0;
   max-width: 34rem;
 }
+
+/* Title-scene hero extras (C.2 eyebrow/hint): the branding line sits above the title, the
+   start cue below the caption, both in the mono chip style (3.2-01). */
+.present-hero-eyebrow {
+  font: var(--type-chip);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 10px;
+}
+.present-hero-hint {
+  font: var(--type-chip);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 14px 0 0;
+}
+.present-hero-eyebrow[hidden],
+.present-hero-hint[hidden] { display: none; }
 
 /* Stat strip: mono figures with small uppercase labels, tabular numerals keep widths steady. */
 .present-stats {
@@ -113,20 +159,28 @@
   border-radius: 3px;
 }
 
-/* Ward scene top-five list cards: rank, road over span, score. */
+/* Ward scene top-five list cards: rank, road over span, score. Rows stay compact so the card
+   holds title, caption and five rows well under half the viewport height (3.1-06). */
 .present-list {
   display: grid;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 6px;
+  margin-top: 10px;
 }
 .present-list[hidden] { display: none; }
 .present-list-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 5px 10px;
   border: 1px solid var(--hairline);
   border-radius: 8px;
+}
+/* desktop only: under 768 the sheet padding (room for the controls) must win */
+@media (min-width: 768px) {
+  .present-card[data-kind="ward"] {
+    padding-top: 16px;
+    padding-bottom: 18px;
+  }
 }
 .present-list-rank {
   font: var(--type-chip);
@@ -137,15 +191,16 @@
 .present-list-main { flex: 1; min-width: 0; }
 .present-list-road {
   font: var(--type-button);
-  font-size: 14px;
+  font-size: 13px;
 }
 .present-list-span {
   font: var(--type-body);
+  font-size: 13px;
   color: var(--ink-muted);
 }
 .present-list-score {
   font: var(--type-stat-value);
-  font-size: 16px;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -161,7 +216,8 @@
 /* Crossfade (250 ms): out phase fades and sinks the contents, in phase rises them with a 60 ms stagger
    (title, caption, then the stat/legend/list blocks). Motion skill: exit defined alongside enter,
    stagger within the 0.05-0.10 s rule, transform/opacity only. */
-.present-title, .present-caption, .present-stats, .present-legend, .present-list, .present-closing {
+.present-hero-eyebrow, .present-title, .present-caption, .present-hero-hint,
+.present-stats, .present-legend, .present-list, .present-closing {
   transition: opacity 125ms ease-in, transform 125ms ease-in;
 }
 .present-card[data-anim="out"] > * {
@@ -171,7 +227,8 @@
 .present-card[data-anim="in"] > * {
   animation: present-in 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.present-card[data-anim="in"] .present-caption { animation-delay: 60ms; }
+.present-card[data-anim="in"] .present-caption,
+.present-card[data-anim="in"] .present-hero-hint { animation-delay: 60ms; }
 .present-card[data-anim="in"] .present-stats,
 .present-card[data-anim="in"] .present-legend,
 .present-card[data-anim="in"] .present-list { animation-delay: 120ms; }
@@ -342,11 +399,34 @@
     justify-content: flex-end;
     max-width: calc(100vw - 28px);
   }
+  /* List scenes on the 40 vh sheet (3.2-07): clamp the caption to two lines so more rows fit,
+     and pin a fade with a chevron to the sheet's bottom edge as the scroll affordance. */
+  .present-card.has-list .present-caption {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .present-card.has-list::after {
+    content: "▾";
+    position: sticky;
+    bottom: 0;
+    display: block;
+    height: 34px;
+    margin-top: -34px;
+    padding-top: 12px;
+    text-align: center;
+    color: var(--ink-muted);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), color-mix(in srgb, var(--paper) 94%, transparent));
+    pointer-events: none;
+  }
 }
 
 /* Reduced motion: the tour still works as a slide show, but nothing animates (JS also skips data-anim). */
 @media (prefers-reduced-motion: reduce) {
-  .present-title, .present-caption, .present-stats, .present-legend, .present-list, .present-closing {
+  .present-hero-eyebrow, .present-title, .present-caption, .present-hero-hint,
+  .present-stats, .present-legend, .present-list, .present-closing {
     transition: none;
   }
   .present-card[data-anim="in"] > * { animation: none; }

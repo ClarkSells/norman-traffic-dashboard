@@ -26,6 +26,10 @@ assert.ok(!html.includes("—") && !html.includes(" - "), "no em dashes or space
 for (const para of html.replace(/<[^>]+>/g, "\n").split("\n")) assert.ok(para.trim().split(/\s+/).filter(Boolean).length <= 90, `cards stay short: ${para.slice(0, 40)}`);
 
 // Behaviour: closed by default, opens from the toggle, closes by button, Escape and the returned close().
+// 3.7-10: Escape is bound on the document and focus is contained, so the shim records document listeners.
+const docListeners = {};
+document.addEventListener = (ev, fn) => { (docListeners[ev] ||= []).push(fn); };
+const docFire = (ev, e = {}) => { for (const fn of docListeners[ev] || []) fn({ key: e.key, target: e.target || document.body, preventDefault() {} }); };
 const help = initHelp({ segments_lanes_verified: 204 });
 assert.ok(help && typeof help.close === "function", "initHelp returns { close } for Reset view");
 assert.equal(el("help-box").hidden, true, "closed by default");
@@ -52,4 +56,16 @@ help.close();
 assert.equal(el("help-box").hidden, true, "programmatic close (Reset view)");
 help.close();
 assert.equal(el("help-box").hidden, true, "close is idempotent");
+// 3.7-10: Escape works wherever focus is while the overlay is open, and focus is contained inside it.
+el("help-toggle").fire("click");
+docFire("keydown", { key: "Escape" });
+assert.equal(el("help-box").hidden, true, "Escape on the document closes the overlay");
+assert.ok(el("help-toggle").focused, "document Escape returns focus to the toggle");
+el("help-toggle").fire("click");
+docFire("focusin", { target: el("ward-toggle") });
+assert.ok(el("help-box").focused, "focus landing outside the open overlay is pulled back in");
+help.close();
+assert.equal(el("help-box").hidden, true);
+docFire("keydown", { key: "Escape" });
+assert.equal(el("help-box").hidden, true, "document Escape is inert once closed");
 console.log("help checks passed");

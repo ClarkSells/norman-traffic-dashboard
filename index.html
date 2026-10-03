@@ -24,7 +24,7 @@
       <div class="subtitle">Congestion, crashes and a combined score for every counted segment, by council ward</div>
     </div>
     <div class="topbar-right">
-      <button id="present-toggle" class="btn" type="button" aria-pressed="false" title="Scripted walkthrough: arrow keys step, Esc exits">Present</button>
+      <button id="present-toggle" class="btn" type="button" title="Scripted walkthrough: arrow keys step, Esc exits">Present</button>
       <button id="panel-toggle" class="btn panel-toggle" type="button" aria-expanded="true" aria-controls="panel">Hide list</button>
       <button id="basemap-toggle" class="btn" type="button" aria-pressed="false">Satellite</button>
     </div>
@@ -104,12 +104,12 @@
     <div id="map"></div>
     <div class="map-tooltip" id="map-tooltip" role="tooltip" hidden></div>
     <div class="legend" id="legend"></div>
-    <section class="present" id="present" hidden aria-label="Presentation">
+    <section class="present" id="present" hidden aria-label="Presentation" tabindex="-1">
       <div class="present-eyebrow">
         <span id="present-eyebrow">CITY OF NORMAN · STREET SEGMENT PRIORITIES</span>
-        <span id="present-scene-count"></span>
+        <span id="present-scene-count" role="status"></span>
       </div>
-      <div class="present-card raised" id="present-card" role="region" aria-live="polite">
+      <div class="present-card raised" id="present-card" role="region" aria-live="polite" aria-label="Scene caption">
         <h2 class="present-title" id="present-title"></h2>
         <p class="present-caption" id="present-caption"></p>
         <div class="present-stats" id="present-stats"></div>

@@ -16,6 +16,21 @@ const CLASSES = [
 const BEFORE_ID = "segments-selected-casing";
 const r3 = (v) => Math.round(v * 1000) / 1000;
 
+// Per-update cost instrumentation (3.4-05; design section 11 budgets under 4 ms per update at 20 per
+// second). One Float64 write per update step, computed only when flowUpdateStats() is called. startFlow
+// resets the buffer so a run measures only itself.
+const STATS_CAP = 240;
+const statsBuf = new Float64Array(STATS_CAP);
+let statsCount = 0;
+
+export function flowUpdateStats() {
+  const n = Math.min(statsCount, STATS_CAP);
+  if (n === 0) return { count: 0, p50: 0, p95: 0, max: 0 };
+  const sorted = Array.from(statsBuf.subarray(0, n)).sort((a, b) => a - b);
+  const pct = (p) => sorted[Math.min(n - 1, Math.ceil((p / 100) * n) - 1)];
+  return { count: statsCount, p50: pct(50), p95: pct(95), max: sorted[n - 1] };
+}
+
 // The dasharray cycle for one class. Phase p sweeps the period in even steps; every frame's dash plus gap
 // sums to dash + gap, so the last frame wraps onto the first without a seam.
 export function dashSequence(dash, gap) {
@@ -102,11 +117,13 @@ export function startFlow(map, { stepMsByLayer, now, raf, caf, hidden } = {}) {
   const seqs = CLASSES.map(({ dash, gap }) => dashSequence(dash, gap));
   const lastStep = seqs.map(() => -1);
   let lastRun = -Infinity, handle = null, stopped = false;
+  statsCount = 0;
   const tick = () => {
     if (stopped) return;
     const time = t();
     if (!isHidden() && time - lastRun >= 50) {
       lastRun = time;
+      const t0 = t();
       FLOW_LAYERS.forEach((id, i) => {
         if (map.getLayer && !map.getLayer(id)) return;   // a style swap wiped the layers mid-loop
         const seq = seqs[i];
@@ -116,6 +133,8 @@ export function startFlow(map, { stepMsByLayer, now, raf, caf, hidden } = {}) {
           map.setPaintProperty(id, "line-dasharray", seq[s]);
         }
       });
+      statsBuf[statsCount % STATS_CAP] = t() - t0;
+      statsCount++;
     }
     handle = request(tick);
   };

@@ -45,6 +45,34 @@ function collectionBounds(fc) {
   return b;
 }
 
+// Spherical mercator in "degrees" (one unit = one degree of longitude), matching the 512 px
+// world of Mapbox GL JS v3: px per unit at zoom z is 512 * 2^z / 360.
+const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2)) * 180 / Math.PI;
+const mercYinv = (y) => (Math.atan(Math.exp(y * Math.PI / 180)) * 2 - Math.PI / 2) * 180 / Math.PI;
+const pxPerDeg = (z) => 512 * Math.pow(2, z) / 360;
+
+// Screen offset of the stage center from the viewport center, from the padding alone
+// (positive x right, positive y down). Symmetric padding gives a zero offset.
+function stageOffset(padding) {
+  const p = padding || {};
+  return { x: ((p.left || 0) - (p.right || 0)) / 2, y: ((p.top || 0) - (p.bottom || 0)) / 2 };
+}
+
+// Camera center that projects `subject` onto the stage center at the given zoom/bearing/pitch:
+// invert the flat mercator projection, undo the cos(pitch) vertical compression, un-rotate by
+// the bearing. GL JS v3's cameraForBounds does NOT do this (its padding only shrinks the fit
+// area; the returned center is the bounds center), and passing padding to flyTo would set the
+// global map padding as a side effect — so the offset is computed here.
+function centerForStage(subject, { offset, zoom, bearing, pitch }) {
+  if (!offset.x && !offset.y) return subject;
+  const s = pxPerDeg(zoom);
+  const b = (bearing || 0) * Math.PI / 180;
+  const yFlat = offset.y / Math.cos((pitch || 0) * Math.PI / 180);
+  const dx = offset.x * Math.cos(b) - yFlat * Math.sin(b);
+  const dy = offset.x * Math.sin(b) + yFlat * Math.cos(b);
+  return [subject[0] - dx / s, mercYinv(mercY(subject[1]) + dy / s)];
+}
+
 // Segment length in miles (geo.js has no total length helper; sums metersBetween over the vertices).
 function lengthMi(coords) {
   let m = 0;
@@ -55,19 +83,53 @@ function lengthMi(coords) {
 // City and ward fits: cameraForBounds gives the flat fit for the padded box; easeTo then applies the
 // scene's pitch. fitBounds with a pitch fits the tilted trapezoid instead, which zooms so far out the
 // city reads as a stamp on the metro map (the first real renderer pass showed the whole OKC metro).
+// When the box cannot fit (a mid-transition canvas smaller than the padding), retry without padding
+// rather than falling back to a pitched fitBounds.
 function fitOrJump(map, bounds, { padding, pitch, bearing, duration: ms, reduced, zoomBias = 0 }) {
-  const cam = map.cameraForBounds(bounds, { padding, bearing });
-  if (!cam) { map.fitBounds(bounds, { padding, pitch, bearing, duration: reduced ? 0 : ms }); return; }
+  let cam = map.cameraForBounds(bounds, { padding, bearing });
+  if (!cam && padding) cam = map.cameraForBounds(bounds, { bearing });
+  if (!cam) { map.fitBounds(bounds, { pitch: 0, bearing, duration: reduced ? 0 : ms }); return; }
   const target = { center: cam.center, zoom: cam.zoom + zoomBias, pitch, bearing };
   if (reduced) map.jumpTo(target);
   else map.easeTo({ ...target, duration: ms });
 }
 
+// Establish zoom (3.2-03): the flat fit leaves the city small once the pitch compresses it, and a
+// flat +0.5 bias only fills the frame at 1440x900. Derive the bias from the bounds, the stage and
+// the pitch: project the rotated bounds at the scene pitch (calibrated against the real renderer at
+// pitch 55: width factor 0.86, height 0.86 * cos(pitch)) and zoom until the union fills the stage.
+// On tall narrow stages (phone) filling means cropping, so the crop is capped at 2x.
+function establishZoom(map, bounds, { padding, pitch, bearing }) {
+  const cam = map.cameraForBounds(bounds, { padding, bearing });
+  if (!cam) return null;
+  const cv = map.getCanvas && map.getCanvas();
+  const vw = cv && cv.clientWidth, vh = cv && cv.clientHeight;
+  if (!vw || !vh) return { center: cam.center, zoom: cam.zoom + 0.5 };
+  const p = padding || {};
+  const stageW = vw - ((p.left || 0) + (p.right || 0));
+  const stageH = vh - ((p.top || 0) + (p.bottom || 0));
+  if (!(stageW > 0) || !(stageH > 0)) return { center: cam.center, zoom: cam.zoom + 0.5 };
+  const b = (bearing || 0) * Math.PI / 180;
+  const ew = bounds[1][0] - bounds[0][0], eh = mercY(bounds[1][1]) - mercY(bounds[0][1]);
+  const rw = Math.abs(ew * Math.cos(b)) + Math.abs(eh * Math.sin(b));
+  const rh = Math.abs(ew * Math.sin(b)) + Math.abs(eh * Math.cos(b));
+  const s = pxPerDeg(cam.zoom);
+  const projW = 0.86 * rw * s, projH = 0.86 * Math.cos((pitch || 0) * Math.PI / 180) * rh * s;
+  const rW = stageW / projW, rH = stageH / projH;
+  const stretch = (projW / projH) / (stageW / stageH);
+  const scale = stretch > 2 ? Math.min(Math.max(rW, rH), 2 * Math.min(rW, rH)) : Math.min(rW, rH);
+  return { center: cam.center, zoom: cam.zoom + Math.log2(scale) };
+}
+
 // Establish: the whole city. Union of the ward bounds, pitch 55, bearing -18, 1600 ms.
-// The flat fit is biased half a zoom level in: at pitch 55 the horizon takes half the frame and the
-// wards read too small at the exact fit (first real renderer pass), so the fit is a starting point.
+// The zoom comes from establishZoom so the ward union fills the stage at every viewport.
 export function establish(map, wardsFc, { padding, pitch = 55, bearing = -18, duration: ms = 1600, reduced } = {}) {
-  fitOrJump(map, collectionBounds(wardsFc), { padding, pitch, bearing, duration: ms, reduced, zoomBias: 0.5 });
+  const bounds = collectionBounds(wardsFc);
+  const fit = establishZoom(map, bounds, { padding, pitch, bearing });
+  if (!fit) { fitOrJump(map, bounds, { padding, pitch, bearing, duration: ms, reduced, zoomBias: 0.5 }); return; }
+  const target = { center: fit.center, zoom: fit.zoom, pitch, bearing };
+  if (reduced) map.jumpTo(target);
+  else map.easeTo({ ...target, duration: ms });
 }
 
 // Fit ward: the ward polygon framed as a stage, pitch 42, bearing -10, 1800 ms.
@@ -75,15 +137,19 @@ export function fitWard(map, wardFeature, { padding, pitch = 42, bearing = -10, 
   fitOrJump(map, geometryBounds(wardFeature && wardFeature.geometry), { padding, pitch, bearing, duration: ms, reduced });
 }
 
-// Shared dolly mechanics: cameraForBounds for the center, then flyTo with the design tuning
-// (curve 1.55, speed 0.85, maxDuration 2600, essential). Resolves on moveend; jumps under reduced.
+// Shared dolly mechanics: the segment's bounds center is placed at the stage center (the padded
+// area right of the caption card), then flyTo with the design tuning (curve 1.55, speed 0.85,
+// maxDuration 2600, essential). Resolves on moveend; jumps under reduced.
 function dolly(map, segmentFeature, { padding, zoom, pitch, reduced }) {
   const coords = (segmentFeature && segmentFeature.geometry && segmentFeature.geometry.coordinates) || [];
   const bounds = lineBounds(coords);
   const bearing = bearingAcrossScreen(coords);
   const z = zoom ?? zoomForLengthMi(lengthMi(coords));
-  const cam = map.cameraForBounds(bounds, { padding, bearing });
-  const target = { center: (cam && cam.center) || lineMidpoint(coords), zoom: z, pitch, bearing };
+  const subject = [(bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2];
+  const center = Number.isFinite(subject[0]) && Number.isFinite(subject[1])
+    ? centerForStage(subject, { offset: stageOffset(padding), zoom: z, bearing, pitch })
+    : lineMidpoint(coords);
+  const target = { center, zoom: z, pitch, bearing };
   if (reduced) { map.jumpTo(target); return Promise.resolve(); }
   return new Promise((resolve) => {
     map.once("moveend", resolve);
@@ -106,17 +172,21 @@ const activeLoops = new Set();
 
 // Linear bearing change over ms on injected timers. No-op under reduced motion, for 0 degrees,
 // or when there is no raf. Returns a cancel function that freezes the bearing where it is.
-function spin(map, degrees, ms, { reduced = false, now, raf, caf } = {}) {
+// `hidden` is injectable (default () => document.hidden): when the tab hides the spin stops for
+// good instead of letting the clock run and jumping to the end bearing on return (AGENTS.md rule 5).
+function spin(map, degrees, ms, { reduced = false, now, raf, caf, hidden } = {}) {
   if (reduced || !degrees || !ms) return () => {};
   const _now = now || (typeof performance !== "undefined" ? () => performance.now() : () => Date.now());
   const _raf = raf || (typeof requestAnimationFrame === "function" ? requestAnimationFrame : null);
   const _caf = caf || (typeof cancelAnimationFrame === "function" ? cancelAnimationFrame : () => {});
+  const isHidden = hidden || (() => typeof document !== "undefined" && !!document.hidden);
   if (!_raf) return () => {};
   const b0 = map.getBearing(), t0 = _now();
   let handle = null, cancelled = false;
   const cancel = () => { cancelled = true; if (handle != null) _caf(handle); activeLoops.delete(cancel); };
   const step = () => {
     if (cancelled) return;
+    if (isHidden()) { cancel(); return; }
     const t = Math.min(1, (_now() - t0) / ms);
     map.jumpTo({ bearing: b0 + degrees * t });
     if (t < 1) handle = _raf(step); else activeLoops.delete(cancel);

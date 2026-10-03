@@ -31,6 +31,8 @@ The lead writes these into `CONTRACTS.md` in Wave 0 verbatim. A card's Interface
 //   motion: { orbitDeg: number, driftDeg: number },    // 0 disables
 //   layers: { flow: bool, heat: bool, dots: "all"|"segment"|"none", callouts: string[], pulse: string[], mask: null|number, segmentsOpacity: number },
 //   autoplayMs: number | null                          // null = manual (title, closing)
+//   eyebrow: string | null,                            // title-scene branding line over the card (Wave 4, 3.2-01)
+//   hint: string | null                                // title-scene start cue, e.g. "Press space or Next" (Wave 4, 3.2-01)
 // }
 ```
 
@@ -99,8 +101,10 @@ export function calloutAnchor(bearingDeg)  // pure: "left"|"right"|"top"|"bottom
 
 ```js
 export function initPresent({ root })   // root = #present
-// -> { show(scene, { prev }), hide(), setProgress(index, total, fraction), setControlsVisible(bool), onAction(cb) }
+// -> { show(scene, { prev }), hide(), setProgress(index, total, fraction), setControlsVisible(bool), setAutoplay(bool), onAction(cb) }
 // onAction(cb) receives "next" | "prev" | "exit" | "autoplay" | "replay" | "explore" | { goto: index }
+// setAutoplay(bool) syncs the switch (checked + aria-checked) when autoplay changes outside the
+// switch itself (the `a` key, or the reducer forcing autoplay off at the last scene). Added in Wave 4.
 ```
 
 ## C.10 Tour player (`ui/tour.js`)

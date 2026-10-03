@@ -74,4 +74,9 @@ const meta = buildMeta(slim, bytes, gz, new Date("2026-02-07T12:00:00.000Z"));
 assert.deepEqual(meta, { features: 5, years: [2021, 2025], bytes, gzipBytes: gz, writtenAt: "2026-02-07T12:00:00.000Z" });
 assert.equal(meta.features, slim.features.length, "feature count equals the meta file");
 
+// Empty input: years must be [null, null], not [Infinity, -Infinity].
+const emptyMeta = buildMeta({ type: "FeatureCollection", features: [] }, 0, 0, new Date("2026-02-07T12:00:00.000Z"));
+assert.equal(emptyMeta.features, 0);
+assert.deepEqual(emptyMeta.years, [null, null], "empty feature list yields null years");
+
 console.log("slim_data checks passed");

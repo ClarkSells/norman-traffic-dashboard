@@ -78,7 +78,7 @@ export function buildMeta(fc, bytes, gzipBytes, now = new Date()) {
   const ys = fc.features.map((f) => f.properties.y).filter((y) => typeof y === "number");
   return {
     features: fc.features.length,
-    years: [Math.min(...ys), Math.max(...ys)],
+    years: ys.length ? [Math.min(...ys), Math.max(...ys)] : [null, null],
     bytes,
     gzipBytes,
     writtenAt: now.toISOString(),
@@ -91,9 +91,10 @@ function main() {
   const metaPath = join(root, "data", "collisions.meta.json");
 
   const beforeBuf = readFileSync(dataPath);
-  const beforeCount = JSON.parse(beforeBuf.toString("utf8")).features.length;
+  const before = JSON.parse(beforeBuf.toString("utf8"));
 
-  const slim = slimCollection(JSON.parse(beforeBuf.toString("utf8")));
+  const slim = slimCollection(before);
+  const beforeCount = before.features.length;
   const afterText = serialize(slim);
   const afterBuf = Buffer.from(afterText, "utf8");
   const meta = buildMeta(slim, afterBuf.length, gzipSync(afterBuf).length);

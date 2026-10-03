@@ -160,17 +160,28 @@ async function trackNetwork(ctx, page) {
   return acc;
 }
 
-// Mark first-idle and arm performance marks before any app code runs.
+// Mark first-idle, first paint with segments and heat-visible before any app code runs (3.4-04).
 function addMarks(page) {
   return page.addInitScript(() => {
     window.__marks = {};
     const t0 = Date.now();
     const iv = setInterval(() => {
       const m = window.__dash && window.__dash.map;
-      if (m && window.__marks.firstIdleMs == null && typeof m.loaded === "function" && m.loaded()) {
-        window.__marks.firstIdleMs = performance.now();
-        clearInterval(iv);
-      }
+      try {
+        if (m && window.__marks.firstIdleMs == null && typeof m.loaded === "function" && m.loaded()) {
+          window.__marks.firstIdleMs = performance.now();
+        }
+        if (m && window.__marks.segmentsVisibleMs == null && typeof m.getLayer === "function" && m.getLayer("segments-line")
+            && typeof m.isSourceLoaded === "function" && m.isSourceLoaded("segments")) {
+          window.__marks.segmentsVisibleMs = performance.now();
+        }
+        if (m && window.__marks.heatVisibleMs == null && typeof m.getLayer === "function" && m.getLayer("collisions-heat")) {
+          const o = m.getPaintProperty("collisions-heat", "heatmap-opacity");
+          if (o > 0) window.__marks.heatVisibleMs = performance.now();
+        }
+        const k = window.__marks;
+        if (k.firstIdleMs != null && k.segmentsVisibleMs != null && k.heatVisibleMs != null) clearInterval(iv);
+      } catch { /* style not ready yet */ }
       if (Date.now() - t0 > 120000) clearInterval(iv);
     }, 100);
   });
@@ -179,11 +190,18 @@ function addMarks(page) {
 async function readLoadTimings(page, readyPath) {
   const load = await page.evaluate(() => {
     const nav = performance.getEntriesByType("navigation")[0] || {};
+    const mark = (n) => { const e = performance.getEntriesByName(n)[0]; return e ? Math.round(e.startTime) : null; };
+    const mk = window.__marks || {};
     return {
       domContentLoadedMs: Math.round(nav.domContentLoadedEventEnd || 0),
       loadEventMs: Math.round(nav.loadEventEnd || 0),
-      firstIdleMs: window.__marks && window.__marks.firstIdleMs != null ? Math.round(window.__marks.firstIdleMs) : null,
+      dataReadyMs: mark("dash:data-ready"),
+      layersAddedMs: mark("dash:layers-added"),
+      segmentsVisibleMs: mk.segmentsVisibleMs != null ? Math.round(mk.segmentsVisibleMs) : null,
+      heatVisibleMs: mk.heatVisibleMs != null ? Math.round(mk.heatVisibleMs) : null,
+      firstIdleMs: mk.firstIdleMs != null ? Math.round(mk.firstIdleMs) : null,
       readyMs: Math.round(performance.now()),
+      heapUsedBytes: performance.memory ? performance.memory.usedJSHeapSize : null,
     };
   });
   load.readyPath = readyPath;
@@ -258,6 +276,9 @@ async function runViewport(browser, url, vp, report, plan) {
     await page.screenshot({ path: shotPath(vp, first) });
     vpReport.screenshots.push(relShot(vp, first));
     for (let scene = 1; scene < SCENE_COUNT; scene++) await captureTransition(page, vp, vpReport, scene);
+    // Flow update cost (3.4-05: budget < 4 ms per update) and heap after a full tour (3.4-06).
+    vpReport.flow = await page.evaluate(() => (window.__dash && typeof window.__dash.flowStats === "function" ? window.__dash.flowStats() : null));
+    vpReport.heapEndBytes = await page.evaluate(() => (performance.memory ? performance.memory.usedJSHeapSize : null));
     await page.close();
     for (const state of EXPLORE_STATES) await captureExplore(ctx, url, vp, vpReport, state, plan);
   }

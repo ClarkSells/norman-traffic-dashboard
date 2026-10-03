@@ -71,6 +71,19 @@ layoutEl.fire("transitionend");
 flushRaf();
 assert.ok(map.resizes > beforeTransition, "map.resize called again after transitionend");
 
+// transitionend bubbles: an event from a child (panel disclosure, legend pill,
+// sheet settle) must NOT schedule a resize; only the layout grid's own
+// transition counts (finding 3.6-04).
+const childEl = document.createElement("div");
+layoutEl.appendChild(childEl);
+const beforeBubbled = map.resizes;
+layoutEl.fire("transitionend", { target: childEl });
+flushRaf();
+assert.equal(map.resizes, beforeBubbled, "bubbled child transitionend does not resize the map");
+layoutEl.fire("transitionend", { target: layoutEl });
+flushRaf();
+assert.equal(map.resizes, beforeBubbled + 1, "transitionend on the layout element itself resizes");
+
 // Leaving present mode restores everything.
 layout.setPresenting(false);
 assert.ok(!layoutEl.classList.contains("presenting"), "presenting class removed");

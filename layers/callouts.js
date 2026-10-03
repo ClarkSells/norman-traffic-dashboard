@@ -22,7 +22,10 @@ export function calloutAnchor(bearingDeg) {
 // The one place the map draws our own type; everything else is HTML. The halo defaults to the
 // explore light paper (--paper #f6f4ee); the caller may restyle text-color/halo for present dusk
 // via setPaintProperty on CALLOUT_LAYER. text-emissive-strength 1 keeps the labels readable under
-// the dusk light preset. The font stack is the cheatsheet section 8 recipe.
+// the dusk light preset. The font stack is the cheatsheet section 8 recipe. Callouts are few and
+// ranked, and per design section 9 they ARE the story: text-allow-overlap + text-ignore-placement
+// keep them from ever losing the collision to the basemap's own road labels (3.1-03, 3.2-05),
+// while symbol-sort-key by rank still decides which label draws on top when two callouts meet.
 export function addCalloutLayer(map) {
   if (!map.getSource(CALLOUT_SOURCE)) map.addSource(CALLOUT_SOURCE, { type: "geojson", data: EMPTY });
   if (map.getLayer(CALLOUT_LAYER)) return;
@@ -34,7 +37,8 @@ export function addCalloutLayer(map) {
       "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
       "text-anchor": ["get", "anchor"],
       "text-offset": [0.8, 0],
-      "text-allow-overlap": false,
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
       "symbol-sort-key": ["get", "rank"],
     },
     paint: {

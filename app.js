@@ -2,7 +2,7 @@ import { CITY_BOUNDS, CENTER, FLOW, MAPBOX_TOKEN, PRESETS, STYLES, ZOOM } from "
 import { applyState, deriveProps, getRaw, loadAll } from "./data.js";
 import { configureStandard, setLightPreset, switchBasemap } from "./layers/basemap.js";
 import { addCollisionsLayer, dimOutsideWard, revealSegmentCrashes, setDotsMode, setHeatVisible, updateCollisions } from "./layers/collisions.js";
-import { addFlowLayers, FLOW_LAYERS, setFlowVisible, startFlow } from "./layers/flow.js";
+import { addFlowLayers, FLOW_LAYERS, setFlowVisible, startFlow, flowUpdateStats } from "./layers/flow.js";
 import { addCalloutLayer, clearCallouts, showCallouts } from "./layers/callouts.js";
 import { addPointsLayer, setPointHover, setPointsTheme } from "./layers/points.js";
 import { addSegmentsLayer, addWardMask, clearWardMask, pulse, setHover, setSegmentsOpacity, setSegmentsTheme, updateSegments } from "./layers/segments.js";
@@ -162,7 +162,7 @@ let cancelSceneSpin = null; // in-flight orbit/drift cancel
 async function setBasemap(next) {
   if (getState().basemap === next) return;
   applyTheme(themeFor(next));
-  await switchBasemap(map, next, { lightPreset: next === "satellite" ? null : PRESETS.explore, presenting: false });
+  await switchBasemap(map, next, { lightPreset: next === "satellite" ? null : PRESETS.explore, presenting: false, fadeMs: getState().reducedMotion ? 0 : 350 });
   setState({ basemap: next });
   applyMapTheme(themeFor(next));
 }
@@ -206,6 +206,8 @@ function applySceneLayers(scene) {
   if (L.callouts && L.callouts.length) showCallouts(map, calloutItems(scene)); else clearCallouts(map);
   if (L.mask != null) { const f = wardFeature(L.mask); addWardMask(map, f, getRaw().wards); dimOutsideWard(map, f); }
   else { clearWardMask(map); dimOutsideWard(map, null); }
+  // Ward labels belong to the ward scenes only (section 10 layer column; 3.2-06).
+  if (map.getLayer("wards-label")) map.setLayoutProperty("wards-label", "visibility", L.mask != null ? "visible" : "none");
 }
 
 // One scene: state, basemap, layers, camera, then the after-arrival emphasis (pulse, crash reveal, orbit).
@@ -219,7 +221,7 @@ async function applyScene(scene, prev) {
   if (popup) popup.remove();
   hideTooltip(document.getElementById("map-tooltip"));
   if (scene.basemap !== getState().basemap) {
-    await switchBasemap(map, scene.basemap, { lightPreset: scene.lightPreset, presenting: true });
+    await switchBasemap(map, scene.basemap, { lightPreset: scene.lightPreset, presenting: true, fadeMs: reduced ? 0 : 350 });
   } else {
     setLightPreset(map, scene.lightPreset);
     configureStandard(map, { lightPreset: scene.lightPreset, presenting: true });
@@ -260,6 +262,10 @@ function onEnterPresent() {
   if (navControl) map.removeControl(navControl);
   if (fsControl) map.removeControl(fsControl);
   if (geolocate) map.removeControl(geolocate);
+  const panelEl = document.getElementById("panel");
+  if (panelEl) panelEl.inert = true;   // hidden panel stays out of the tab order (3.7-01)
+  const presentEl = document.getElementById("present");
+  if (presentEl) presentEl.focus();    // keep the keyboard user's place across the boundary (3.7-11)
 }
 
 function onExitPresent(saved) {
@@ -271,12 +277,17 @@ function onExitPresent(saved) {
   clearCallouts(map);
   clearWardMask(map);
   dimOutsideWard(map, null);
+  if (map.getLayer("wards-label")) map.setLayoutProperty("wards-label", "visibility", "visible");
   setDotsMode(map, "all");
   setSegmentsOpacity(map, 1);
   stopFlowLoop();
   layout.setPresenting(false);
   applyMode("explore");
   mapchrome.setPresenting(false);
+  const panelEl = document.getElementById("panel");
+  if (panelEl) panelEl.inert = false;
+  const toggle = document.getElementById("present-toggle");
+  if (toggle) toggle.focus();          // restore focus to the control that started the tour (3.7-11)
   if (navControl) map.addControl(navControl, "top-right");
   if (fsControl) map.addControl(fsControl, "top-right");
   if (geolocate) map.addControl(geolocate, "top-right");
@@ -289,7 +300,7 @@ function onExitPresent(saved) {
   };
   if (back && getState().basemap !== back.basemap) {
     applyTheme(themeFor(back.basemap));
-    switchBasemap(map, back.basemap, { lightPreset: back.basemap === "satellite" ? null : PRESETS.explore, presenting: false })
+    switchBasemap(map, back.basemap, { lightPreset: back.basemap === "satellite" ? null : PRESETS.explore, presenting: false, fadeMs: getState().reducedMotion ? 0 : 350 })
       .then(() => { applyMapTheme(themeFor(back.basemap)); finish(); });
   } else {
     setLightPreset(map, PRESETS.explore);
@@ -319,8 +330,10 @@ function render(state, patch) {
 async function main() {
   await loadAll(setProgress);
   dataReady = true;
+  performance.mark("dash:data-ready");
   initControls();
   addAllLayers();
+  performance.mark("dash:layers-added");
   popup = attachPopup(map, (locId) => setState({ selectedLocId: locId }), () => !presenting);
   helpBox = initHelp(getRaw().summary && getRaw().summary.qa);
   panelToggle = initPanelToggle();
@@ -328,7 +341,7 @@ async function main() {
               peekEls: [document.getElementById("sheet-handle"), document.getElementById("briefing"), document.getElementById("stats")] });
   map.resize();   // the panel may have become a bottom sheet, which changes the map box
   // Read-only handles for the Playwright checks (tests/e2e); nothing in the UI depends on them.
-  window.__dash = { map, getState, sheet, ready: false, get tour() { return tour; } };
+  window.__dash = { map, getState, sheet, ready: false, get tour() { return tour; }, flowStats: () => flowUpdateStats() };
   initLegend(document.getElementById("legend"));
   // Present mode: 15 scenes, the chrome, and the player.
   const scenes = buildScenes(getRaw());
@@ -352,6 +365,7 @@ async function main() {
     const p = clampPatchYears(p0);
     if (t != null && !tour.getState().active) tour.dispatch({ type: "enter", total: scenes.length, saved: snapshot(), index: t });
     else if (t != null && tour.getState().active && tour.getState().index !== t) tour.dispatch({ type: "goto", index: t });
+    else if (t == null && tour.getState().active) tour.dispatch({ type: "exit" });
     else if (t == null && Object.keys(p).length && !tour.getState().active) { if (p.basemap) setBasemap(p.basemap); setState(p); }
   });
   document.getElementById("reset-view").addEventListener("click", resetView);

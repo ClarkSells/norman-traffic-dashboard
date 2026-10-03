@@ -17,8 +17,8 @@ function fullState(basemap, patch, { heat = false, flow = false } = {}) {
   return { ...BASE, ...patch, basemap, reducedMotion: false, heat, flow, presenting: true };
 }
 
-// Complete C.2 layers object; defaults are "plain city view".
-function layers({ flow = false, heat = false, dots = "all", callouts = [], pulse = [], mask = null, segmentsOpacity = 1 } = {}) {
+// Complete C.2 layers object; dots default to "none" so crash dots only render where the storyboard lists them.
+function layers({ flow = false, heat = false, dots = "none", callouts = [], pulse = [], mask = null, segmentsOpacity = 1 } = {}) {
   return { flow, heat, dots, callouts, pulse, mask, segmentsOpacity };
 }
 
@@ -26,8 +26,6 @@ function layers({ flow = false, heat = false, dots = "all", callouts = [], pulse
 export function buildScenes(raw) {
   const segs = (raw && raw.segments && raw.segments.features) || [];
   const byId = Object.fromEntries(segs.map(f => [f.properties.loc_id, f.properties]));
-  const vcMax = segs.reduce((a, f) => Math.max(a, f.properties.v_c_E || 0), 0);
-  const vcMaxText = vcMax ? vcMax.toFixed(2) : FACTS.v_c_max;
   const ward2 = rankedRows({ ...BASE, ward: 2 });
   const over1Rows = rankedRows({ ...BASE, ward: 2, los: "C" }).filter(r => r.v_c_active >= 1);
   const over1 = over1Rows.length;
@@ -38,13 +36,15 @@ export function buildScenes(raw) {
   const laneCallout = `${main.lanes_final != null ? main.lanes_final : "?"} lanes · ${main.vpd_max != null ? n(main.vpd_max) : "?"} VPD`;
 
   const scenes = [
-    // 0: Title (storyboard copy verbatim)
+    // 0: Title (storyboard copy verbatim, with the section 10 eyebrow and start hint)
     { id: "title", kind: "title", title: "Norman street segment priorities",
       caption: "Congestion, crashes and a combined score for every counted segment, by council ward",
+      eyebrow: "Prepared for the City of Norman · MIS Data Analytics Case Competition · October 2026",
+      hint: "Press space or Next",
       stats: [], legend: null, list: null,
       state: fullState("light", {}), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
-      layers: layers({ segmentsOpacity: 0.5 }) },
+      layers: layers({ dots: "none", segmentsOpacity: 0.5 }) },
     // 1: Every counted segment
     { id: "citywide", kind: "city", title: "Every counted segment in Norman",
       caption: `${n(FACTS.segments)} segments, ${n(FACTS.collision_rows)} crash records, ${n(FACTS.assigned_in_window)} assigned ${FACTS.year_min} to ${FACTS.year_max}. Each segment is colored by its combined score: crashes plus the volume to capacity ratio (v/c).`,
@@ -52,35 +52,35 @@ export function buildScenes(raw) {
       legend: null, list: null,
       state: fullState("light", {}, { flow: true }), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 14, driftDeg: 0 },
-      layers: layers({ flow: true }) },
+      layers: layers({ flow: true, dots: "none" }) },
     // 2: Volume alone
     { id: "vc", kind: "city", title: "Volume alone",
-      caption: `Colored by v/c: the highest daily count at each location divided by its capacity at level of service (LOS) E. The highest v/c citywide is ${vcMaxText}, so no segment is over capacity on this measure.`,
-      stats: [{ label: "highest v/c", value: vcMaxText }], legend: "v_c", list: null,
+      caption: `Colored by v/c: the highest daily count at each location divided by its capacity at level of service (LOS) E. The highest v/c citywide is ${FACTS.v_c_max}, so no segment is over capacity on this measure.`,
+      stats: [{ label: "highest v/c", value: FACTS.v_c_max }], legend: "v_c", list: null,
       state: fullState("light", { metric: "v_c" }, { flow: true }), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
-      layers: layers({ flow: true }) },
+      layers: layers({ flow: true, dots: "none" }) },
     // 3: Where crashes cluster (heat fades in, segments at 35 percent, flow off)
     { id: "heat", kind: "city", title: "Where crashes cluster",
       caption: `Five years of crash records as a density surface: ${n(FACTS.collision_rows)} rows from ${FACTS.year_min} to ${FACTS.year_max}, ${n(FACTS.assigned_in_window)} of them assigned to a counted segment. The bright clusters show where crashes concentrate before any score is applied.`,
       stats: [{ label: "assigned", value: n(FACTS.assigned_in_window) }], legend: null, list: null,
       state: fullState("light", {}, { heat: true }), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
-      layers: layers({ heat: true, segmentsOpacity: 0.35 }) },
+      layers: layers({ heat: true, dots: "none", segmentsOpacity: 0.35 }) },
     // 4: Crashes by segment (heat fades out)
     { id: "crashes", kind: "city", title: "Crashes alone",
       caption: `Colored by crashes assigned to each segment, ${FACTS.year_min} to ${FACTS.year_max}. The map barely changes from the combined view: ${FACTS.rank_correlation_phrase}.`,
       stats: [], legend: null, list: null,
       state: fullState("light", { metric: "collisions" }), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
-      layers: layers({}) },
+      layers: layers({ dots: "none" }) },
     // 5: The combined score (orbit ends, top five called out and pulsed in rank order)
-    { id: "combined", kind: "city", title: "Back to the combined score", autoplayMs: 12000,   // storyboard: 12 s
+    { id: "combined", kind: "city", title: "Back to the combined score", autoplayMs: SCENE_TIMING.segment,   // storyboard: 12 s
       caption: "Combined score = crashes + v/c, exactly as the brief defines it. The five highest scoring segments in the city come next, in rank order.",
       stats: TOP5.map(t => ({ label: `#${t.rank} ${t.name}`, value: t.combined })), legend: null, list: null,
       state: fullState("light", {}, { flow: true }), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
-      layers: layers({ flow: true, callouts: top5Ids, pulse: top5Ids }) },
+      layers: layers({ flow: true, dots: "none", callouts: top5Ids, pulse: top5Ids }) },
     // 6 to 10: #1 to #5 citywide, dolly with drift, crash reveal, flow on
     ...TOP5.map(t => {
       const p = byId[t.loc_id] || {};
@@ -97,23 +97,24 @@ export function buildScenes(raw) {
         camera: { kind: "segment", locId: t.loc_id }, motion: { orbitDeg: 0, driftDeg: 6 },
         layers: layers({ flow: true, dots: "segment", callouts: [t.loc_id], pulse: [t.loc_id] }) };
     }),
-    // 11: How a councilmember reads their list (ward 2 mask, day preset, top five list cards)
+    // 11: How a councilmember reads their list (ward 2 mask, day preset, top five list cards; dots "all" so
+    // the storyboard's "crashes outside ward 25 percent" render dimmed by the mask)
     { id: "ward2", kind: "ward", title: "How a councilmember reads their list",
       caption: `Ward 2 has ${ward2.length} arterial segments in its primary list, ranked top down by combined score. A boundary tag means the segment sits on a ward line: counted once, listed in both neighboring wards.`,
       stats: [], legend: null,
       list: ward2.slice(0, 5).map(r => ({ rank: r.rank, locId: r.loc_id, road: r.on_road, span: `${r.from_road} to ${r.to_road}`, score: r.combined_active.toFixed(2) })),
       state: fullState("light", { ward: 2 }), basemap: "light", lightPreset: "day",
       camera: { kind: "ward", ward: 2 }, motion: { orbitDeg: 0, driftDeg: 8 },
-      layers: layers({ mask: 2 }) },
+      layers: layers({ mask: 2, dots: "all" }) },
     // 12: What moves under LOS C (hold on the ward 2 framing, crossovers pulse and get callouts)
     { id: "losc", kind: "ward", title: "What moves under LOS C",
       caption: `LOS C uses the 2020 plan's lower capacities, so every v/c rises and ${over1} Ward 2 ${over1 === 1 ? "segment reaches" : "segments reach"} or pass 1.0. Crash counts do not move, so the order of the list barely changes.`,
       stats: [], legend: null, list: null,
       state: fullState("light", { ward: 2, los: "C" }), basemap: "light", lightPreset: "day",
       camera: { kind: "ward", ward: 2 }, motion: { orbitDeg: 0, driftDeg: 0 },
-      layers: layers({ mask: 2, callouts: over1Ids, pulse: over1Ids }) },
+      layers: layers({ mask: 2, dots: "none", callouts: over1Ids, pulse: over1Ids }) },
     // 13: The lane count story (satellite aerial on 52500-158, existing caption without the URL)
-    { id: "lanes", kind: "segment", title: "The lane count story", autoplayMs: 14000,   // storyboard: 14 s
+    { id: "lanes", kind: "segment", title: "The lane count story", autoplayMs: SCENE_TIMING.ward,   // storyboard: 14 s
       caption: `All ${n(FACTS.lanes_verified)} lane counts were verified by a person against aerial imagery. W Main St carries ${main.vpd_max != null ? n(main.vpd_max) : "its highest count"} vehicles per day on ${main.lanes_final != null ? main.lanes_final : "its verified"} lanes.`,
       stats: [], legend: null, list: null, calloutText: laneCallout,
       state: fullState("satellite", { selectedLocId: "52500-158" }, { flow: true }), basemap: "satellite", lightPreset: "dusk",
@@ -125,7 +126,8 @@ export function buildScenes(raw) {
       stats: [], legend: null, list: null,
       state: fullState("light", {}), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
-      layers: layers({ segmentsOpacity: 0.5 }) },
+      layers: layers({ dots: "none", segmentsOpacity: 0.5 }) },
   ];
-  return scenes.map((s, i) => ({ ...s, index: i, number: i + 1, total: scenes.length, autoplayMs: s.autoplayMs !== undefined ? s.autoplayMs : AUTOPLAY[s.kind] }));
+  // eyebrow/hint default to null on every scene but the title (C.2 Wave 4 fields).
+  return scenes.map((s, i) => ({ eyebrow: null, hint: null, ...s, index: i, number: i + 1, total: scenes.length, autoplayMs: s.autoplayMs !== undefined ? s.autoplayMs : AUTOPLAY[s.kind] }));
 }

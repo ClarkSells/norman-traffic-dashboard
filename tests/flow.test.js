@@ -2,7 +2,7 @@
 // Flow animation layers (card 1.7, contract C.6). A recording fake map stands in for Mapbox; no browser needed.
 import assert from "node:assert/strict";
 
-const { FLOW_LAYERS, addFlowLayers, setFlowVisible, startFlow, dashSequence, flowFilter, flowWidthExpression } = await import("../layers/flow.js");
+const { FLOW_LAYERS, addFlowLayers, setFlowVisible, startFlow, dashSequence, flowFilter, flowWidthExpression, flowUpdateStats } = await import("../layers/flow.js");
 const { widthExpression, primaryExpression } = await import("../layers/segments.js");
 const { FLOW } = await import("../config.js");
 
@@ -157,6 +157,54 @@ const sum = (a) => a.reduce((x, y) => x + y, 0);
   frame(); // a stray queued frame after stop must be a no-op
   assert.equal(dashCalls().length, n, "no painting after stop()");
   console.log("startFlow checks passed");
+}
+
+// ---- flowUpdateStats: per-update cost instrumentation (3.4-05), reset on start, frozen by stop() ----
+{
+  const m = fakeMap();
+  addFlowLayers(m, { flow: true });
+  let cb = null;
+  // Each tick reads `now` three times (the 50 ms gate, then before and after the paint batch). The script
+  // spaces the gates by 60 ms so every tick runs an update whose batch measures a known delta.
+  const times = [0, 0, 2.5, 60, 60, 62.5, 120, 120, 123, 180, 180, 184, 240];
+  const stop = startFlow(m, {
+    stepMsByLayer: [FLOW.stepMs.free, FLOW.stepMs.moderate, FLOW.stepMs.congested],
+    now: () => times.shift(),
+    raf: (fn) => { cb = fn; return 1; },
+    caf: () => {},
+    hidden: () => false,
+  });
+  const frame = () => { const f = cb; cb = null; f(); };
+
+  assert.deepEqual(flowUpdateStats(), { count: 0, p50: 0, p95: 0, max: 0 }, "no samples before the first update");
+
+  for (let i = 0; i < 4; i++) frame();
+  const s = flowUpdateStats();
+  assert.equal(s.count, 4, "one sample per update step");
+  assert.equal(s.p50, 2.5, "p50 over the scripted deltas [2.5, 2.5, 3, 4]");
+  assert.equal(s.p95, 4, "p95 (nearest rank) is the top sample");
+  assert.equal(s.max, 4, "max is the slowest update");
+
+  stop();
+  frame(); // a stray queued frame after stop must not add a sample
+  assert.equal(flowUpdateStats().count, 4, "stop() freezes the stats");
+
+  // A fresh startFlow resets the ring buffer so a new run measures only itself.
+  const m2 = fakeMap();
+  addFlowLayers(m2, { flow: true });
+  let cb2 = null;
+  const stop2 = startFlow(m2, {
+    stepMsByLayer: [FLOW.stepMs.free, FLOW.stepMs.moderate, FLOW.stepMs.congested],
+    now: () => 0,
+    raf: (fn) => { cb2 = fn; return 1; },
+    caf: () => {},
+    hidden: () => false,
+  });
+  assert.equal(flowUpdateStats().count, 0, "startFlow resets the stats");
+  const f2 = cb2; cb2 = null; f2();
+  assert.equal(flowUpdateStats().count, 1, "the new run counts from zero");
+  stop2();
+  console.log("flowUpdateStats checks passed");
 }
 
 console.log("flow.test.js PASS");

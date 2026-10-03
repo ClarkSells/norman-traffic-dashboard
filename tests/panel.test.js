@@ -33,6 +33,9 @@ const losBox = el("los-toggle"); const losBtns = ["E", "C"].map(v => button(losB
 const wrapLos = new El("div"); wrapLos.classList.add("control"); wrapLos.appendChild(losBox);
 const wrapYears = new El("div"); wrapYears.classList.add("control"); wrapYears.appendChild(el("year-min"));
 const wrapColl = new El("label"); wrapColl.classList.add("control"); wrapColl.appendChild(el("show-collectors"));
+const wrapMetric = new El("div"); wrapMetric.classList.add("control"); wrapMetric.appendChild(metricBox);
+const moreLabel = new El("span"); moreLabel.setAttribute("id", "settings-label");
+const wrapMore = new El("div"); wrapMore.classList.add("control"); wrapMore.appendChild(moreLabel); wrapMore.appendChild(el("settings-toggle"));
 initControls();
 assert.equal(el("year-min").min, "2019", "slider extent widens to every year in the data"); assert.equal(el("year-max").max, "2023");
 assert.equal(getState().yearMin, 2021); assert.equal(getState().yearMax, 2023, "default window clamped to the data years");
@@ -63,6 +66,13 @@ assert.equal(el("settings").hidden, true, "settings closed by default");
 assert.equal(el("settings-toggle").getAttribute("aria-expanded"), "false");
 const settingsKids = el("settings").children;
 assert.ok(settingsKids.includes(wrapLos) && settingsKids.includes(wrapYears) && settingsKids.includes(wrapColl), "LOS, year range and Include collectors move behind the settings disclosure");
+// 3.3-02/03: the quiet Settings disclosure sits on the metric row; the labeled "More" row is gone.
+const toggleHost = el("settings-toggle").parentNode;
+assert.ok(toggleHost && toggleHost.classList.contains("metric-row"), "Settings moves onto the metric row");
+assert.ok(toggleHost.children.includes(metricBox), "metric segmented and Settings share one row");
+assert.equal(toggleHost.parentNode, wrapMetric, "the metric row stays inside the metric control");
+assert.ok(!wrapMore.children.includes(el("settings-toggle")), "the More row gives up the toggle");
+assert.equal(el("settings").getAttribute("aria-labelledby"), "settings-toggle", "the disclosure is named by the toggle once the More label is gone");
 el("settings-toggle").fire("click");
 assert.equal(el("settings").hidden, false, "toggle opens the disclosure");
 assert.equal(el("settings-toggle").getAttribute("aria-expanded"), "true");
@@ -84,9 +94,13 @@ assert.equal(el("heat-toggle").checked, true, "missing state.heat reads as on");
 assert.equal(el("flow-toggle").checked, false, "missing state.flow reads as off");
 
 // Table and stats
-assert.equal(statsLine({ metric: "combined", yearMin: 2021, yearMax: 2025 }, { n: 177, crashes: 5121, top: { on_road: "W Main St" } }), "177 segments · 5,121 crashes 2021 to 2025 · top: W Main St", "stats line matches the design format");
-assert.equal(statsLine({ metric: "combined", yearMin: 2023, yearMax: 2023 }, { n: 1, crashes: 4, top: { on_road: "Main" } }), "1 segment · 4 crashes in 2023 · top: Main", "singular segment and single year window");
-assert.equal(statsLine({ metric: "combined", yearMin: 2021, yearMax: 2025 }, { n: 0, crashes: 0, top: null }), "0 segments · 0 crashes 2021 to 2025 · top: none", "empty list still reads as a sentence");
+// 3.3-01: the stats line drops the years span so the top street name fits the 400 px panel.
+const cityLine = statsLine({ metric: "combined", yearMin: 2021, yearMax: 2025 }, { n: 177, crashes: 5121, top: { on_road: "W Main St" } });
+assert.ok(cityLine.includes("W Main St"), "the top street name is on the stats line");
+assert.ok(!cityLine.includes("2021"), "the years span leaves the stats line so the street name fits");
+assert.equal(cityLine, "177 segments · 5,121 crashes · top: W Main St", "stats line format");
+assert.equal(statsLine({ metric: "combined", yearMin: 2023, yearMax: 2023 }, { n: 1, crashes: 4, top: { on_road: "Main" } }), "1 segment · 4 crashes · top: Main", "singular segment");
+assert.equal(statsLine({ metric: "combined", yearMin: 2021, yearMax: 2025 }, { n: 0, crashes: 0, top: null }), "0 segments · 0 crashes · top: none", "empty list still reads as a sentence");
 setState({ ward: null, metric: "combined", los: "E", yearMin: 2021, yearMax: 2023, includeCollectors: false, selectedLocId: null });
 const rows = renderTable(getState(), () => {});
 assert.deepEqual(rows.map(r => r.loc_id), ["A", "B"]);
@@ -94,7 +108,7 @@ const tbody = document.querySelector("#rank-table tbody");
 assert.deepEqual(tbody.children.map(c => c.dataset.loc), ["A", "B"], "one row per segment, in rank order");
 assert.equal(el("stat-segments").textContent, "2"); assert.equal(el("stat-crashes").textContent, "4", "crashes in window only");
 assert.ok(el("stat-top").textContent.startsWith("Main, x to y"));
-assert.equal(el("stats-line").textContent, "2 segments · 4 crashes 2021 to 2023 · top: Main", "stats line driven by the same summary as the tiles");
+assert.equal(el("stats-line").textContent, "2 segments · 4 crashes · top: Main", "stats line driven by the same summary as the tiles");
 assert.equal(el("briefing-title").textContent, "All wards");
 assert.equal(el("briefing-line").textContent, "2 segments, ranked by combined score, crashes 2021 to 2023");
 assert.equal(el("table-empty").hidden, true);
@@ -112,5 +126,5 @@ assert.equal(el("table-empty").hidden, false);
 assert.ok(el("table-empty").innerHTML.includes("No arterial segments to show in Ward 5") && el("table-empty").innerHTML.includes('data-action="Include collectors"'));
 assert.equal(tbody.children.length, 0, "rows for other wards are removed");
 assert.equal(el("stat-top").textContent, "none");
-assert.equal(el("stats-line").textContent, "0 segments · 0 crashes 2021 to 2023 · top: none", "stats line handles the empty list");
+assert.equal(el("stats-line").textContent, "0 segments · 0 crashes · top: none", "stats line handles the empty list");
 console.log("panel checks passed");

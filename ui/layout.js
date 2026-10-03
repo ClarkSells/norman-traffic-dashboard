@@ -35,7 +35,12 @@ export function initLayout(map, { layoutEl, mapEl }) {
   if (observer && mapEl) observer.observe(mapEl);
 
   // The grid animates when present mode toggles; resize again once it settles.
-  const onTransitionEnd = () => scheduleResize();
+  // transitionend bubbles, so ignore events from children (panel disclosure,
+  // legend pill, sheet settle) — only the layout grid's own transition counts.
+  const onTransitionEnd = (e) => {
+    if (e && e.target !== layoutEl) return;
+    scheduleResize();
+  };
   if (layoutEl && typeof layoutEl.addEventListener === "function") {
     layoutEl.addEventListener("transitionend", onTransitionEnd);
   }

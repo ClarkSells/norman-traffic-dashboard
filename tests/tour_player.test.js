@@ -48,7 +48,7 @@ const scene = (id, index, autoplayMs, kind = "city") => ({
 const scenes = [scene("title", 0, null, "title"), scene("city", 1, 1000), scene("closing", 2, null, "closing")];
 
 function fakePresent() {
-  const calls = { show: [], hide: 0, progress: [], controls: [] };
+  const calls = { show: [], hide: 0, progress: [], controls: [], autoplay: [] };
   let cb = null;
   return {
     calls,
@@ -56,6 +56,7 @@ function fakePresent() {
     hide: () => { calls.hide++; },
     setProgress: (i, total, f) => calls.progress.push([i, total, f]),
     setControlsVisible: (v) => calls.controls.push(v),
+    setAutoplay: (v) => calls.autoplay.push(v),
     onAction: (fn) => { cb = fn; },
     fire: (a) => cb(a),
   };
@@ -185,5 +186,59 @@ assert.equal(player.getState().index, 1, "swipe left goes forward");
 fireDoc("pointerdown", { isPrimary: true, clientX: 100, clientY: 100 }); fireDoc("pointerup", { clientX: 220, clientY: 90 });
 assert.equal(player.getState().index, 0, "swipe right goes back");
 player.dispatch({ type: "exit" });
+
+// --- Wave 4 fixes: chrome keyboard isolation (3.7-02, 3.7-03) and autoplay switch sync (3.5-1) ----
+player.dispatch({ type: "enter", total: 3 });
+let pd = 0;
+const noDefault = () => { pd++; };
+// Space or arrows on a focused present-chrome button must activate it natively: no dispatch, no preventDefault
+const inButton = { tagName: "SPAN", closest: (sel) => (sel.includes("button") ? { id: "present-prev" } : null) };
+fireDoc("keydown", { key: " ", target: inButton, preventDefault: noDefault });
+assert.equal(player.getState().index, 0, "Space on a focused button does not step scenes");
+assert.equal(pd, 0, "native button activation is not suppressed");
+fireDoc("keydown", { key: "Enter", target: inButton, preventDefault: noDefault });
+assert.equal(player.getState().index, 0, "Enter on a focused button is left to the browser");
+assert.equal(pd, 0);
+fireDoc("keydown", { key: "ArrowRight", target: inButton, preventDefault: noDefault });
+assert.equal(player.getState().index, 0, "arrows on chrome do not step scenes");
+assert.equal(pd, 0);
+// Arrow keys inside the progress tablist belong to the roving-tabindex navigation, not the player
+const inProgress = { tagName: "DIV", closest: (sel) => (sel.includes("#present-progress") ? { id: "present-progress" } : null) };
+fireDoc("keydown", { key: "ArrowRight", target: inProgress, preventDefault: noDefault });
+assert.equal(player.getState().index, 0, "Right inside #present-progress does not step");
+fireDoc("keydown", { key: "ArrowLeft", target: inProgress, preventDefault: noDefault });
+assert.equal(player.getState().index, 0, "Left inside #present-progress does not step");
+assert.equal(pd, 0, "tablist keeps its own key handling");
+// Global keys still work when focus is on body/map, and Escape exits even from chrome
+fireDoc("keydown", { key: "ArrowRight", target: { tagName: "BODY", closest: () => null }, preventDefault: noDefault });
+assert.equal(player.getState().index, 1, "arrows still step scenes from the map/body");
+fireDoc("keydown", { key: "Escape", target: inButton, preventDefault: noDefault });
+assert.equal(player.getState().active, false, "Escape exits even with focus on a button");
+
+// The autoplay switch follows player state: the a key, the reducer's last-scene auto-off, enter/exit
+player.dispatch({ type: "enter", total: 3 });
+let syncs = present.calls.autoplay.length;
+fireDoc("keydown", { key: "a", target: { tagName: "BODY" }, preventDefault() {} });
+assert.equal(player.getState().autoplay, true);
+assert.equal(present.calls.autoplay.length, syncs + 1, "the a key syncs the switch");
+assert.equal(present.calls.autoplay.at(-1), true, "switch shows autoplay on");
+player.dispatch({ type: "next" });
+assert.equal(player.getState().autoplay, true, "mid-tour next keeps autoplay");
+player.dispatch({ type: "next" }); // lands on the last scene
+assert.equal(player.getState().index, 2);
+assert.equal(player.getState().autoplay, false, "reducer forces autoplay off at the last scene");
+assert.equal(present.calls.autoplay.at(-1), false, "switch shows autoplay off at the last scene");
+player.dispatch({ type: "goto", index: 1 });
+player.dispatch({ type: "toggleAutoplay" });
+player.dispatch({ type: "exit" });
+assert.equal(present.calls.autoplay.at(-1), false, "exit with autoplay on syncs the switch off");
+
+// Older chrome without setAutoplay keeps working (stub compatibility)
+const legacy = fakePresent(); delete legacy.setAutoplay;
+const legacyPlayer = initTourPlayer({ scenes, present: legacy, timers: fakeTimers(), applyScene: () => {} });
+legacyPlayer.dispatch({ type: "enter", total: 3 });
+legacyPlayer.dispatch({ type: "toggleAutoplay" });
+assert.equal(legacyPlayer.getState().autoplay, true, "toggle works without a setAutoplay surface");
+legacyPlayer.dispatch({ type: "exit" });
 
 console.log("tour player checks passed");

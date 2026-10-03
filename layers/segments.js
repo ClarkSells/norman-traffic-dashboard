@@ -74,6 +74,8 @@ const transitionFor = (reducedMotion) => ({ duration: reducedMotion ? 0 : DUR.mi
 
 export function addSegmentsLayer(map, segments, { reducedMotion = false } = {}) {
   const T = transitionFor(reducedMotion);
+  // The real GeoJSONSource exposes no public .data accessor, so the pulse filters this cache.
+  segmentsCache = segments;
   if (!map.getSource("segments")) map.addSource("segments", { type: "geojson", data: segments, promoteId: "loc_id" });
   // One feature source for the selection, with lineMetrics so line-progress works for the pulse.
   if (!map.getSource("segments-selected")) map.addSource("segments-selected", { type: "geojson", data: { type: "FeatureCollection", features: [] }, lineMetrics: true });
@@ -112,6 +114,12 @@ export function addSegmentsLayer(map, segments, { reducedMotion = false } = {}) 
   map.addLayer({ id: "segments-selected", type: "line", source: "segments-selected", slot: "top",
     layout: { "line-cap": "round", "line-join": "round", visibility: reducedMotion ? "none" : "visible" },
     paint: { "line-color": "#ffffff", "line-width": widthExpression(2), "line-opacity": 0.9, "line-gradient": pulseGradient(-1), "line-emissive-strength": 1 } });
+  // A setStyle wipe brings us here with the selection source empty again: reset the module
+  // selection state so the next updateSegments re-runs setSelected (halo, gap ring, pulse)
+  // even when selectedLocId never changed across the swap.
+  stopPulse();
+  selected = null;
+  selectionFc = { type: "FeatureCollection", features: [] };
   lastState = null;
 }
 
@@ -152,6 +160,8 @@ let selected = null;
 let hovered = null;
 let lastState = null;
 let cancelFade = null;
+let segmentsCache = null;                                        // the FC passed to addSegmentsLayer
+let selectionFc = { type: "FeatureCollection", features: [] };   // what segments-selected currently holds
 
 // Hover feature-state, driven by the table rows and by the map itself. null clears it.
 export function setHover(map, locId) {
@@ -166,7 +176,8 @@ export function setHover(map, locId) {
 export function setSelected(map, feature, { reducedMotion = false } = {}) {
   const src = map.getSource("segments-selected");
   if (!src) return;
-  src.setData({ type: "FeatureCollection", features: feature ? [feature] : [] });
+  selectionFc = { type: "FeatureCollection", features: feature ? [feature] : [] };
+  src.setData(selectionFc);
   stopPulse();
   if (!feature) return;
   if (map.setLayoutProperty && map.getLayer("segments-selected")) map.setLayoutProperty("segments-selected", "visibility", reducedMotion ? "none" : "visible");
@@ -229,20 +240,21 @@ export function setSegmentsOpacity(map, k = 1) {
 }
 
 // A 1.4 s line-width pulse on segments-selected: 1.0x to 1.6x and back, twice, then the original
-// width expression is restored. Every feature in the selection source pulses together; when the
-// segments source data is reachable the named locIds are copied into it first so several segments
-// can pulse at once. Under reduced motion it is a no-op. Returns a cancel that restores at once.
+// width expression is restored. Every feature in the selection source pulses together; the named
+// locIds are copied into it first (filtered from the FeatureCollection cached by addSegmentsLayer —
+// the real GeoJSONSource has no public .data accessor) so several segments can pulse at once, and
+// the source is restored from the module-tracked selection FC afterwards. Under reduced motion it
+// is a no-op. Returns a cancel that restores at once.
 export function pulse(map, locIds, { reduced = false, tween: tweenImpl } = {}) {
   const noop = () => {};
   if (reduced || !map.getLayer || !map.getLayer("segments-selected")) return noop;
   const base = (map.getPaintProperty && map.getPaintProperty("segments-selected", "line-width")) || widthExpression(2);
   let prior = null;
   const selSrc = map.getSource && map.getSource("segments-selected");
-  const segsSrc = map.getSource && map.getSource("segments");
-  if (selSrc && segsSrc && segsSrc.data && Array.isArray(segsSrc.data.features) && locIds && locIds.length) {
-    const feats = segsSrc.data.features.filter(f => f.properties && locIds.includes(f.properties.loc_id));
+  if (selSrc && segmentsCache && Array.isArray(segmentsCache.features) && locIds && locIds.length) {
+    const feats = segmentsCache.features.filter(f => f.properties && locIds.includes(f.properties.loc_id));
     if (feats.length) {
-      prior = selSrc.data || null;
+      prior = selectionFc;
       selSrc.setData({ type: "FeatureCollection", features: feats });
     }
   }
@@ -252,7 +264,8 @@ export function pulse(map, locIds, { reduced = false, tween: tweenImpl } = {}) {
     if (finished) return;
     finished = true;
     map.setPaintProperty("segments-selected", "line-width", base);
-    if (prior && selSrc) selSrc.setData(prior);
+    // A setSelected that landed mid-pulse wins; only restore when the selection is untouched.
+    if (prior && selSrc && selectionFc === prior) selSrc.setData(prior);
   };
   const cancelTween = tw({
     duration: 1400, ease: linear,
@@ -296,9 +309,18 @@ function unionBbox(wardsFc) {
 }
 
 // The veil is one polygon: an outer ring the size of the wards union extent (padded, or a large
-// world bbox when no collection is given) with the ward polygon cut out as a hole. 45 percent of
-// the explore light paper; the caller may restyle fill-color for present/dusk. The layer is added
-// once and re-masking only swaps the data.
+// world bbox when no collection is given) with the ward polygon cut out as a hole, filled at 45
+// percent of the mode's paper color. The paper is read from the mirrored THEMES, never a CSS
+// var(): applyMode("present") strips the inline theme variables, so a var() reference would
+// resolve to nothing and render transparent. In present mode that is the dark present paper
+// (#121417) — over a ~235-lum day map the light explore paper would be an invisible veil, which
+// is what flattened the stage in the ward scenes (3.1-04). The layer is added once and
+// re-masking only swaps the data.
+function wardMaskColor() {
+  const el = typeof document !== "undefined" ? document.documentElement : null;
+  const mode = el && el.dataset ? el.dataset.mode : null;
+  return mode === "present" ? THEMES.present.surface : THEMES.light.surface;
+}
 export function addWardMask(map, wardFeature, wardsFc) {
   const bb = unionBbox(wardsFc) || [-180, -85, 180, 85];
   const padX = Math.max((bb[2] - bb[0]) * 0.2, 0.01), padY = Math.max((bb[3] - bb[1]) * 0.2, 0.01);
@@ -309,8 +331,8 @@ export function addWardMask(map, wardFeature, wardsFc) {
   const src = map.getSource && map.getSource(WARD_MASK_SOURCE);
   if (src) { src.setData(data); return; }
   map.addSource(WARD_MASK_SOURCE, { type: "geojson", data });
-  const layer = { id: WARD_MASK_LAYER, type: "fill", source: WARD_MASK_SOURCE,
-    paint: { "fill-color": "#f6f4ee", "fill-opacity": 0.45 } };
+  const layer = { id: WARD_MASK_LAYER, type: "fill", source: WARD_MASK_SOURCE, slot: "top",
+    paint: { "fill-color": wardMaskColor(), "fill-opacity": 0.45 } };
   // Under the segment lines, so the data stays crisp while the basemap outside the ward is veiled.
   if (map.getLayer && map.getLayer("segments-casing")) map.addLayer(layer, "segments-casing");
   else map.addLayer(layer);

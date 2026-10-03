@@ -13,6 +13,7 @@
   --ink: #1c1b18;
   --ink-muted: #6b6963;
   --accent: #d45f14;
+  --link: #b44e0d;   /* accent is a map-ramp color (3.79:1 on raised); links need AA 4.5:1 */
   --hairline: #e3dfd5;
   --focus: #2a78d6;
 
@@ -35,6 +36,7 @@
   --ink: #f3f1ea;
   --ink-muted: #a7a49c;
   --accent: #ee7b2f;
+  --link: #ee7b2f;   /* 5.70:1 on dark raised, passes AA */
   --hairline: #2a2e35;
   --focus: #86b6ef;
   color-scheme: dark;

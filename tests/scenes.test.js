@@ -25,13 +25,13 @@ const BASE = { ward: null, metric: "combined", los: "E", yearMin: FACTS.year_min
 const byId = Object.fromEntries(raw.segments.features.map(f => [f.properties.loc_id, f.properties]));
 const ward2 = rankedRows({ ...BASE, ward: 2 });
 const over1 = rankedRows({ ...BASE, ward: 2, los: "C" }).filter(r => r.v_c_active >= 1);
-const vcMax = raw.segments.features.reduce((a, f) => Math.max(a, f.properties.v_c_E || 0), 0);
 const n = (v) => Number(v).toLocaleString("en-US");
 const main = byId["52500-158"] || {};
 
 // Numeric tokens a caption may carry: quoted facts plus this deck's computed values.
 // "1.0" (the v/c threshold) and "2020" (the capacity plan) are sanctioned constants from the tour captions.
-const computed = new Set(["1.0", "2020", vcMax ? vcMax.toFixed(2) : FACTS.v_c_max, String(ward2.length), String(over1.length)]);
+// FACTS.v_c_max is quoted, never recomputed (3.5-2).
+const computed = new Set(["1.0", "2020", FACTS.v_c_max, String(ward2.length), String(over1.length)]);
 if (main.vpd_max != null) computed.add(n(main.vpd_max));
 if (main.lanes_final != null) computed.add(String(main.lanes_final));
 const tokens = factTokens();
@@ -79,9 +79,11 @@ for (const s of scenes) {
   }
 }
 
-// autoplayMs: null only for title and closing; SCENE_TIMING by kind everywhere else, except the two
-// scenes the storyboard times explicitly (scene 5 "combined" 12 s, scene 13 "lanes" 14 s).
-const STORYBOARD_TIMING = { combined: 12000, lanes: 14000 };
+// autoplayMs: null only for title and closing; SCENE_TIMING by kind everywhere else, including the two
+// scenes the storyboard times explicitly (scene 5 "combined" 12 s = segment, scene 13 "lanes" 14 s = ward) (3.5-4).
+assert.equal(SCENE_TIMING.segment, 12000, "storyboard scene 5 time lives in SCENE_TIMING.segment");
+assert.equal(SCENE_TIMING.ward, 14000, "storyboard scene 13 time lives in SCENE_TIMING.ward");
+const STORYBOARD_TIMING = { combined: SCENE_TIMING.segment, lanes: SCENE_TIMING.ward };
 assert.equal(scenes[0].autoplayMs, null, "title is manual");
 assert.equal(scenes[14].autoplayMs, null, "closing is manual");
 for (const s of scenes) {
@@ -129,6 +131,11 @@ assert.equal(scenes[13].basemap, "satellite", "scene 13 is satellite");
 assert.equal(scenes[13].state.basemap, "satellite");
 assert.equal(scenes[13].calloutText, `${main.lanes_final} lanes · ${n(main.vpd_max)} VPD`, "aerial callout text from the segment's own figures");
 
+// Crash dots per the section 10 layer column (3.2-06): "segment" on the dolly/aerial scenes, "all" only on
+// scene 11 ("crashes outside ward 25 percent" under the ward mask), "none" everywhere else.
+const STORYBOARD_DOTS = ["none", "none", "none", "none", "none", "none", "segment", "segment", "segment", "segment", "segment", "all", "none", "segment", "none"];
+for (const [i, s] of scenes.entries()) assert.equal(s.layers.dots, STORYBOARD_DOTS[i], `scene ${i} (${s.id}): dots "${STORYBOARD_DOTS[i]}" per the storyboard layer column`);
+
 // State progressions mirror the storyboard
 assert.equal(scenes[1].state.metric, "combined"); assert.equal(scenes[2].state.metric, "v_c");
 assert.equal(scenes[4].state.metric, "collisions"); assert.equal(scenes[5].state.metric, "combined");
@@ -147,8 +154,29 @@ assert.equal(scenes[0].caption, "Congestion, crashes and a combined score for ev
 assert.equal(scenes[0].kind, "title"); assert.equal(scenes[14].kind, "closing");
 assert.equal(scenes[0].layers.segmentsOpacity, 0.5); assert.equal(scenes[14].layers.segmentsOpacity, 0.5, "bookends show segments at 50 percent");
 
+// 3.2-01: the title scene carries the storyboard eyebrow and hint (C.2, Wave 4); every scene carries the keys.
+assert.equal(scenes[0].eyebrow, "Prepared for the City of Norman · MIS Data Analytics Case Competition · October 2026", "title eyebrow verbatim");
+assert.equal(scenes[0].hint, "Press space or Next", "title hint verbatim");
+for (const s of scenes) {
+  assert.ok("eyebrow" in s && "hint" in s, `${s.id}: eyebrow and hint keys present`);
+  if (s.index !== 0) {
+    assert.equal(s.eyebrow, null, `${s.id}: no eyebrow`);
+    assert.equal(s.hint, null, `${s.id}: no hint`);
+  }
+}
+
+// 3.5-2: the v/c caption quotes FACTS.v_c_max by identity, never a recomputed max, even when the data
+// would round to a different value.
+const synthetic = { segments: { type: "FeatureCollection", features: [seg("52500-158", [2], 30000, { 2023: 168 }, { v_c_E: 0.123456 })] }, summary: { years: [2021, 2022, 2023, 2024, 2025] } };
+setRaw({ ...synthetic, wards: { features: [] }, collisions: null, points: null });
+const syntheticScenes = buildScenes(synthetic);
+assert.ok(syntheticScenes[2].caption.includes(FACTS.v_c_max), "scene 2 caption quotes FACTS.v_c_max");
+assert.ok(!syntheticScenes[2].caption.includes("0.12"), "scene 2 caption never carries a recomputed max");
+assert.equal(syntheticScenes[2].stats[0].value, FACTS.v_c_max, "scene 2 stat quotes FACTS.v_c_max by value");
+setRaw({ ...raw, wards: { features: [] }, collisions: null, points: null });
+
 if (existsSync(real)) {
-  assert.ok(scenes[2].caption.includes("0.88"), "v/c max computed from data agrees with the quoted 0.88");
+  assert.ok(scenes[2].caption.includes(FACTS.v_c_max), "v/c caption quotes the FACTS.v_c_max figure");
   assert.equal(scenes[13].calloutText, "6 lanes · 31,886 VPD", "callout text matches the storyboard verbatim");
   for (const t of TOP5) assert.ok(byId[t.loc_id], `TOP5 ${t.loc_id} exists in segments.geojson`);
   console.log("scenes real-data checks passed");

@@ -1,7 +1,10 @@
 // Presentation chrome (CONTRACTS.md C.9): caption card, segmented progress tablist, controls with auto-hide.
 // All scene content comes from the Scene object (C.2); this module never computes a fact.
 // Motion: contents crossfade via data-anim on the card (250 ms, CSS carries the stagger); skipped under
-// reduced motion. Controls auto-hide after 3 s without pointer movement. Timers are injectable for tests.
+// reduced motion. Controls auto-hide after 3 s without pointer movement (hidden controls also leave the
+// tab order); any pointer movement or any key anywhere brings them back. The progress tablist follows the
+// WAI-ARIA tabs pattern: roving tabindex, Arrow/Home/End keys, activation emits { goto }. Day-preset
+// scenes get a "day" class on the root so the CSS can adapt the chrome (3.2-02). Timers are injectable.
 import { METRIC_LABEL, RAMP } from "../config.js";
 import { prefersReducedMotion } from "../motion.js";
 
@@ -46,10 +49,12 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
 
   // --- controls visibility + auto-hide -------------------------------------------
   let hideTimer = null;
+  const controlButtons = [els.prev, els.next, els.autoplay, els.exit].filter(Boolean);
   const applyControls = (visible) => {
     if (!els.controls) return;
     els.controls.classList.toggle("hidden", !visible);
-    els.controls.setAttribute("aria-hidden", String(!visible));
+    // the fade is opacity-only, so hidden buttons must also leave the tab order (3.7-04)
+    for (const b of controlButtons) b.tabIndex = visible ? 0 : -1;
   };
   const cancelHide = () => { if (hideTimer != null) { _ct(hideTimer); hideTimer = null; } };
   const scheduleHide = () => {
@@ -62,7 +67,9 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     scheduleHide();
   };
   on(root, "pointermove", wake);
-  on(root, "keydown", wake);
+  // any key anywhere wakes the controls (3.7-04); the test fake document has no
+  // addEventListener, so it falls back to the root listener
+  on(typeof document !== "undefined" && document.addEventListener ? document : root, "keydown", wake);
 
   // --- scene rendering -------------------------------------------------------------
   const block = (className, text) => {
@@ -104,6 +111,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
   function renderList(scene) {
     els.list.innerHTML = "";
     const items = scene.list || [];
+    els.card.classList.toggle("has-list", items.length > 0);
     for (const it of items) {
       const card = document.createElement("div");
       card.classList.add("present-list-card");
@@ -126,11 +134,34 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     els.list.hidden = items.length === 0;
   }
 
+  // Title-scene hero extras (C.2 eyebrow/hint, Wave 4): branding line above the title and the
+  // start cue below the caption. Created once, populated only when the scene carries the fields.
+  const heroEyebrow = document.createElement("div");
+  heroEyebrow.classList.add("present-hero-eyebrow");
+  heroEyebrow.hidden = true;
+  const heroHint = document.createElement("div");
+  heroHint.classList.add("present-hero-hint");
+  heroHint.hidden = true;
+  if (els.card) {
+    if (els.card.insertBefore) {
+      els.card.insertBefore(heroHint, els.stats);
+      els.card.insertBefore(heroEyebrow, els.title);
+    } else {
+      els.card.appendChild(heroEyebrow);
+      els.card.appendChild(heroHint);
+    }
+  }
+
   function renderScene(scene) {
     if (els.count) els.count.textContent = `Scene ${scene.number != null ? scene.number : scene.index + 1} of ${scene.total}`;
     els.title.textContent = scene.title || "";
     els.caption.textContent = scene.caption || "";
     els.card.dataset.kind = scene.kind;
+    heroEyebrow.textContent = scene.eyebrow || "";
+    heroEyebrow.hidden = !scene.eyebrow;
+    heroHint.textContent = scene.hint || "";
+    heroHint.hidden = !scene.hint;
+    if (root) root.classList.toggle("day", scene.lightPreset === "day");
     renderStats(scene);
     renderLegend(scene);
     renderList(scene);
@@ -166,12 +197,35 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
   }
 
   // --- progress tablist -----------------------------------------------------------------
+  // WAI-ARIA tabs pattern (3.7-03): one tab per scene, roving tabindex, Arrow/Home/End move
+  // focus with automatic activation (emitting { goto } through onAction). This handler owns
+  // keys inside #present-progress; tour.js leaves them alone when focus is in the tablist.
   const setFill = (el, f) => {
     const v = String(f);
     if (el.style.setProperty) el.style.setProperty("--fill", v); else el.style["--fill"] = v;
   };
   let progressTotal = 0;
   let segments = [];
+  let focusIndex = 0;
+  const syncTabOrder = () => {
+    segments.forEach((seg, i) => { seg.tabIndex = i === focusIndex ? 0 : -1; });
+  };
+  on(els.progress, "keydown", (e) => {
+    if (!segments.length) return;
+    let nextIndex = null;
+    if (e.key === "ArrowRight") nextIndex = Math.min(focusIndex + 1, segments.length - 1);
+    else if (e.key === "ArrowLeft") nextIndex = Math.max(focusIndex - 1, 0);
+    else if (e.key === "Home") nextIndex = 0;
+    else if (e.key === "End") nextIndex = segments.length - 1;
+    else return;
+    if (e.preventDefault) e.preventDefault();
+    if (nextIndex === focusIndex) return;
+    focusIndex = nextIndex;
+    syncTabOrder();
+    const seg = segments[focusIndex];
+    if (seg && seg.focus) seg.focus();
+    emit({ goto: focusIndex });
+  });
   function setProgress(index, total, fraction) {
     const frac = clamp01(fraction == null ? 0 : fraction);
     if (total !== progressTotal) {
@@ -183,6 +237,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
         seg.type = "button";
         seg.setAttribute("role", "tab");
         seg.setAttribute("aria-label", `Scene ${i + 1} of ${total}`);
+        seg.setAttribute("aria-controls", "present-card");
         const gotoIndex = i;
         seg.addEventListener("click", () => emit({ goto: gotoIndex }));
         els.progress.appendChild(seg);
@@ -190,11 +245,12 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
       }
       progressTotal = total;
     }
+    focusIndex = index;
     segments.forEach((seg, i) => {
       seg.setAttribute("aria-selected", String(i === index));
-      seg.tabIndex = i === index ? 0 : -1;
       setFill(seg, i < index ? 1 : i === index ? frac : 0);
     });
+    syncTabOrder();
   }
 
   function setControlsVisible(visible) {
@@ -202,11 +258,20 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     if (visible) scheduleHide(); else cancelHide();
   }
 
+  // C.9 Wave 4 (3.5-1/3.7-05): the player calls this when autoplay changes outside the switch
+  // itself (the `a` key, or the reducer forcing autoplay off at the last scene).
+  function setAutoplay(onState) {
+    if (!els.autoplay) return;
+    els.autoplay.checked = !!onState;
+    els.autoplay.setAttribute("aria-checked", String(!!onState));
+  }
+
   return {
     show,
     hide,
     setProgress,
     setControlsVisible,
+    setAutoplay,
     onAction: (cb) => { cbs.push(cb); },
   };
 }

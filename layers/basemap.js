@@ -63,7 +63,7 @@ export function slotFor(layerKind) {
 // style under it, re-apply config and hand control to onReady after style.load, then fade the
 // overlay away once the map is idle. The snapshot needs preserveDrawingBuffer: true on the Map
 // constructor (Wave 2 wiring); if toDataURL fails the switch still completes without an overlay.
-export function switchBasemap(map, next, { lightPreset, presenting, onReady, tween: tweenFn = tween, fadeMs = 350 } = {}) {
+export function switchBasemap(map, next, { lightPreset, presenting, onReady, tween: tweenFn = tween, fadeMs = 350, setTimeout: setTimeoutFn = setTimeout, clearTimeout: clearTimeoutFn = clearTimeout } = {}) {
   const url = STYLE_FOR[next] || next;
   const canvas = map.getCanvas ? map.getCanvas() : null;
   const container = (map.getCanvasContainer && map.getCanvasContainer()) || (canvas && canvas.parentNode) || null;
@@ -85,15 +85,27 @@ export function switchBasemap(map, next, { lightPreset, presenting, onReady, twe
     }
   }
   return new Promise((resolve) => {
+    let settled = false;
+    let timeoutId = null;
+    const clearFallback = () => {
+      if (timeoutId !== null) { clearTimeoutFn(timeoutId); timeoutId = null; }
+    };
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      clearFallback();
+      if (overlay) { overlay.remove(); overlay = null; }
+      resolve();
+    };
     map.once("style.load", () => {
       configureStandard(map, { lightPreset, presenting });
       if (onReady) onReady();
       // The selection pulse and the flow loop keep repainting forever, so a perfect idle may never
       // come; bound the wait and fade the overlay regardless.
-      let settled = false;
       const proceed = () => {
         if (settled) return;
         settled = true;
+        clearFallback();
         if (!overlay || !fadeMs) { if (overlay) overlay.remove(); resolve(); return; }
         tweenFn({
           duration: fadeMs,
@@ -102,9 +114,12 @@ export function switchBasemap(map, next, { lightPreset, presenting, onReady, twe
         });
       };
       map.once("idle", proceed);
-      setTimeout(proceed, 5000);
+      timeoutId = setTimeoutFn(proceed, 5000);
     });
-    map.setStyle(url);
+    // A style that never reaches style.load (bad URL, network block mid-session) must not hang the
+    // awaiting callers: settle on the map error event, and on a synchronous setStyle throw.
+    map.once("error", fail);
+    try { map.setStyle(url); } catch { fail(); }
   });
 }
 

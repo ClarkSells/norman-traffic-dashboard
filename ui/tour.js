@@ -50,7 +50,7 @@ export function dotsHtml(index, total) {
 //   scenes: C.2 scene list,
 //   applyScene(scene, prev): drives map/camera/layers; may return a promise,
 //   onEnter(saved), onExit(saved),
-//   present: the C.9 chrome { show, hide, setProgress, setControlsVisible, onAction },
+//   present: the C.9 chrome { show, hide, setProgress, setControlsVisible, setAutoplay?, onAction },
 //   timers: injectable { now, setInterval, clearInterval } so tests can drive autoplay time,
 // }
 // Returns { dispatch, getState }.
@@ -105,6 +105,7 @@ export function initTourPlayer(opts) {
     s = tourReduce(s, action);
     if (s === prev) return s;
     stopTick();
+    if (s.autoplay !== prev.autoplay && present && typeof present.setAutoplay === "function") present.setAutoplay(s.autoplay);
     if (action.type === "enter" && opts.onEnter) opts.onEnter(s.saved);
     if (s.active && (!prev.active || prev.index !== s.index || action.type === "enter")) {
       const scene = scenes[s.index];
@@ -137,6 +138,10 @@ export function initTourPlayer(opts) {
     document.addEventListener("keydown", (e) => {
       if (!s.active) return;
       const t = e.target, tag = t && t.tagName ? t.tagName.toLowerCase() : "";
+      // Chrome keeps its native keys: Space/Enter/arrows on a focused button or progress tab
+      // activate/navigate it instead of stepping scenes. Escape still exits from anywhere.
+      const onChrome = tag === "button" || !!(t && typeof t.closest === "function" && t.closest('button, [role="tab"], #present-progress'));
+      if (onChrome && e.key !== "Escape") return;
       const inField = tag === "input" || tag === "select" || tag === "textarea" || (t && t.isContentEditable);
       const a = keyAction(e.key, inField && e.key !== "Escape");
       if (a) { if (e.preventDefault) e.preventDefault(); dispatch(a); }

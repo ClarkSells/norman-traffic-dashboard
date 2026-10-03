@@ -30,7 +30,7 @@ async function open(ctxOpts, hash = "") {
   await shot(page, "01_desktop_citywide");
   check("desktop loads with the layers and no loading card", await page.evaluate(() => document.getElementById("loading").hidden && !document.getElementById("panel").classList.contains("skeleton")));
   check("stat tiles show 177 primary segments and 5,121 crashes", await page.evaluate(() => document.getElementById("stat-segments").textContent === "177" && document.getElementById("stat-crashes").textContent === "5,121"));
-  check("stats line reads segments, crashes and the top segment in one mono line", await page.evaluate(() => { const l = document.getElementById("stats-line"); return !!l && /177 segments · 5,121 crashes 2021 to 2025 · top: /.test(l.textContent); }), await page.evaluate(() => (document.getElementById("stats-line") || {}).textContent || "missing"));
+  check("stats line reads segments, crashes and the top segment in one mono line", await page.evaluate(() => { const l = document.getElementById("stats-line"); return !!l && /177 segments · 5,121 crashes · top: W Main St/.test(l.textContent); }), await page.evaluate(() => (document.getElementById("stats-line") || {}).textContent || "missing"));
   for (const w of ["1", "2", "3", "4", "5", "6", "7", "8", ""]) {
     await page.click(`#ward-toggle button[data-ward="${w}"]`); await settle(page, 900);
     const s = await state(page); const n = await page.evaluate(() => document.querySelectorAll("#rank-table tbody tr:not(.leaving)").length);

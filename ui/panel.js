@@ -110,6 +110,19 @@ export function initSettings() {
     const host = controlHost(inner);
     if (host && host !== settings && host.parentNode !== settings && typeof settings.appendChild === "function") settings.appendChild(host);
   }
+  // The quiet Settings disclosure sits inline on the metric row; the labeled "More" row goes away (3.3-02/03).
+  const metricBox = document.getElementById("metric-toggle");
+  const metricControl = metricBox ? controlHost(metricBox) : null;
+  const moreControl = controlHost(toggle);
+  if (metricControl && metricControl !== metricBox && moreControl && moreControl !== toggle && metricControl !== moreControl && typeof document.createElement === "function") {
+    const row = document.createElement("div");
+    row.classList.add("metric-row");
+    metricControl.appendChild(row);
+    row.appendChild(metricBox);
+    row.appendChild(toggle);
+    if (typeof moreControl.remove === "function") moreControl.remove();
+    settings.setAttribute("aria-labelledby", "settings-toggle");
+  }
   const set = (open) => {
     settings.hidden = !open;
     toggle.setAttribute("aria-expanded", String(open));
@@ -198,7 +211,7 @@ export function rowCells(r, state, maxScore) {
   const share = maxScore > 0 && r.metric_value != null ? Math.max(0, Math.min(1, r.metric_value / maxScore)) : 0;
   const scoreText = state.metric === "v_c" ? num(r.v_c_active) : state.metric === "collisions" ? int(r.collisions_active) : num(r.combined_active);
   return `<td class="num rank">${r.rank}</td>
-      <td><div class="road">${r.on_road}${r.shared_boundary ? '<span class="tag">boundary</span>' : ""}${ARTERIAL.has(r.functional_class) ? "" : '<span class="tag">collector</span>'}</div><div class="span">${r.from_road} to ${r.to_road}</div></td>
+      <td><div class="road"><span class="name">${r.on_road}</span>${r.shared_boundary ? '<span class="tag">boundary</span>' : ""}${ARTERIAL.has(r.functional_class) ? "" : '<span class="tag">collector</span>'}</div><div class="span">${r.from_road} to ${r.to_road}</div></td>
       <td class="num">${num(r.v_c_active)}</td><td class="num">${int(r.collisions_active)}</td>
       <td class="num score"><div class="bar" aria-hidden="true"><i style="width:${(share * 100).toFixed(1)}%"></i></div><span>${scoreText}</span></td>`;
 }
@@ -248,7 +261,7 @@ export function renderTable(state, onRowClick, hooks = {}) {
     const selected = r.loc_id === state.selectedLocId;
     tr.classList.toggle("selected", selected);
     tr.classList.toggle("leaving", false);
-    tr.setAttribute("aria-selected", String(selected));
+    if (selected) tr.setAttribute("aria-current", "true"); else tr.removeAttribute("aria-current");
     tbody.appendChild(tr);   // appending an existing node moves it: this is the reorder
     seen.add(r.loc_id);
   }
@@ -287,12 +300,12 @@ export function renderTable(state, onRowClick, hooks = {}) {
   return rows;
 }
 
-// One mono line under the controls, e.g. "177 segments · 5,121 crashes 2021 to 2025 · top: W Main St".
-// Driven by the same summarize() result as the stat tiles; the tiles keep their ids but the line is the visual.
+// One mono line under the controls, e.g. "177 segments · 5,121 crashes · top: W Main St".
+// The year window already reads in the briefing line and the year slider label; dropping it here keeps the
+// top street visible inside the 400 px panel (3.3-01). Driven by the same summarize() result as the stat tiles.
 export function statsLine(state, summary) {
   const n = summary.n;
-  const window = state.yearMin === state.yearMax ? `in ${state.yearMin}` : `${state.yearMin} to ${state.yearMax}`;
-  return `${int(n)} segment${n === 1 ? "" : "s"} · ${int(summary.crashes)} crashes ${window} · top: ${summary.top ? summary.top.on_road : "none"}`;
+  return `${int(n)} segment${n === 1 ? "" : "s"} · ${int(summary.crashes)} crashes · top: ${summary.top ? summary.top.on_road : "none"}`;
 }
 
 export function renderStats(state, summary, animateNumber) {

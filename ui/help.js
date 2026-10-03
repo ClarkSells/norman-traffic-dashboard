@@ -55,7 +55,16 @@ export function initHelp(qa) {
   };
   closeBtn.addEventListener("click", () => close());
   set(false);
-  btn.addEventListener("click", () => set(box.hidden));
-  box.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  btn.addEventListener("click", () => (box.hidden ? set(true) : close()));
+  // Escape works wherever focus is while the overlay is open, and focus that strays outside is pulled back in (3.7-10).
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  box.addEventListener("keydown", onKey);
+  if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("focusin", (e) => {
+      if (box.hidden || !e || !e.target || e.target === box) return;
+      if (typeof box.contains === "function" && !box.contains(e.target) && typeof box.focus === "function") box.focus({ preventScroll: true });
+    });
+  }
   return { close, set };
 }

@@ -34,6 +34,7 @@ const timers = fakeTimers();
 const present = initPresent({ root: el("present"), reducedMotion: false, setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout });
 assert.equal(typeof present.show, "function"); assert.equal(typeof present.hide, "function");
 assert.equal(typeof present.setProgress, "function"); assert.equal(typeof present.setControlsVisible, "function");
+assert.equal(typeof present.setAutoplay, "function", "C.9 Wave 4: setAutoplay is part of the return object");
 assert.equal(typeof present.onAction, "function");
 
 // --- show(scene) writes the card -------------------------------------------------
@@ -137,12 +138,16 @@ assert.equal(el("present-autoplay").getAttribute("aria-checked"), "true", "switc
 
 // --- controls auto-hide after 3 s idle --------------------------------------------------
 const controls = el("present-controls");
+const controlButtons = ["present-prev", "present-next", "present-autoplay", "present-exit"].map(el);
 assert.equal(controls.classList.contains("hidden"), false, "controls start visible");
+assert.ok(controlButtons.every((b) => b.tabIndex === 0), "visible controls keep their buttons in the tab order");
 timers.runDue(AUTO_HIDE_MS);
 assert.equal(controls.classList.contains("hidden"), true, "controls hide after 3 s without pointer movement");
-assert.equal(controls.getAttribute("aria-hidden"), "true");
+assert.equal(controls.getAttribute("aria-hidden"), null, "no aria-hidden on the hidden controls (3.7-04)");
+assert.ok(controlButtons.every((b) => b.tabIndex === -1), "hidden controls leave the tab order (3.7-04)");
 el("present").fire("pointermove");
 assert.equal(controls.classList.contains("hidden"), false, "pointer movement brings them back");
+assert.ok(controlButtons.every((b) => b.tabIndex === 0), "woken controls rejoin the tab order");
 timers.runDue(AUTO_HIDE_MS);
 assert.equal(controls.classList.contains("hidden"), true, "and they hide again");
 el("present").fire("keydown", { key: "ArrowRight" });
@@ -151,6 +156,72 @@ present.setControlsVisible(true);
 assert.equal(controls.classList.contains("hidden"), false);
 present.setControlsVisible(false);
 assert.equal(controls.classList.contains("hidden"), true, "explicit hide wins");
+assert.ok(controlButtons.every((b) => b.tabIndex === -1), "explicit hide also drops the tab order");
+
+// --- setAutoplay syncs the switch (3.5-1 / 3.7-05, C.9 Wave 4) ----------------------------
+present.setAutoplay(false);
+assert.equal(el("present-autoplay").checked, false);
+assert.equal(el("present-autoplay").getAttribute("aria-checked"), "false");
+present.setAutoplay(true);
+assert.equal(el("present-autoplay").checked, true, "setAutoplay checks the switch");
+assert.equal(el("present-autoplay").getAttribute("aria-checked"), "true", "and its aria-checked");
+present.setAutoplay(false);
+
+// --- progress tablist: arrow keys move the roving tabindex and emit goto (3.7-03) ---------
+present.setProgress(1, 4, 0);
+const segs = el("present-progress").children;
+assert.ok([...segs].every((s) => s.getAttribute("aria-controls") === "present-card"), "every tab controls the caption card");
+const gotos = [];
+present.onAction((act) => { if (typeof act === "object" && act) gotos.push(act.goto); });
+const rightEvt = el("present-progress").fire("keydown", { key: "ArrowRight" });
+assert.equal(rightEvt.prevented, true, "the tablist owns arrow keys");
+assert.equal(segs[2].tabIndex, 0, "ArrowRight moves the roving tabindex");
+assert.equal(segs[1].tabIndex, -1, "the previous tab leaves the order");
+assert.equal(segs[2].focused, true, "focus follows the arrow");
+assert.deepEqual(gotos, [2], "activation emits { goto } through onAction");
+el("present-progress").fire("keydown", { key: "End" });
+assert.equal(segs[3].tabIndex, 0, "End jumps to the last tab");
+assert.deepEqual(gotos, [2, 3]);
+el("present-progress").fire("keydown", { key: "ArrowLeft" });
+assert.equal(segs[2].tabIndex, 0, "ArrowLeft steps back");
+assert.deepEqual(gotos, [2, 3, 2]);
+el("present-progress").fire("keydown", { key: "Home" });
+assert.equal(segs[0].tabIndex, 0, "Home jumps to the first tab");
+assert.deepEqual(gotos, [2, 3, 2, 0]);
+const passThrough = el("present-progress").fire("keydown", { key: "x" });
+assert.equal(passThrough.prevented, undefined, "unrelated keys pass through");
+present.setProgress(1, 4, 0.5);
+assert.equal(segs[1].tabIndex, 0, "setProgress re-syncs the roving tabindex to the active scene");
+
+// --- title scene hero: eyebrow and hint render when the scene carries them (3.2-01) -------
+present.show(scene({
+  kind: "title", number: 1, title: "Norman street segment priorities", stats: [], legend: null, list: null,
+  eyebrow: "Prepared for the City of Norman · MIS Data Analytics Case Competition · October 2026",
+  hint: "Press space or Next",
+}), { prev: b });
+timers.runDue(CROSSFADE_MS / 2);
+const heroEyebrow = el("present-card").children.find((c) => c.classList.contains("present-hero-eyebrow"));
+const heroHint = el("present-card").children.find((c) => c.classList.contains("present-hero-hint"));
+assert.ok(heroEyebrow, "the card carries a hero eyebrow element");
+assert.ok(heroHint, "the card carries a hero hint element");
+assert.equal(heroEyebrow.textContent, "Prepared for the City of Norman · MIS Data Analytics Case Competition · October 2026");
+assert.equal(heroEyebrow.hidden, false, "the eyebrow shows when scene.eyebrow is set");
+assert.equal(heroHint.textContent, "Press space or Next");
+assert.equal(heroHint.hidden, false, "the hint shows when scene.hint is set");
+present.show(scene({ kind: "city", title: "A plain scene" }), { prev: s1 });
+timers.runDue(CROSSFADE_MS / 2);
+assert.equal(heroEyebrow.hidden, true, "the eyebrow disappears on scenes without it");
+assert.equal(heroEyebrow.textContent, "");
+assert.equal(heroHint.hidden, true, "the hint disappears on scenes without it");
+
+// --- day preset scenes key the adaptive chrome class (3.2-02) -----------------------------
+present.show(scene({ lightPreset: "day" }), { prev: s1 });
+timers.runDue(CROSSFADE_MS / 2);
+assert.equal(el("present").classList.contains("day"), true, "a day preset toggles the day chrome class");
+present.show(scene({ lightPreset: "dusk" }), { prev: s1 });
+timers.runDue(CROSSFADE_MS / 2);
+assert.equal(el("present").classList.contains("day"), false, "a dusk preset clears it");
+
 present.hide();
 assert.equal(el("present").hidden, true, "hide dismisses the chrome");
 

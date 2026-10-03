@@ -146,6 +146,66 @@ for (const kind of ["segments", "flow", "dots", "callouts", "points", "mask", "a
   await p;
 }
 
+// 3.6-03: the promise must ALWAYS settle, and the 5 s idle-fallback timer must be cleared
+{
+  // idle path: the fallback timer is cleared once idle wins
+  const map = makeMap();
+  const timers = [];
+  const cleared = [];
+  const fakeSetTimeout = (cb, ms) => { const id = timers.length; timers.push({ cb, ms }); return id; };
+  const fakeClearTimeout = (id) => cleared.push(id);
+  const p = switchBasemap(map, "satellite", { lightPreset: "day", presenting: false, setTimeout: fakeSetTimeout, clearTimeout: fakeClearTimeout });
+  map.fire("style.load");
+  assert.equal(timers.length, 1, "one fallback timer armed after style.load");
+  assert.equal(timers[0].ms, 5000, "5 s idle fallback");
+  map.fire("idle");
+  assert.deepEqual(cleared, [0], "fallback timer cleared when idle wins");
+  await p;
+  timers[0].cb(); // stale fire must be a no-op (settled flag)
+  await p;
+}
+{
+  // fallback path: the timer fires before idle, and it still resolves + removes the overlay
+  const map = makeMap();
+  const timers = [];
+  const cleared = [];
+  const tweens = [];
+  const fakeTween = (opts) => { tweens.push(opts); return () => {}; };
+  const p = switchBasemap(map, "satellite", {
+    lightPreset: "day", presenting: false, tween: fakeTween,
+    setTimeout: (cb, ms) => { timers.push(cb); return timers.length - 1; },
+    clearTimeout: (id) => cleared.push(id),
+  });
+  map.fire("style.load");
+  timers[0](); // timer wins the race
+  assert.equal(tweens.length, 1, "fallback drives the same fade");
+  tweens[0].onDone();
+  await p;
+  map.fire("idle"); // late idle is a no-op
+  await p;
+}
+{
+  // setStyle throwing synchronously still resolves and removes the overlay (C.5: always settle)
+  const map = makeMap();
+  const boom = new Error("bad style url");
+  map.setStyle = () => { throw boom; };
+  let readyCalls = 0;
+  const p = switchBasemap(map, "satellite", { lightPreset: "day", presenting: false, onReady: () => { readyCalls++; } });
+  const settled = await Promise.race([p.then(() => "resolved"), new Promise((res) => setTimeout(() => res("hung"), 100))]);
+  assert.equal(settled, "resolved", "switchBasemap resolves even when setStyle throws");
+  assert.equal(map.container.children.length, 0, "overlay removed when setStyle throws");
+  assert.equal(readyCalls, 0, "onReady does not fire without style.load");
+}
+{
+  // an error event before style.load settles the promise too
+  const map = makeMap();
+  const p = switchBasemap(map, "satellite", { lightPreset: "day", presenting: false });
+  map.fire("error");
+  const settled = await Promise.race([p.then(() => "resolved"), new Promise((res) => setTimeout(() => res("hung"), 100))]);
+  assert.equal(settled, "resolved", "switchBasemap resolves on map error before style.load");
+  assert.equal(map.container.children.length, 0, "overlay removed on error");
+}
+
 // legacy exports kept for app.js and tests/layers.test.js until the lead rewires them
 assert.equal(typeof isStandardStyle, "function");
 assert.equal(typeof tuneBasemap, "function");
