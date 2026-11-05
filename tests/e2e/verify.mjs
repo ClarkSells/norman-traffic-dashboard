@@ -231,7 +231,7 @@ async function open(ctxOpts, hash = "") {
   await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 300, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 120, clientY: 404, isPrimary: true })); }); await settle(page, 2200);
   check("390: swipe left advances the scene", (await page.textContent("#present-scene-count")) === "Scene 2 of 17");
   await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 100, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 300, clientY: 396, isPrimary: true })); }); await settle(page, 2200);
-  check("390: swipe right goes back", (await page.textContent("#present-scene-count")) === "Scene 1 of 15");
+  check("390: swipe right goes back", (await page.textContent("#present-scene-count")) === "Scene 1 of 17");
   await page.evaluate(() => window.__dash.tour.dispatch({ type: "goto", index: 11 })); await settle(page, 2500);
   check("390: the ward scene keeps the phone caption layout, no operating panel", await page.evaluate(() => document.getElementById("layout").classList.contains("presenting") && document.getElementById("panel").getBoundingClientRect().top >= innerHeight - 4 && !document.getElementById("present-list").hidden), await page.evaluate(() => document.getElementById("present-scene-count").textContent));
   await shot(page, "12_m390_ward_scene");

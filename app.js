@@ -377,8 +377,9 @@ async function main() {
   performance.mark("dash:data-ready");
   initControls();
   initSimulate({ daytypes: getRaw().daytypes });
-  // data/SAMPLE_DATA.txt exists only while scripts/stamp_sample.mjs output stands in for the pipeline.
-  fetch("data/SAMPLE_DATA.txt", { method: "HEAD" }).then(r => setSampleNotice(r.ok)).catch(() => setSampleNotice(false));
+  // The scenario files are real pipeline output. scripts/stamp_sample.mjs can stand in again during development:
+  // run it and set window.__sample = true before app.js loads to show the sample notice (no network probe, no 404).
+  setSampleNotice(!!window.__sample);
   addAllLayers();
   performance.mark("dash:layers-added");
   const siteView = initSiteView(map);
