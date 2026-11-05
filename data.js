@@ -180,6 +180,19 @@ export function closureImpact(state) {
            detour_len_mi: impact ? impact.detour_len_mi : null, ratio: impact ? impact.ratio : null };
 }
 
+// The briefing sentence for game day, from daytypes.json alone (C.16). Fields the file lacks are left out.
+export function gamedayText(daytypes) {
+  const g = daytypes && daytypes.gameday;
+  const n = (v, d = 0) => Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  if (!g) return "OU game day: no game day routing data loaded";
+  const parts = [];
+  if (g.vehicles != null) parts.push(`${n(g.vehicles)} vehicles${g.seats != null && g.occupancy != null ? ` (${n(g.seats)} seats at ${n(g.occupancy, 1)} per vehicle)` : ""}, counted arriving and leaving`);
+  const origins = Array.isArray(g.origins) ? g.origins.length : 0;
+  if (origins) parts.push(`routed from ${origins} interchanges to the stadium by shortest travel time`);
+  if (Array.isArray(g.closures) && g.closures.length) parts.push(`${g.closures.length} segment${g.closures.length === 1 ? "" : "s"} closed around the stadium`);
+  return `OU game day: ${parts.length ? parts.join(", ") : "assumption"}`;
+}
+
 // How many listed segments sit at or above a v/c threshold under the state (the scene stat and the briefing).
 export function countOver(state, threshold) {
   return rankedRows(state).filter(r => r.v_c_active != null && r.v_c_active >= threshold).length;

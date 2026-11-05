@@ -26,6 +26,7 @@ import { readHash, writeHash } from "./hash.js";
 import { initSheet } from "./ui/sheet.js";
 import { closureArmed, initSimulate, playYears, setSampleNotice, stopYears, syncSimulate } from "./ui/simulate.js";
 import { addClosureLayers, setClosure, setClosureTheme } from "./layers/closure.js";
+import { addGamedayLayers, setGamedayTheme, setGamedayVisible, startGamedayFlow } from "./layers/gameday.js";
 
 initLoading();   // loading card over the map until the layers are on it
 setStage("map");
@@ -36,7 +37,7 @@ applyMode("explore");
 
 // The chrome theme and the map chrome (casings, ward lines, labels) move together.
 function applyMapTheme(name) {
-  setSegmentsTheme(map, name); setWardsTheme(map, name); setPointsTheme(map, name); setClosureTheme(map, name);
+  setSegmentsTheme(map, name); setWardsTheme(map, name); setPointsTheme(map, name); setClosureTheme(map, name); setGamedayTheme(map, name);
 }
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -115,11 +116,13 @@ function addAllLayers() {
   for (const id of FLOW_LAYERS) if (typeof map.moveLayer === "function" && map.getLayer("segments-selected")) map.moveLayer(id, "segments-selected");
   addCalloutLayer(map);
   addClosureLayers(map);
+  addGamedayLayers(map, raw.daytypes, { visible: state.daytype === "gameday" });
   addPointsLayer(map, raw.points);
   updateWards(map, state);
   updateSegments(map, state, applyState(state));
   updateCollisions(map, state);
   applyClosure(state);
+  applyGameday(state);
   if (state.flow) startFlowLoop();
   if (presenting && currentScene) applySceneLayers(currentScene);   // re-apply scene effects after a style swap
   setStage("crashes");
@@ -177,6 +180,16 @@ function applyClosure(state) {
   const f = state.closing ? getRaw().segments.features.find(x => x.properties.loc_id === state.closing) : null;
   const impacts = getRaw().closures;
   setClosure(map, f || null, f && impacts ? impacts[state.closing] : null);
+}
+
+// Game day (C.16): the routed stadium traffic and its origins show only on that day type; the dash runs
+// unless the user prefers reduced motion. Stops on exit, on hidden tabs (inside the loop) and on any other day type.
+let stopGameday = null;
+function applyGameday(state) {
+  const on = state.daytype === "gameday";
+  setGamedayVisible(map, on);
+  if (stopGameday) { stopGameday(); stopGameday = null; }
+  if (on && !state.reducedMotion) stopGameday = startGamedayFlow(map);
 }
 
 // A segment click while the Close a segment switch is on closes that segment (a second click reopens it).
@@ -340,6 +353,7 @@ function render(state, patch) {
   const bmBtn = document.getElementById("basemap-toggle");
   if (bmBtn) { bmBtn.textContent = state.basemap === "satellite" ? "Streets" : "Satellite"; bmBtn.setAttribute("aria-pressed", String(state.basemap === "satellite")); }
   if (patch && "closing" in patch) applyClosure(state);
+  if (patch && ("daytype" in patch || "reducedMotion" in patch)) applyGameday(state);
   if (presenting) { writeHash(state, tour && tour.getState().active ? tour.getState().index : null); return; }
   if (patch && "ward" in patch) flyToWard(state.ward);
   if (patch && "heat" in patch) setHeatVisible(map, state.heat !== false, { fadeMs: state.reducedMotion ? 0 : 600 });

@@ -1,5 +1,5 @@
 // Left panel: briefing header, controls, stat tiles and the ranked table.
-import { closureImpact, scenarioText, summarize, vcLabel, yearExtent, years } from "../data.js";
+import { closureImpact, gamedayText, getRaw, scenarioText, summarize, vcLabel, yearExtent, years } from "../data.js";
 import { getState, setState } from "../state.js";
 import { METRIC_LABEL } from "../config.js";
 import { animateNumber, capMoves, flipPlan, measureRows, playFlip } from "../motion.js";
@@ -25,8 +25,11 @@ export function briefingLine(state, summary) {
   const sc = scenarioText(state);
   if (sc && state.metric !== "collisions") parts.push(`projected v/c, ${sc}`);
   const line = parts.join(", ");
+  const extra = [];
+  if (state.daytype === "gameday") extra.push(gamedayText(getRaw().daytypes));
   const closure = closureLine(state);
-  return closure ? `${line}. ${closure}` : line;
+  if (closure) extra.push(closure);
+  return extra.length ? `${line}. ${extra.join(". ")}` : line;
 }
 
 // "W Main St closed: its 31,886 vpd route onto 12th Ave SE, v/c 0.52 to 0.81, detour 2.1 mi, 1.8 times the segment".

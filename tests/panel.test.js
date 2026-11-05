@@ -155,3 +155,12 @@ console.log("panel checks passed");
   assert.equal(el("th-vc").textContent, "v/c", "back to today");
   console.log("scenario panel checks passed");
 }
+
+// Game day: the briefing line states the routing assumption from daytypes.json.
+{
+  const { getRaw } = await import("../data.js");
+  setRaw({ ...getRaw(), daytypes: { factors: {}, gameday: { vehicles: 30800, seats: 80000, occupancy: 2.6, origins: [{ name: "a", lon: 0, lat: 0, share: 0.5 }, { name: "b", lon: 0, lat: 0, share: 0.5 }], closures: [], routes: [] } } });
+  const g = { ward: null, metric: "v_c", yearMin: 2021, yearMax: 2023, los: "E", includeCollectors: false, daytype: "gameday", year: 2025, growthAdd: 0, band: "base", closing: null };
+  assert.equal(briefingLine(g, { n: 2 }), "2 segments, ranked by volume to capacity ratio (v/c), crashes 2021 to 2023, projected v/c, 2025, base band, OU game day. OU game day: 30,800 vehicles (80,000 seats at 2.6 per vehicle), counted arriving and leaving, routed from 2 interchanges to the stadium by shortest travel time");
+  console.log("game day briefing checks passed");
+}
