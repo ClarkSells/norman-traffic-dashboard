@@ -3,6 +3,7 @@ import { caveatsFor, FALLBACK_GEOMETRY_IDS } from "../caveats.js";
 import { deriveProps, getRaw, rankWithin } from "../data.js";
 import { getState } from "../state.js";
 import { METRIC_LABEL } from "../config.js";
+import { closureLine } from "./tooltip.js";
 
 function num(v, d = 2) { return v == null ? "n/a" : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
 function int(v) { return v == null ? "n/a" : Math.round(Number(v)).toLocaleString("en-US"); }
@@ -17,24 +18,28 @@ export function popupHtml(p, ranks, state) {
   const chips = wards.map(w => `<span class="chip">Ward ${w}</span>`).join("")
     + (p.shared_boundary ? '<span class="chip muted">boundary, listed in both</span>' : "")
     + `<span class="chip muted">${p.functional_class || "class unknown"}</span>`
-    + (FALLBACK_GEOMETRY_IDS.includes(p.loc_id) ? '<span class="chip muted">approximate geometry</span>' : "");
+    + (FALLBACK_GEOMETRY_IDS.includes(p.loc_id) ? '<span class="chip muted">approximate geometry</span>' : "")
+    + (p.is_closed ? '<span class="chip">closed in this scenario</span>' : "");
   const metricWord = st.metric === "v_c" ? "v/c" : st.metric === "collisions" ? "crashes" : "combined score";
   const rankLine = ranks && ranks.listed
     ? `#${ranks.wardRank} of ${ranks.wardOf} in Ward ${ranks.ward}<br>#${ranks.cityRank} of ${ranks.cityOf} citywide, by ${metricWord}`
     : (ranks && !ranks.listed ? "Scored, not in the primary lists" : "");
   const caveats = caveatsFor(p.loc_id).map(t => `<p class="caveat">${t}</p>`).join("");
+  const detour = closureLine(p);
+  const closure = detour ? `<p class="closure">${detour}</p>` : "";
+  const vcWord = p.projected ? "projected v/c" : "volume to capacity (v/c)";
   return `<div class="popup"><h4>${p.on_road}</h4><div class="span">${p.from_road} to ${p.to_road} · ${p.loc_id}</div>
     <div class="chips">${chips}</div>
     <div class="grid">
       <div class="cell"><div class="v">${int(p.vpd_max)}<small>VPD, ${p.volume_year || "year n/a"}</small></div><div class="k">volume, vehicles per day</div></div>
       <div class="cell"><div class="v">${int(p.lanes_final)}<small>${p.one_way ? "one way" : "lanes"}</small></div><div class="k">lanes, ${p.lanes_source || "source n/a"}</div></div>
       <div class="cell"><div class="v">${int(cap)}<small>VPD</small></div><div class="k">capacity at LOS ${st.los}</div></div>
-      <div class="cell"><div class="v">${num(p.v_c_active)}</div><div class="k">volume to capacity (v/c)</div></div>
+      <div class="cell"><div class="v">${num(p.v_c_active)}</div><div class="k">${vcWord}</div></div>
       <div class="cell"><div class="v">${int(p.collisions_active)}</div><div class="k">crashes ${st.yearMin} to ${st.yearMax}</div></div>
       <div class="cell"><div class="v">${p.length_mi != null ? num(p.length_mi, 2) : "n/a"}<small>mi</small></div><div class="k">length${FALLBACK_GEOMETRY_IDS.includes(p.loc_id) ? ", approximate" : ""}</div></div>
     </div>
     <div class="score-row"><div><div class="k" style="font-size:10.5px;color:var(--ink-muted)">${METRIC_LABEL.combined}, crashes + v/c</div><div class="v">${num(p.combined_active)}</div></div><div class="ranks">${rankLine}</div></div>
-    ${caveats}${aerial}</div>`;
+    ${closure}${caveats}${aerial}</div>`;
 }
 
 // Builds the popup content for a loc_id from the raw data under the current state. Returns null when the id is unknown.
@@ -48,8 +53,11 @@ export function popupFor(locId, state) {
   return { html: popupHtml(p, rankWithin(st, locId), st), lngLat: mid, feature: f };
 }
 
-export function attachPopup(map, onSelect, enabled) {
+// opts.intercept(locId, lngLat) may claim a segment click (closure mode): when it returns true nothing opens
+// and nothing is selected.
+export function attachPopup(map, onSelect, enabled, opts = {}) {
   const canOpen = typeof enabled === "function" ? enabled : () => true;
+  const intercept = typeof opts.intercept === "function" ? opts.intercept : () => false;
   const popup = new mapboxgl.Popup({ closeButton: true, maxWidth: "340px", offset: 10 });
   const open = (locId, lngLat) => {
     const built = popupFor(locId);
@@ -57,18 +65,15 @@ export function attachPopup(map, onSelect, enabled) {
     popup.setLngLat(lngLat || built.lngLat).setHTML(built.html).addTo(map);
     return popup;
   };
-  map.on("click", "segments-line", (e) => {
+  const onFeatureClick = (e) => {
     if (!canOpen()) return;   // presentation never uses the popup (audit A5)
     const f = e.features[0];
+    if (intercept(f.properties.loc_id, e.lngLat)) return;
     open(f.properties.loc_id, e.lngLat);
     onSelect(f.properties.loc_id);
-  });
-  map.on("click", "count-points", (e) => {
-    if (!canOpen()) return;
-    const f = e.features[0];
-    open(f.properties.loc_id, e.lngLat);
-    onSelect(f.properties.loc_id);
-  });
+  };
+  map.on("click", "segments-line", onFeatureClick);
+  map.on("click", "count-points", onFeatureClick);
   popup.open = open;
   popup.refresh = () => { if (popup.isOpen && popup.isOpen() && popup.__loc) open(popup.__loc, popup.getLngLat()); };
   const origOpen = popup.open; popup.open = (locId, lngLat) => { popup.__loc = locId; return origOpen(locId, lngLat); };

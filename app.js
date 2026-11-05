@@ -25,6 +25,7 @@ import { initMapChrome } from "./ui/mapchrome.js";
 import { readHash, writeHash } from "./hash.js";
 import { initSheet } from "./ui/sheet.js";
 import { closureArmed, initSimulate, playYears, setSampleNotice, stopYears, syncSimulate } from "./ui/simulate.js";
+import { addClosureLayers, setClosure, setClosureTheme } from "./layers/closure.js";
 
 initLoading();   // loading card over the map until the layers are on it
 setStage("map");
@@ -35,7 +36,7 @@ applyMode("explore");
 
 // The chrome theme and the map chrome (casings, ward lines, labels) move together.
 function applyMapTheme(name) {
-  setSegmentsTheme(map, name); setWardsTheme(map, name); setPointsTheme(map, name);
+  setSegmentsTheme(map, name); setWardsTheme(map, name); setPointsTheme(map, name); setClosureTheme(map, name);
 }
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -113,10 +114,12 @@ function addAllLayers() {
   // The design stacks flow above segments-line and below the selection frame, all in slot "top".
   for (const id of FLOW_LAYERS) if (typeof map.moveLayer === "function" && map.getLayer("segments-selected")) map.moveLayer(id, "segments-selected");
   addCalloutLayer(map);
+  addClosureLayers(map);
   addPointsLayer(map, raw.points);
   updateWards(map, state);
   updateSegments(map, state, applyState(state));
   updateCollisions(map, state);
+  applyClosure(state);
   if (state.flow) startFlowLoop();
   if (presenting && currentScene) applySceneLayers(currentScene);   // re-apply scene effects after a style swap
   setStage("crashes");
@@ -166,6 +169,21 @@ async function setBasemap(next) {
   await switchBasemap(map, next, { lightPreset: next === "satellite" ? null : PRESETS.explore, presenting: false, fadeMs: getState().reducedMotion ? 0 : 350 });
   setState({ basemap: next });
   applyMapTheme(themeFor(next));
+}
+
+// Closure mode (C.14): the closed segment and its detour path from closure_impacts.json. The detour segments
+// repaint through updateSegments (projected v/c carries the added volume), so only the two overlays live here.
+function applyClosure(state) {
+  const f = state.closing ? getRaw().segments.features.find(x => x.properties.loc_id === state.closing) : null;
+  const impacts = getRaw().closures;
+  setClosure(map, f || null, f && impacts ? impacts[state.closing] : null);
+}
+
+// A segment click while the Close a segment switch is on closes that segment (a second click reopens it).
+function closureIntercept(locId) {
+  if (presenting || !closureArmed()) return false;
+  setState({ closing: getState().closing === locId ? null : locId });
+  return true;
 }
 
 function selectSegment(locId, { fly = true, openPopup = true } = {}) {
@@ -321,6 +339,7 @@ function render(state, patch) {
   syncSimulate(state);
   const bmBtn = document.getElementById("basemap-toggle");
   if (bmBtn) { bmBtn.textContent = state.basemap === "satellite" ? "Streets" : "Satellite"; bmBtn.setAttribute("aria-pressed", String(state.basemap === "satellite")); }
+  if (patch && "closing" in patch) applyClosure(state);
   if (presenting) { writeHash(state, tour && tour.getState().active ? tour.getState().index : null); return; }
   if (patch && "ward" in patch) flyToWard(state.ward);
   if (patch && "heat" in patch) setHeatVisible(map, state.heat !== false, { fadeMs: state.reducedMotion ? 0 : 600 });
@@ -339,7 +358,7 @@ async function main() {
   fetch("data/SAMPLE_DATA.txt", { method: "HEAD" }).then(r => setSampleNotice(r.ok)).catch(() => setSampleNotice(false));
   addAllLayers();
   performance.mark("dash:layers-added");
-  popup = attachPopup(map, (locId) => setState({ selectedLocId: locId }), () => !presenting);
+  popup = attachPopup(map, (locId) => setState({ selectedLocId: locId }), () => !presenting, { intercept: closureIntercept });
   helpBox = initHelp(getRaw().summary && getRaw().summary.qa);
   panelToggle = initPanelToggle();
   const sheet = initSheet({ panel: document.getElementById("panel"), handle: document.getElementById("sheet-handle"), header: document.getElementById("briefing"),
