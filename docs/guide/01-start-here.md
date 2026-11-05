@@ -90,7 +90,7 @@ npm install --save-dev playwright@1.63.0
 npx playwright install chromium
 ```
 
-Other drives in `tests/e2e/`: `real.mjs` loads the real Mapbox library and screenshots every scene at three viewports into `qa/real/` (needs network and the token), `perf.mjs` reads the flow loop cost, `peek.mjs` and `mobile_peek.mjs` take one screenshot each for a quick look.
+Other drives in `tests/e2e/`: `real.mjs` loads the real Mapbox library and screenshots every scene at three viewports into `qa/real/` (needs network and the token), `perf.mjs` measures load time under a throttled connection with and without gzip (it imports Playwright from the absolute path `/opt/node-tools/node_modules/playwright`, so it runs only on a machine with that install), `peek.mjs` and `mobile_peek.mjs` take one screenshot each for a quick look.
 
 ## The three files to read first
 
