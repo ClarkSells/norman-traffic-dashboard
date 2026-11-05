@@ -1,5 +1,5 @@
 // Left panel: briefing header, controls, stat tiles and the ranked table.
-import { summarize, yearExtent, years } from "../data.js";
+import { closureImpact, scenarioText, summarize, vcLabel, yearExtent, years } from "../data.js";
 import { getState, setState } from "../state.js";
 import { METRIC_LABEL } from "../config.js";
 import { animateNumber, capMoves, flipPlan, measureRows, playFlip } from "../motion.js";
@@ -12,13 +12,36 @@ const METRIC_WORD = { combined: "combined score", v_c: "volume to capacity ratio
 // "Ward 2" or "All wards"
 export function briefingTitle(state) { return state.ward == null ? "All wards" : `Ward ${state.ward}`; }
 
+const num2 = (v) => num(v, 2);
+
 // One sentence that says what is on screen, e.g. "31 segments, ranked by combined score, crashes 2021 to 2025".
+// Under a Simulate scenario the sentence carries the scenario ("projected v/c, 2031, base band, school weekday")
+// and, with a segment closed, the closure line: the segment with the largest v/c increase, or why there is none.
 export function briefingLine(state, summary) {
   const n = summary.n;
   const parts = [`${n} segment${n === 1 ? "" : "s"}`, `ranked by ${METRIC_WORD[state.metric] || state.metric}`, `crashes ${state.yearMin} to ${state.yearMax}`];
   if (state.los === "C") parts.push("capacity at LOS C");
   if (state.includeCollectors) parts.push("collectors included");
-  return parts.join(", ");
+  const sc = scenarioText(state);
+  if (sc && state.metric !== "collisions") parts.push(`projected v/c, ${sc}`);
+  const line = parts.join(", ");
+  const closure = closureLine(state);
+  return closure ? `${line}. ${closure}` : line;
+}
+
+// "W Main St closed: its 31,886 vpd route onto 12th Ave SE, v/c 0.52 to 0.81, detour 2.1 mi, 1.8 times the segment".
+export function closureLine(state) {
+  const ci = closureImpact(state);
+  if (!ci) return "";
+  const name = `${ci.closed.on_road} closed`;
+  if (ci.no_path) return `${name}: no detour path in the road graph, so no volume is rerouted`;
+  const vol = ci.closed.vpd_max != null ? `its ${int(ci.closed.vpd_max)} vpd` : "its volume";
+  const parts = [];
+  if (ci.top) parts.push(`${vol} route onto ${ci.top.on_road}, v/c ${num2(ci.top.before)} to ${num2(ci.top.after)}`);
+  if (ci.detours.length > 1) parts.push(`${ci.detours.length} detour segments in all`);
+  if (ci.detour_len_mi != null) parts.push(`detour ${num(ci.detour_len_mi, 1)} mi${ci.ratio != null ? `, ${num(ci.ratio, 1)} times the segment` : ""}`);
+  if (ci.flagged) parts.push("flagged by the pipeline as an implausible detour");
+  return `${name}: ${parts.join(", ")}`;
 }
 
 // Shared behaviour of every segmented control: one pressed button, data-<key> carries the value.
@@ -318,6 +341,9 @@ export function renderStats(state, summary, animateNumber) {
   const top = document.getElementById("stat-top"), topLabel = document.getElementById("stat-top-label");
   if (top) top.textContent = summary.top ? `${summary.top.on_road}, ${summary.top.from_road} to ${summary.top.to_road}` : "none";
   if (topLabel) topLabel.textContent = summary.top ? `top segment by ${METRIC_WORD[state.metric] || state.metric}` : "top segment";
+  // The v/c column header follows the scenario: "v/c" today, "projected v/c" with the full label as its title.
+  const th = document.getElementById("th-vc");
+  if (th) { const label = vcLabel(state); th.textContent = label === "v/c" ? "v/c" : "projected v/c"; th.setAttribute("title", label); th.setAttribute("aria-label", label); th.classList.toggle("projected", label !== "v/c"); }
   let line = document.getElementById("stats-line");
   if (!line && typeof document.createElement === "function") {
     const stats = document.getElementById("stats");

@@ -216,3 +216,18 @@ const tipEl = { innerHTML: "", hidden: true, style: {}, offsetWidth: 100, offset
 showTooltip(tipEl, "<b>x</b>", { x: 5, y: 5 }, { width: 500, height: 500 }); assert.equal(tipEl.hidden, false); assert.equal(tipEl.style.transform, "translate(17px, 17px)");
 hideTooltip(tipEl); assert.equal(tipEl.hidden, true); hideTooltip(null);
 console.log("tooltip checks passed");
+
+// Simulate (C.14): the tooltip names the projected v/c and carries the closure delta line.
+{
+  const { closureLine } = await import("../ui/tooltip.js");
+  const scen = { metric: "v_c", daytype: "weekend", year: 2029, growthAdd: 0.01, band: "lo", closing: null };
+  const t = tooltipHtml({ on_road: "x", from_road: "a", to_road: "b", v_c_active: 0.61 }, scen);
+  assert.ok(t.includes("<strong>0.61</strong> projected v/c, 2029, low band, plus 1 percent per year, weekend"), "projected label built from state");
+  const det = { on_road: "12th Ave SE", from_road: "a", to_road: "b", v_c_active: 0.81, closure_added: 14200, closure_from: "W Main St", v_c_before_closure: 0.52 };
+  assert.equal(closureLine(det), "plus 14,200 vpd from the closure of W Main St, v/c 0.52 to 0.81");
+  assert.ok(tooltipHtml(det, { metric: "combined" }).includes('<div class="closure">plus 14,200 vpd from the closure of W Main St, v/c 0.52 to 0.81</div>'));
+  assert.ok(tooltipHtml({ on_road: "x", from_road: "a", to_road: "b", v_c_active: 0, is_closed: 1 }, { metric: "v_c", closing: "x" }).includes("closed in this scenario"));
+  assert.equal(closureLine({ closure_added: 0 }), ""); assert.equal(closureLine(null), "");
+  assert.ok(!tooltipHtml(det, { metric: "combined" }).includes("—"));
+  console.log("scenario tooltip checks passed");
+}

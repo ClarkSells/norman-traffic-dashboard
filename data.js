@@ -1,7 +1,19 @@
 import { DATA } from "./config.js";
 
 const ARTERIAL = new Set(["Principal Arterial", "Minor Arterial"]);
-let raw = { segments: null, collisions: null, wards: null, points: null, summary: null };
+let raw = { segments: null, collisions: null, wards: null, points: null, summary: null, closures: null, daytypes: null, horizon: null };
+
+// Simulate files (C.15, C.16). config.js DATA holds the five base files; these three are optional: a missing one
+// leaves its slot null and the Simulate controls degrade without breaking the base dashboard.
+export const SIM_DATA = { closures: "data/closure_impacts.json", daytypes: "data/daytypes.json", horizon: "data/horizon.json" };
+export const SIM_DEFAULT = { daytype: "school_fri", year: 2025, growthAdd: 0, band: "base", closing: null };
+export const SIM_YEARS = [2025, 2035];
+export const GROWTH_ADDS = [0, 0.01, 0.02];
+export const DAYTYPES = ["school_fri", "school_wkday", "weekend", "summer_wkday", "gameday"];
+export const DAYTYPE_LABEL = { school_fri: "School Friday", school_wkday: "School weekday", weekend: "Weekend", summer_wkday: "Summer weekday", gameday: "OU game day" };
+export const DAYTYPE_WORD = { school_fri: "school Friday", school_wkday: "school weekday", weekend: "weekend", summer_wkday: "summer weekday", gameday: "OU game day" };
+export const BAND_LABEL = { lo: "Low", base: "Base", hi: "High" };
+export const BAND_WORD = { lo: "low band", base: "base band", hi: "high band" };
 
 // Reads a response body counting bytes. onBytes(loaded, total) is called as chunks arrive; total is null when the
 // server sent no Content-Length. Falls back to res.text() when streaming is not available.
@@ -38,7 +50,14 @@ export async function loadAll(onProgress) {
     const text = await readWithProgress(res, (loaded, total) => { perFile[k] = { loaded, total }; report(); });
     return [k, JSON.parse(text)];
   }));
-  raw = Object.fromEntries(entries);
+  const sim = await Promise.all(Object.entries(SIM_DATA).map(async ([k, url]) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return [k, null];
+      return [k, JSON.parse(await res.text())];
+    } catch { return [k, null]; }
+  }));
+  raw = { ...Object.fromEntries(entries), ...Object.fromEntries(sim) };
   return raw;
 }
 
@@ -60,10 +79,124 @@ export function yearExtent() {
   return { min: arr[0], max: arr[arr.length - 1] };
 }
 
+// ---- Simulate (CONTRACTS C.14): scenario math, pure ---------------------------------------------------------
+
+// The default scenario (school Friday count, 2025, no growth lever, base band, nothing closed) leaves every
+// number exactly as the base dashboard computes it. A state without the simulate keys counts as default.
+export function isDefaultScenario(state) {
+  return (state.daytype == null || state.daytype === SIM_DEFAULT.daytype)
+    && (state.year == null || state.year === SIM_DEFAULT.year)
+    && !state.growthAdd
+    && (state.band == null || state.band === SIM_DEFAULT.band)
+    && !state.closing;
+}
+
+// g = growth_<band> + growthAdd. An unknown band rate falls back to the base rate, then to 0 (the count is carried
+// flat and only the lever applies), so a segment without a fitted growth still projects.
+export function growthRate(p, state) {
+  const band = state.band || SIM_DEFAULT.band;
+  let g = p[`growth_${band}`];
+  if (g == null) g = p.growth_base;
+  if (g == null) g = 0;
+  return g + (state.growthAdd || 0);
+}
+
+// vpd_eff = dt_<daytype>_vpd * (1 + g) ** (year - volume_year). The count is projected forward from the year it
+// was taken, which can be well before 2025; that is intended. Null when the day type volume is unknown.
+export function effectiveVpd(p, state) {
+  const dt = state.daytype || SIM_DEFAULT.daytype;
+  let base = p[`dt_${dt}_vpd`];
+  if (base == null && dt === "school_fri") base = p.vpd_max;   // the school Friday volume is the count itself
+  if (base == null) return null;
+  const year = state.year != null ? state.year : SIM_DEFAULT.year;
+  const from = p.volume_year != null ? p.volume_year : year;
+  return base * (1 + growthRate(p, state)) ** (year - from);
+}
+
+// Volume a detour segment receives from the closed segment, from closure_impacts.json (0 when none or unknown).
+export function closureAdded(locId, closing, impacts) {
+  if (!closing || !impacts || !impacts[closing] || !impacts[closing].added_vpd) return 0;
+  const v = impacts[closing].added_vpd[locId];
+  return v == null ? 0 : v;
+}
+
+// vc_eff = (vpd_eff + added_vpd[closing][loc]) / capacity_<los>; the closed segment itself reads 0.
+export function effectiveVc(p, state, closureImpacts) {
+  const cap = state.los === "C" ? p.capacity_C : p.capacity_E;
+  if (!cap) return null;
+  if (state.closing && p.loc_id === state.closing) return 0;
+  const vpd = effectiveVpd(p, state);
+  if (vpd == null) return null;
+  return (vpd + closureAdded(p.loc_id, state.closing, closureImpacts)) / cap;
+}
+
+let segIndex = { fc: null, map: new Map() };
+export function segmentProps(locId) {
+  const fc = raw.segments;
+  if (!fc) return null;
+  if (segIndex.fc !== fc) segIndex = { fc, map: new Map((fc.features || []).map(f => [f.properties.loc_id, f.properties])) };
+  return segIndex.map.get(locId) || null;
+}
+
+// "2031, base band, school weekday" plus ", plus 1 percent per year" and ", W Main St closed" when they apply.
+// Empty for the default scenario. Built from state only, so every label on screen agrees.
+export function scenarioText(state) {
+  if (isDefaultScenario(state)) return "";
+  const parts = [String(state.year != null ? state.year : SIM_DEFAULT.year), BAND_WORD[state.band] || BAND_WORD.base];
+  if (state.growthAdd) parts.push(`plus ${Math.round(state.growthAdd * 100)} percent per year`);
+  parts.push(DAYTYPE_WORD[state.daytype] || DAYTYPE_WORD.school_fri);
+  if (state.closing) { const c = segmentProps(state.closing); parts.push(`${c ? c.on_road : state.closing} closed`); }
+  return parts.join(", ");
+}
+
+// The v/c column and legend word: "v/c" today, "projected v/c, 2031, base band, school weekday" under a scenario.
+export function vcLabel(state) {
+  const t = scenarioText(state);
+  return t ? `projected v/c, ${t}` : "v/c";
+}
+
+// Everything the closure UI says about the closed segment: the detour rows sorted by the v/c increase, the top
+// one, and the pipeline's flags. Null when nothing is closed or the segment is unknown.
+export function closureImpact(state) {
+  if (!state.closing) return null;
+  const closed = segmentProps(state.closing);
+  if (!closed) return null;
+  const impact = raw.closures && raw.closures[state.closing] ? raw.closures[state.closing] : null;
+  const detours = [];
+  if (impact && !impact.no_path) {
+    for (const id of impact.detour_loc_ids || []) {
+      const p = segmentProps(id);
+      if (!p) continue;
+      // "before" is the same projection without the closure, so the delta is the closure alone.
+      const before = effectiveVc(p, { ...state, closing: null }, raw.closures);
+      const after = effectiveVc(p, state, raw.closures);
+      detours.push({ loc_id: id, on_road: p.on_road, from_road: p.from_road, to_road: p.to_road, added: closureAdded(id, state.closing, raw.closures), before, after,
+                     delta: before != null && after != null ? after - before : null });
+    }
+    detours.sort((a, b) => (b.delta || 0) - (a.delta || 0));
+  }
+  return { closing: state.closing, closed, impact, detours, top: detours[0] || null,
+           no_path: !impact || !!impact.no_path, flagged: !!(impact && impact.flagged),
+           detour_len_mi: impact ? impact.detour_len_mi : null, ratio: impact ? impact.ratio : null };
+}
+
+// How many listed segments sit at or above a v/c threshold under the state (the scene stat and the briefing).
+export function countOver(state, threshold) {
+  return rankedRows(state).filter(r => r.v_c_active != null && r.v_c_active >= threshold).length;
+}
+
 // Recompute the state-dependent numbers for one segment feature. Pure function, no Mapbox involved.
+// Under a scenario (C.14) the projected v/c replaces v_c in the paint and the table; the default scenario
+// reproduces the base dashboard exactly.
 export function deriveProps(p, state) {
   const cap = state.los === "C" ? p.capacity_C : p.capacity_E;
-  const v_c = cap ? p.vpd_max / cap : null;
+  const v_c_today = cap ? p.vpd_max / cap : null;
+  const def = isDefaultScenario(state);
+  const v_c = def ? v_c_today : effectiveVc(p, state, raw.closures);
+  const vpd_eff = def ? p.vpd_max : effectiveVpd(p, state);
+  const closure_added = def ? 0 : closureAdded(p.loc_id, state.closing, raw.closures);
+  const closedProps = closure_added > 0 ? segmentProps(state.closing) : null;
+  const is_closed = state.closing && p.loc_id === state.closing ? 1 : 0;
   const byYear = typeof p.collisions_by_year === "string" ? JSON.parse(p.collisions_by_year) : (p.collisions_by_year || {});
   let collisions = 0;
   for (const [y, n] of Object.entries(byYear)) {
@@ -75,8 +208,11 @@ export function deriveProps(p, state) {
   const inWard = state.ward == null || wards.includes(state.ward);
   const isPrimary = state.includeCollectors || ARTERIAL.has(p.functional_class);
   const metricValue = state.metric === "v_c" ? v_c : state.metric === "collisions" ? collisions : combined;
-  return { v_c_active: v_c, collisions_active: collisions, combined_active: combined, metric_value: metricValue,
-           capacity_active: cap, in_ward: inWard ? 1 : 0, is_primary: isPrimary ? 1 : 0, wards_list: wards };
+  const out = { v_c_active: v_c, collisions_active: collisions, combined_active: combined, metric_value: metricValue,
+                capacity_active: cap, in_ward: inWard ? 1 : 0, is_primary: isPrimary ? 1 : 0, wards_list: wards,
+                v_c_today, vpd_eff, closure_added, is_closed, projected: def ? 0 : 1 };
+  if (closedProps) { out.closure_from = closedProps.on_road; out.v_c_before_closure = cap && vpd_eff != null ? vpd_eff / cap : null; }
+  return out;
 }
 
 // A fresh GeoJSON with derived properties merged in, ready for map.getSource("segments").setData(...)

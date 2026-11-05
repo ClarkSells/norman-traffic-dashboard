@@ -1,13 +1,19 @@
 // Compact legend: horizontal metric ramp with the break values, a line width key, the dashed boundary key and the collision keys.
 import { BLUE_RAMP, BREAKS, METRIC_LABEL, RAMP } from "../config.js";
 import { COLLISION_COLORS } from "../theme.js";
+import { scenarioText } from "../data.js";
 export { COLLISION_COLORS };
 
 function fmt(v, metric) { return metric === "v_c" ? v.toFixed(1) : String(v); }
 
 
+// Under a Simulate scenario (C.14) the v/c in the ramp is the projected one, and the title says so:
+// "Projected v/c, 2031, base band, school weekday, LOS E, crashes 2021 to 2025".
 export function legendTitle(state) {
-  return `${METRIC_LABEL[state.metric] || state.metric}, LOS ${state.los}, crashes ${state.yearMin} to ${state.yearMax}`;
+  const sc = scenarioText(state);
+  const metric = !sc || state.metric === "collisions" ? (METRIC_LABEL[state.metric] || state.metric)
+    : state.metric === "v_c" ? `Projected v/c, ${sc}` : `${METRIC_LABEL.combined} with projected v/c, ${sc}`;
+  return `${metric}, LOS ${state.los}, crashes ${state.yearMin} to ${state.yearMax}`;
 }
 
 export function renderLegend(el, state) {
@@ -15,8 +21,9 @@ export function renderLegend(el, state) {
   const collapsed = !!(el.classList && el.classList.contains && el.classList.contains("collapsed"));
   const ramp = RAMP.map(c => `<i style="background:${c}"></i>`).join("");
   const labels = b.map(v => `<span>${fmt(v, state.metric)}</span>`).join("");
-  const low = state.metric === "v_c" ? "lower v/c" : state.metric === "collisions" ? "fewer crashes" : "lower score";
-  const high = state.metric === "v_c" ? "higher v/c" : state.metric === "collisions" ? "more crashes" : "higher score";
+  const projected = !!scenarioText(state) && state.metric !== "collisions";
+  const low = state.metric === "v_c" ? (projected ? "lower projected v/c" : "lower v/c") : state.metric === "collisions" ? "fewer crashes" : "lower score";
+  const high = state.metric === "v_c" ? (projected ? "higher projected v/c" : "higher v/c") : state.metric === "collisions" ? "more crashes" : "higher score";
   el.innerHTML = `<button type="button" class="legend-toggle" aria-expanded="${!collapsed}">${legendTitle(state)}</button>
     <div class="ramp" aria-hidden="true">${ramp}</div>
     <div class="ramp-labels" aria-hidden="true">${labels}</div>

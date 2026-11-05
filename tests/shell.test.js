@@ -46,5 +46,5 @@ assert.ok(cfg.STYLES.light.startsWith("mapbox://") && cfg.STYLES.satellite.start
 let seen = null; const off = subscribe((s, patch) => { seen = patch; });
 setState({ metric: "v_c" });
 assert.equal(getState().metric, "v_c"); assert.deepEqual(seen, { metric: "v_c" }); off();
-assert.deepEqual(Object.keys(getState()).sort(), ["basemap", "flow", "heat", "includeCollectors", "los", "metric", "presenting", "reducedMotion", "selectedLocId", "ward", "yearMax", "yearMin"]);
+assert.deepEqual(Object.keys(getState()).sort(), ["band", "basemap", "closing", "daytype", "flow", "growthAdd", "heat", "includeCollectors", "los", "metric", "presenting", "reducedMotion", "selectedLocId", "simPlaying", "ward", "year", "yearMax", "yearMin"], "C.1 plus the C.14 simulate keys");
 console.log("shell checks passed");

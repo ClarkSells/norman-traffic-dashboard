@@ -128,3 +128,30 @@ assert.equal(tbody.children.length, 0, "rows for other wards are removed");
 assert.equal(el("stat-top").textContent, "none");
 assert.equal(el("stats-line").textContent, "0 segments · 0 crashes · top: none", "stats line handles the empty list");
 console.log("panel checks passed");
+
+// Simulate (C.14): the briefing line names the scenario and the closure, the v/c header follows.
+{
+  const { closureLine } = await import("../ui/panel.js");
+  const scen = { ward: null, metric: "combined", yearMin: 2021, yearMax: 2023, los: "E", includeCollectors: false, daytype: "school_wkday", year: 2031, growthAdd: 0, band: "base", closing: null };
+  assert.equal(briefingLine(scen, { n: 2 }), "2 segments, ranked by combined score, crashes 2021 to 2023, projected v/c, 2031, base band, school weekday");
+  assert.equal(briefingLine({ ...scen, metric: "collisions" }, { n: 2 }), "2 segments, ranked by crash count, crashes 2021 to 2023", "crash ranking ignores the scenario");
+  assert.equal(closureLine(scen), "", "nothing closed, no closure line");
+  setRaw({ segments: { type: "FeatureCollection", features: [seg("A", [1], "Minor Arterial", 12000, { 2023: 3 }), seg("B", [1], "Minor Arterial", 6000, { 2023: 1 })] },
+           wards: { features: [] }, summary: { years: [2021, 2022, 2023] }, collisions: null, points: null,
+           closures: { A: { detour_loc_ids: ["B"], added_vpd: { B: 12000 }, vc_after: { B: 0.53 }, path: [[0, 0], [1, 1]], detour_len_mi: 2.1, ratio: 1.8, flagged: false, no_path: false },
+                       B: { detour_loc_ids: [], added_vpd: {}, vc_after: {}, path: [], detour_len_mi: null, ratio: null, flagged: false, no_path: true } } });
+  const closed = { ...scen, daytype: "school_fri", year: 2025, closing: "A" };
+  assert.equal(closureLine(closed), "Main closed: its 12,000 vpd route onto Main, v/c 0.18 to 0.53, detour 2.1 mi, 1.8 times the segment");
+  assert.ok(briefingLine(closed, { n: 2 }).endsWith("projected v/c, 2025, base band, school Friday, Main closed. Main closed: its 12,000 vpd route onto Main, v/c 0.18 to 0.53, detour 2.1 mi, 1.8 times the segment"));
+  assert.equal(closureLine({ ...closed, closing: "B" }), "Main closed: no detour path in the road graph, so no volume is rerouted");
+  setState({ ...getState(), ...closed, selectedLocId: null });
+  renderTable(getState(), () => {});
+  assert.equal(el("th-vc").textContent, "projected v/c", "the v/c header switches under a scenario");
+  assert.equal(el("th-vc").getAttribute("title"), "projected v/c, 2025, base band, school Friday, Main closed", "the full label rides on the header");
+  setState({ metric: "v_c" });
+  assert.deepEqual(renderTable(getState(), () => {}).map(r => r.loc_id), ["B", "A"], "by v/c the detour segment outranks the closed one (which reads 0)");
+  setState({ closing: null, metric: "combined" });
+  renderTable(getState(), () => {});
+  assert.equal(el("th-vc").textContent, "v/c", "back to today");
+  console.log("scenario panel checks passed");
+}

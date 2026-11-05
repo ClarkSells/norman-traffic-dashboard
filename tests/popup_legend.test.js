@@ -48,3 +48,12 @@ renderLegend(el, { metric: "collisions", los: "E", yearMin: 2016, yearMax: 2026 
 assert.ok(el.innerHTML.includes("<span>10</span><span>25</span><span>50</span><span>100</span>") && el.innerHTML.includes("more crashes"));
 assert.ok(!el.innerHTML.includes("—") && !el.innerHTML.includes(" - "));
 console.log("popup and legend checks passed");
+
+// Simulate (C.14): the legend title names the projected v/c scenario; collisions are untouched by it.
+const scen = { metric: "v_c", los: "E", yearMin: 2021, yearMax: 2025, daytype: "school_wkday", year: 2031, growthAdd: 0, band: "base", closing: null };
+assert.equal(legendTitle(scen), "Projected v/c, 2031, base band, school weekday, LOS E, crashes 2021 to 2025");
+assert.equal(legendTitle({ ...scen, metric: "combined", growthAdd: 0.02, band: "hi" }), "Combined score with projected v/c, 2031, high band, plus 2 percent per year, school weekday, LOS E, crashes 2021 to 2025");
+assert.equal(legendTitle({ ...scen, metric: "collisions" }), "Collisions, LOS E, crashes 2021 to 2025", "the crash count never reads as projected");
+renderLegend(el, scen);
+assert.ok(el.innerHTML.includes("lower projected v/c") && el.innerHTML.includes("higher projected v/c"), "ramp ends say projected under a scenario");
+console.log("scenario legend checks passed");

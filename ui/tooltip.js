@@ -1,10 +1,23 @@
 // Lightweight hover tooltip over the map: segment name and the active metric. The click opens the full popup.
 import { METRIC_LABEL } from "../config.js";
+import { vcLabel } from "../data.js";
+
+const num2 = (v) => (v == null ? "n/a" : Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const int = (v) => Math.round(v).toLocaleString("en-US");
+
+// One sentence for a detour segment: "plus 14,200 vpd from the closure of W Main St, v/c 0.52 to 0.81".
+export function closureLine(p) {
+  if (!p || !(p.closure_added > 0)) return "";
+  return `plus ${int(p.closure_added)} vpd from the closure of ${p.closure_from || "the closed segment"}, v/c ${num2(p.v_c_before_closure)} to ${num2(p.v_c_active)}`;
+}
 
 export function tooltipHtml(p, state) {
   const v = state.metric === "v_c" ? p.v_c_active : state.metric === "collisions" ? p.collisions_active : p.combined_active;
-  const text = v == null ? "n/a" : state.metric === "collisions" ? Math.round(v).toLocaleString("en-US") : Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `<div class="road">${p.on_road}</div><div class="span">${p.from_road} to ${p.to_road}</div><div class="score"><strong>${text}</strong> ${METRIC_LABEL[state.metric] ? METRIC_LABEL[state.metric].toLowerCase() : state.metric}</div>`;
+  const text = v == null ? "n/a" : state.metric === "collisions" ? int(v) : num2(v);
+  const label = state.metric === "v_c" ? vcLabel(state) : METRIC_LABEL[state.metric] ? METRIC_LABEL[state.metric].toLowerCase() : state.metric;
+  const closed = p.is_closed ? '<div class="closure">closed in this scenario</div>' : "";
+  const detour = closureLine(p);
+  return `<div class="road">${p.on_road}</div><div class="span">${p.from_road} to ${p.to_road}</div><div class="score"><strong>${text}</strong> ${label}</div>${closed}${detour ? `<div class="closure">${detour}</div>` : ""}`;
 }
 
 // Keeps the tooltip inside the map box: flips to the left or above the cursor near the edges.
