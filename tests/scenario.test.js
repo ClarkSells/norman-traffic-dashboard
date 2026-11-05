@@ -81,7 +81,8 @@ const cc = closureImpact({ ...base, closing: "C" });
 assert.deepEqual(cc.detours.map(d => d.loc_id), ["A", "B"], "detours sorted by the v/c increase");
 assert.equal(cc.flagged, true);
 const cb = closureImpact({ ...base, closing: "B" });
-assert.equal(cb.no_path, true); assert.equal(cb.top, null); assert.deepEqual(cb.detours, []);
+assert.equal(cb.no_path, true); assert.equal(cb.missing, false); assert.equal(cb.top, null); assert.deepEqual(cb.detours, []);
+assert.equal(ci.missing, false);
 assert.equal(closureImpact({ ...base, closing: "nope" }), null, "unknown segment");
 assert.equal(segmentProps("A").on_road, "W Main St"); assert.equal(segmentProps("zz"), null);
 

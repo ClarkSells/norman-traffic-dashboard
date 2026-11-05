@@ -1,6 +1,6 @@
 // Full verification drive: node tests/e2e/verify.mjs
 // Serves the repo, swaps the Mapbox CDN script for the stub, and drives the controls, the hash round trip,
-// the 15 present scenes, reduced motion, a keyboard-only pass, the mobile sheet at 390, 768 and 844 by 390,
+// the 17 present scenes, reduced motion, a keyboard-only pass, the mobile sheet at 390, 768 and 844 by 390,
 // and a console error check. Screenshots land in the scratch folder, never in output/.
 import { createRequire } from "node:module";
 const { chromium, devices } = createRequire(import.meta.url)("playwright");
@@ -122,14 +122,14 @@ async function open(ctxOpts, hash = "") {
   await ctx.close();
 }
 
-// ---------- Present mode: all 15 scenes ----------
+// ---------- Present mode: all 17 scenes ----------
 {
   const { ctx, page, errors } = await open({ viewport: { width: 1440, height: 900 } });
   const scenes = await page.evaluate(async () => { const { buildScenes } = await import("/scenes.js"); const { getRaw } = await import("/data.js"); return buildScenes(getRaw()).map(s => ({ id: s.id, kind: s.kind, title: s.title, caption: s.caption, state: s.state, basemap: s.basemap })); });
-  check("the storyboard builds 15 scenes", scenes.length === 15);
+  check("the storyboard builds 17 scenes", scenes.length === 17);
   const camBefore = await cam(page); const stateBefore = await state(page);
   await page.click("#present-toggle"); await settle(page, 2000);
-  check("Present enters scene 0: full bleed, chrome on, panel and legend gone, 15 progress segments", await page.evaluate(() => document.getElementById("layout").classList.contains("presenting") && !document.getElementById("present").hidden && document.querySelectorAll(".present-segment").length === 15 && getComputedStyle(document.getElementById("legend")).display === "none" && getComputedStyle(document.getElementById("panel")).opacity === "0" && getComputedStyle(document.querySelector(".topbar")).display === "none" && document.documentElement.dataset.mode === "present"));
+  check("Present enters scene 0: full bleed, chrome on, panel and legend gone, 17 progress segments", await page.evaluate(() => document.getElementById("layout").classList.contains("presenting") && !document.getElementById("present").hidden && document.querySelectorAll(".present-segment").length === 17 && getComputedStyle(document.getElementById("legend")).display === "none" && getComputedStyle(document.getElementById("panel")).opacity === "0" && getComputedStyle(document.querySelector(".topbar")).display === "none" && document.documentElement.dataset.mode === "present"));
   const settleFor = (kind) => kind === "segment" ? 3000 : kind === "ward" ? 2200 : 2000;
   for (let i = 0; i < scenes.length; i++) {
     if (i > 0) { await page.keyboard.press(i % 2 ? "ArrowRight" : "Space"); }
@@ -138,7 +138,7 @@ async function open(ctxOpts, hash = "") {
     const ui = await page.evaluate(() => ({ count: document.getElementById("present-scene-count").textContent, title: document.getElementById("present-title").textContent, caption: document.getElementById("present-caption").textContent, popup: !!document.querySelector(".mapboxgl-popup .popup h4"), hash: location.hash, mode: document.documentElement.dataset.mode, sel: document.querySelector('.present-segment[aria-selected="true"]') != null }));
     const s = scenes[i];
     const stateOk = ["ward", "metric", "los", "yearMin", "yearMax", "includeCollectors", "selectedLocId", "basemap", "heat", "flow", "presenting"].every(k => st[k] === s.state[k]);
-    check(`scene ${i} (${s.id}): count, title, caption, state, hash, no popup`, ui.count === `Scene ${i + 1} of 15` && ui.title === s.title && ui.caption === s.caption && stateOk && ui.hash.endsWith(`tour=${i}`) && !ui.popup && ui.mode === "present" && ui.sel, JSON.stringify({ ui, st: { ward: st.ward, metric: st.metric, los: st.los, basemap: st.basemap, heat: st.heat, flow: st.flow } }));
+    check(`scene ${i} (${s.id}): count, title, caption, state, hash, no popup`, ui.count === `Scene ${i + 1} of 17` && ui.title === s.title && ui.caption === s.caption && stateOk && ui.hash.endsWith(`tour=${i}`) && !ui.popup && ui.mode === "present" && ui.sel, JSON.stringify({ ui, st: { ward: st.ward, metric: st.metric, los: st.los, basemap: st.basemap, heat: st.heat, flow: st.flow } }));
     const c = await cam(page);
     if (i === 0) check("scene 0 camera is the establish framing (pitch 55)", c.pitch === 55, JSON.stringify(c));
     if (s.kind === "segment") check(`scene ${i} camera pitched on the segment`, c.pitch >= 55, JSON.stringify(c));
@@ -146,7 +146,7 @@ async function open(ctxOpts, hash = "") {
     await shot(page, `scene_${String(i).padStart(2, "0")}_${s.id}`);
   }
   await page.keyboard.press("ArrowLeft"); await settle(page, 2000);
-  check("Left arrow goes back a scene", (await page.textContent("#present-scene-count")) === "Scene 14 of 15");
+  check("Left arrow goes back a scene", (await page.textContent("#present-scene-count")) === "Scene 16 of 17");
   await page.click("#present-autoplay + .switch-track"); await settle(page, 100);
   check("autoplay toggle turns on", await page.evaluate(() => document.getElementById("present-autoplay").checked));
   await page.click("#present-autoplay + .switch-track");
@@ -170,7 +170,7 @@ async function open(ctxOpts, hash = "") {
   // The tour still works as a slide show: enter, step, exit, all instant.
   await page.click("#present-toggle"); await settle(page, 600);
   await page.keyboard.press("ArrowRight"); await settle(page, 600);
-  check("reduced motion: the present show still steps", (await page.textContent("#present-scene-count")) === "Scene 2 of 15" && await page.evaluate(() => window.__dash.map.getLayoutProperty("segments-flow-lo", "visibility") !== "visible"), await page.textContent("#present-scene-count"));
+  check("reduced motion: the present show still steps", (await page.textContent("#present-scene-count")) === "Scene 2 of 17" && await page.evaluate(() => window.__dash.map.getLayoutProperty("segments-flow-lo", "visibility") !== "visible"), await page.textContent("#present-scene-count"));
   await page.keyboard.press("Escape"); await settle(page, 600);
   await shot(page, "07_reduced_motion");
   check("reduced motion pass: no console errors", errors().length === 0, errors().join(" | "));
@@ -198,7 +198,7 @@ async function open(ctxOpts, hash = "") {
   await shot(page, "08_keyboard_focus");
   await page.focus("#present-toggle"); await page.keyboard.press("Enter"); await settle(page, 2000);
   await page.keyboard.press("ArrowRight"); await settle(page, 2000);
-  check("keyboard: Present and arrow keys drive the scenes", (await page.textContent("#present-scene-count")) === "Scene 2 of 15");
+  check("keyboard: Present and arrow keys drive the scenes", (await page.textContent("#present-scene-count")) === "Scene 2 of 17");
   await page.keyboard.press("Escape"); await settle(page, 800);
   check("keyboard pass: no console errors", errors().length === 0, errors().join(" | "));
   await ctx.close();
@@ -229,7 +229,7 @@ async function open(ctxOpts, hash = "") {
   check("390: present on a phone shows the caption sheet and hides the panel", await page.evaluate(() => !document.getElementById("present").hidden && document.getElementById("panel").getBoundingClientRect().top >= innerHeight - 4 && !!document.getElementById("present-card").getBoundingClientRect().height));
   await page.touchscreen.tap(300, 400); // noop tap, then swipe
   await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 300, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 120, clientY: 404, isPrimary: true })); }); await settle(page, 2200);
-  check("390: swipe left advances the scene", (await page.textContent("#present-scene-count")) === "Scene 2 of 15");
+  check("390: swipe left advances the scene", (await page.textContent("#present-scene-count")) === "Scene 2 of 17");
   await page.evaluate(() => { document.dispatchEvent(new PointerEvent("pointerdown", { clientX: 100, clientY: 400, isPrimary: true })); document.dispatchEvent(new PointerEvent("pointerup", { clientX: 300, clientY: 396, isPrimary: true })); }); await settle(page, 2200);
   check("390: swipe right goes back", (await page.textContent("#present-scene-count")) === "Scene 1 of 15");
   await page.evaluate(() => window.__dash.tour.dispatch({ type: "goto", index: 11 })); await settle(page, 2500);

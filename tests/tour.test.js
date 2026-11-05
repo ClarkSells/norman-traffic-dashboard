@@ -28,6 +28,7 @@ const raw = {
   collisions: load("collisions.geojson"),
   points: load("count_points.geojson"),
   summary: load("summary.json"),
+  closures: load("closure_impacts.json"),
 };
 setRaw(raw);
 
@@ -109,13 +110,13 @@ try {
 }
 const scenes = buildScenes(raw);
 
-// Shape: 15 scenes, complete C.2 definitions, storyboard order
-assert.equal(scenes.length, 15, "fifteen scenes");
-const KINDS = ["title", "city", "city", "city", "city", "city", "segment", "segment", "segment", "segment", "segment", "ward", "ward", null, "closing"];
+// Shape: 17 scenes (the storyboard's 15 plus the two Simulate scenes at 13 and 14), complete C.2 definitions, storyboard order
+assert.equal(scenes.length, 17, "seventeen scenes");
+const KINDS = ["title", "city", "city", "city", "city", "city", "segment", "segment", "segment", "segment", "segment", "ward", "ward", "city", "segment", null, "closing"];
 const STATE_KEYS = ["ward", "metric", "los", "yearMin", "yearMax", "includeCollectors", "selectedLocId", "basemap", "reducedMotion", "heat", "flow", "presenting"];
 for (const sc of scenes) {
   assert.ok(sc.id && sc.title && sc.caption, `scene ${sc.index}: id, title and caption`);
-  assert.equal(sc.number, sc.index + 1); assert.equal(sc.total, 15);
+  assert.equal(sc.number, sc.index + 1); assert.equal(sc.total, 17);
   if (KINDS[sc.index]) assert.equal(sc.kind, KINDS[sc.index], `scene ${sc.index} kind`);
   assert.ok(Array.isArray(sc.stats) && sc.stats.length <= 5, `scene ${sc.index}: stats 0 to 5`);
   assert.ok(sc.state && typeof sc.state === "object", `scene ${sc.index}: full state`);
@@ -141,22 +142,24 @@ for (let i = 0; i < 5; i++) {
   assert.ok(c.includes(t.name) && c.includes(`v/c ${t.v_c}`) && c.includes(`${t.crashes} crashes`) && c.includes(t.combined), `top ${i + 1} caption quotes name, v/c, crashes, score`);
 }
 assert.ok(scenes[11].caption.includes("counted once, listed in both neighboring wards"), "ward scene explains the boundary tag");
-assert.ok(scenes[14].caption.includes(LIVE_URL), "closing caption carries the live URL");
+assert.ok(scenes[16].caption.includes(LIVE_URL), "closing caption carries the live URL");
 
 // The ward scene carries its top five list cards in rank order
 assert.ok(Array.isArray(scenes[11].list) && scenes[11].list.length === 5, "ward scene carries a top five list");
 scenes[11].list.forEach((row, i) => { assert.equal(row.rank, i + 1); assert.ok(row.locId && row.road, `list row ${i + 1} complete`); });
 
 // Basemap and autoplay timing
-assert.equal(scenes[13].basemap, "satellite", "scene 13 satellite");
+assert.equal(scenes[15].basemap, "satellite", "scene 15 satellite");
 scenes.forEach((sc, i) => {
-  if (i === 0 || i === 14) assert.equal(sc.autoplayMs, null, `scene ${i} is manual (title and closing never auto advance)`);
+  if (i === 0 || i === 16) assert.equal(sc.autoplayMs, null, `scene ${i} is manual (title and closing never auto advance)`);
   else assert.ok(Number.isFinite(sc.autoplayMs) && sc.autoplayMs > 0, `scene ${i} has an autoplay duration`);
 });
 assert.ok(scenes.slice(1, 5).every(sc => sc.autoplayMs === SCENE_TIMING.city), "city scenes 1 to 4 run 10 s");
 assert.equal(scenes[5].autoplayMs, 12000, "the combined score scene runs the storyboard's 12 s");
 assert.ok(scenes.slice(6, 11).every(sc => sc.autoplayMs === SCENE_TIMING.segment), "segment scenes run 12 s");
 assert.ok(scenes.slice(11, 13).every(sc => sc.autoplayMs === SCENE_TIMING.ward), "ward and LOS scenes run 14 s");
-assert.equal(scenes[13].autoplayMs, 14000, "the lane story scene runs the storyboard's 14 s");
+assert.equal(scenes[13].autoplayMs, SCENE_TIMING.city, "the run out scene runs a city scene's 10 s, longer than the 9 s year play");
+assert.equal(scenes[14].autoplayMs, SCENE_TIMING.segment, "the closure scene runs a segment scene's 12 s");
+assert.equal(scenes[15].autoplayMs, 14000, "the lane story scene runs the storyboard's 14 s");
 
 console.log(`tour scene checks passed (${source})`);

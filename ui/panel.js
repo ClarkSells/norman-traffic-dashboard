@@ -37,6 +37,7 @@ export function closureLine(state) {
   const ci = closureImpact(state);
   if (!ci) return "";
   const name = `${ci.closed.on_road} closed`;
+  if (ci.missing) return `${name}: closure impacts are not loaded, so no volume is rerouted`;
   if (ci.no_path) return `${name}: no detour path in the road graph, so no volume is rerouted`;
   const vol = ci.closed.vpd_max != null ? `its ${int(ci.closed.vpd_max)} vpd` : "its volume";
   const parts = [];

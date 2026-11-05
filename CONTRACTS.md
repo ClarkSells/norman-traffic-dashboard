@@ -32,7 +32,8 @@ The lead writes these into `CONTRACTS.md` in Wave 0 verbatim. A card's Interface
 //   layers: { flow: bool, heat: bool, dots: "all"|"segment"|"none", callouts: string[], pulse: string[], mask: null|number, segmentsOpacity: number },
 //   autoplayMs: number | null                          // null = manual (title, closing)
 //   eyebrow: string | null,                            // title-scene branding line over the card (Wave 4, 3.2-01)
-//   hint: string | null                                // title-scene start cue, e.g. "Press space or Next" (Wave 4, 3.2-01)
+//   hint: string | null,                               // title-scene start cue, e.g. "Press space or Next" (Wave 4, 3.2-01)
+//   yearPlay: null | { from: 2025, to: 2035 }          // Simulate (C.14): the player steps state.year through the range after the camera arrives
 // }
 ```
 

@@ -248,6 +248,7 @@ async function applyScene(scene, prev) {
   currentScene = scene;
   if (!styleReady) await new Promise((r) => map.once("style.load", r));   // deep link into a scene at boot
   stopMotion(map);
+  stopYears();   // a Simulate scene's year player never outlives its scene
   if (cancelSceneSpin) { cancelSceneSpin(); cancelSceneSpin = null; }
   if (cancelReveal) { cancelReveal(); cancelReveal = null; }
   if (popup) popup.remove();
@@ -274,6 +275,8 @@ async function applyScene(scene, prev) {
   if (scene.layers.flow) startFlowLoop(); else stopFlowLoop();
   if (scene.layers.pulse && scene.layers.pulse.length) pulse(map, scene.layers.pulse, { reduced });
   if (scene.layers.dots === "segment" && scene.state.selectedLocId) cancelReveal = revealSegmentCrashes(map, scene.state.selectedLocId, { reduced });
+  // The run out scene steps state.year 2025 to 2035 once the camera has settled (jumps under reduced motion).
+  if (scene.yearPlay) { setState({ year: scene.yearPlay.from }); playYears({ reduced }); }
   const ms = scene.autoplayMs || 10000;
   if (scene.motion.orbitDeg) cancelSceneSpin = orbit(map, scene.motion.orbitDeg, ms, { reduced });
   else if (scene.motion.driftDeg) cancelSceneSpin = drift(map, scene.motion.driftDeg, ms, { reduced });
@@ -304,6 +307,7 @@ function onExitPresent(saved) {
   presenting = false;
   currentScene = null;
   stopMotion(map);
+  stopYears();
   if (cancelSceneSpin) { cancelSceneSpin(); cancelSceneSpin = null; }
   if (cancelReveal) { cancelReveal(); cancelReveal = null; }
   clearCallouts(map);

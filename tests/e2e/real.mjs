@@ -20,8 +20,8 @@ import { VIEWPORTS, buildReport, contextOptions, emptyViewportReport, root, serv
 import { watchConsole } from "./harness.js";
 
 // --- Scene loop config ------------------------------------------------------
-// Card 2.1 (Wave 2) repoints these two values at the 15-scene present mode:
-const SCENE_COUNT = 15;                     // Wave 2: 15 scenes, 0..14 (scenes.js buildScenes)
+// Card 2.1 (Wave 2) repoints these two values at the 17-scene present mode:
+const SCENE_COUNT = 17;                     // Phase 2: 17 scenes, 0..16 (scenes.js buildScenes, Simulate scenes at 13 and 14)
 const NEXT_SCENE_SELECTOR = "#present-next";   // Wave 2: the present chrome stepper
 
 const EXPLORE_STATES = [

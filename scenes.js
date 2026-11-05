@@ -1,13 +1,15 @@
-// The 15 present-mode scenes (0 to 14) from handoff/02_DESIGN_DIRECTION.md section 10, as pure data (C.2).
+// The 17 present-mode scenes (0 to 16): the 15 from handoff/02_DESIGN_DIRECTION.md section 10 plus the two
+// Simulate scenes (13 "runout", 14 "closure") after the ward scenes, as pure data (C.2).
 // Captions quote facts.js / tour.js tokens exactly; the ward 2 count and the LOS C crossover list are
 // computed with rankedRows exactly as tour.js does today. No map, no DOM: camera.js, layers/* and the
 // tour player consume these objects.
 import { SCENE_TIMING } from "./config.js";
 import { FACTS, LIVE_URL, TOP5 } from "./facts.js";
-import { rankedRows } from "./data.js";
+import { closureImpact, countOver, rankedRows, SIM_DEFAULT, SIM_YEARS } from "./data.js";
 
 // Same defaults tour.js BASE uses (the state.js explore defaults), so scene states never drift from explore.
-const BASE = { ward: null, metric: "combined", los: "E", yearMin: FACTS.year_min, yearMax: FACTS.year_max, includeCollectors: false, selectedLocId: null };
+// The Simulate keys (C.14) ride along at their defaults, so every existing scene shows today's numbers.
+const BASE = { ward: null, metric: "combined", los: "E", yearMin: FACTS.year_min, yearMax: FACTS.year_max, includeCollectors: false, selectedLocId: null, ...SIM_DEFAULT, simPlaying: false };
 const n = (v) => Number(v).toLocaleString("en-US");
 const AUTOPLAY = { title: null, city: SCENE_TIMING.city, segment: SCENE_TIMING.segment, ward: SCENE_TIMING.ward, closing: null };
 
@@ -34,6 +36,24 @@ export function buildScenes(raw) {
   const main = byId["52500-158"] || {};
   // Storyboard: callout "6 lanes · 31,886 VPD", built from the segment's own verified figures.
   const laneCallout = `${main.lanes_final != null ? main.lanes_final : "?"} lanes · ${main.vpd_max != null ? n(main.vpd_max) : "?"} VPD`;
+  // Simulate scenes (C.14): the 2035 projection at base growth, and the closure of the top citywide segment.
+  const vcState = { ...BASE, metric: "v_c" };
+  const overToday = countOver(vcState, 0.9);
+  const over2035 = countOver({ ...vcState, year: SIM_YEARS[1] }, 0.9);
+  const listed = rankedRows(vcState).length;
+  const closeId = TOP5[0].loc_id;
+  const ci = closureImpact({ ...BASE, closing: closeId });
+  const closureCaption = (() => {
+    const t = TOP5[0];
+    const head = `If ${t.name} closed between ${t.span.replace(" to ", " and ")}`;
+    if (!ci || ci.missing) return `${head}, every vehicle on it would need another way through. Closure impacts are not loaded for this build.`;
+    if (ci.no_path) return `${head}, the road graph finds no detour between its end nodes, so no volume is rerouted. The pipeline flags it for a closer look.`;
+    const vol = ci.closed.vpd_max != null ? `its ${n(ci.closed.vpd_max)} vehicles a day` : "its traffic";
+    const top = ci.top ? ` The largest increase lands on ${ci.top.on_road}, ${ci.top.from_road} to ${ci.top.to_road}: v/c ${ci.top.before.toFixed(2)} to ${ci.top.after.toFixed(2)}.` : "";
+    const len = ci.detour_len_mi != null ? ` The detour runs ${ci.detour_len_mi.toFixed(1)} miles${ci.ratio != null ? `, ${ci.ratio.toFixed(1)} times the closed segment` : ""}.` : "";
+    const flag = ci.flagged ? " The pipeline flags this detour as implausibly long." : "";
+    return `${head}, ${vol} would route onto ${ci.detours.length} counted segment${ci.detours.length === 1 ? "" : "s"} along the shortest detour.${top}${len}${flag}`;
+  })();
 
   const scenes = [
     // 0: Title (storyboard copy verbatim, with the section 10 eyebrow and start hint)
@@ -113,14 +133,30 @@ export function buildScenes(raw) {
       state: fullState("light", { ward: 2, los: "C" }), basemap: "light", lightPreset: "day",
       camera: { kind: "ward", ward: 2 }, motion: { orbitDeg: 0, driftDeg: 0 },
       layers: layers({ mask: 2, dots: "none", callouts: over1Ids, pulse: over1Ids }) },
-    // 13: The lane count story (satellite aerial on 52500-158, existing caption without the URL)
+    // 13: When does each corridor run out of road (the year plays 2025 to 2035 at base growth)
+    { id: "runout", kind: "city", title: "When does each corridor run out of road",
+      caption: `Each count projected forward at its own fitted growth rate, base band, school year Friday. ${overToday} of the ${listed} listed segments sit at or above v/c 0.9 today; ${over2035} do by 2035. Watch the year run from 2025 to 2035.`,
+      stats: [{ label: "at or over 0.9 today", value: String(overToday) }, { label: "at or over 0.9 by 2035", value: String(over2035) }, { label: "growth band", value: "base" }],
+      legend: "v_c", list: null,
+      state: fullState("light", { metric: "v_c" }), basemap: "light", lightPreset: "dusk",
+      camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
+      layers: layers({ dots: "none" }), yearPlay: { from: SIM_YEARS[0], to: SIM_YEARS[1] } },
+    // 14: One closure (the top citywide segment closes, its detour draws, the detour segments repaint)
+    { id: "closure", kind: "segment", title: "One closure",
+      caption: closureCaption,
+      stats: ci && ci.top ? [{ label: "closed", value: TOP5[0].name }, { label: "onto", value: ci.top.on_road }, { label: "v/c before", value: ci.top.before.toFixed(2) }, { label: "v/c after", value: ci.top.after.toFixed(2) }] : [{ label: "closed", value: TOP5[0].name }],
+      legend: "v_c", list: null,
+      state: fullState("light", { metric: "v_c", closing: closeId }), basemap: "light", lightPreset: "dusk",
+      camera: { kind: "segment", locId: closeId, zoom: 13.6 }, motion: { orbitDeg: 0, driftDeg: 5 },
+      layers: layers({ dots: "none", callouts: [closeId] }) },
+    // 15: The lane count story (satellite aerial on 52500-158, existing caption without the URL)
     { id: "lanes", kind: "segment", title: "The lane count story", autoplayMs: SCENE_TIMING.ward,   // storyboard: 14 s
       caption: `All ${n(FACTS.lanes_verified)} lane counts were verified by a person against aerial imagery. W Main St carries ${main.vpd_max != null ? n(main.vpd_max) : "its highest count"} vehicles per day on ${main.lanes_final != null ? main.lanes_final : "its verified"} lanes.`,
       stats: [], legend: null, list: null, calloutText: laneCallout,
       state: fullState("satellite", { selectedLocId: "52500-158" }, { flow: true }), basemap: "satellite", lightPreset: "dusk",
       camera: { kind: "aerial", locId: "52500-158" }, motion: { orbitDeg: 25, driftDeg: 0 },
       layers: layers({ flow: true, dots: "segment", callouts: ["52500-158"] }) },
-    // 14: Closing (manual, bookend establish at 50 percent)
+    // 16: Closing (manual, bookend establish at 50 percent)
     { id: "closing", kind: "closing", title: "Explore it yourself",
       caption: `Every figure in this story traces to the workbook and the crash audit. Replay the story, or explore the dashboard yourself at ${LIVE_URL}`,
       stats: [], legend: null, list: null,
@@ -128,6 +164,6 @@ export function buildScenes(raw) {
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
       layers: layers({ dots: "none", segmentsOpacity: 0.5 }) },
   ];
-  // eyebrow/hint default to null on every scene but the title (C.2 Wave 4 fields).
-  return scenes.map((s, i) => ({ eyebrow: null, hint: null, ...s, index: i, number: i + 1, total: scenes.length, autoplayMs: s.autoplayMs !== undefined ? s.autoplayMs : AUTOPLAY[s.kind] }));
+  // eyebrow/hint default to null on every scene but the title (C.2 Wave 4 fields); yearPlay only on the run out scene.
+  return scenes.map((s, i) => ({ eyebrow: null, hint: null, yearPlay: null, ...s, index: i, number: i + 1, total: scenes.length, autoplayMs: s.autoplayMs !== undefined ? s.autoplayMs : AUTOPLAY[s.kind] }));
 }

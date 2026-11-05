@@ -176,7 +176,7 @@ export function closureImpact(state) {
     detours.sort((a, b) => (b.delta || 0) - (a.delta || 0));
   }
   return { closing: state.closing, closed, impact, detours, top: detours[0] || null,
-           no_path: !impact || !!impact.no_path, flagged: !!(impact && impact.flagged),
+           missing: !impact, no_path: !impact || !!impact.no_path, flagged: !!(impact && impact.flagged),
            detour_len_mi: impact ? impact.detour_len_mi : null, ratio: impact ? impact.ratio : null };
 }
 
