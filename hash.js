@@ -1,5 +1,11 @@
 // URL hash <-> UI state. #ward=2&metric=combined&los=E&years=2021-2025&sel=52500-158&tour=10
+// Simulate keys (C.14) are short and written only when they leave the default scenario:
+// dt=school_wkday&yr=2031&grow=1&band=hi&close=52500-158
 const METRICS = new Set(["combined", "v_c", "collisions"]);
+const DAYTYPES = new Set(["school_fri", "school_wkday", "weekend", "summer_wkday", "gameday"]);
+const BANDS = new Set(["lo", "base", "hi"]);
+const GROWTH_ADDS = [0, 0.01, 0.02];
+export const YEAR_RANGE = [2025, 2035];
 
 export function stateToHash(state, tourStep) {
   const q = [];
@@ -10,6 +16,11 @@ export function stateToHash(state, tourStep) {
   if (state.includeCollectors) q.push("collectors=1");
   if (state.selectedLocId) q.push(`sel=${encodeURIComponent(state.selectedLocId)}`);
   if (state.basemap === "satellite") q.push("basemap=satellite");
+  if (state.daytype && state.daytype !== "school_fri") q.push(`dt=${state.daytype}`);
+  if (state.year != null && state.year !== YEAR_RANGE[0]) q.push(`yr=${state.year}`);
+  if (state.growthAdd) q.push(`grow=${Math.round(state.growthAdd * 100)}`);
+  if (state.band && state.band !== "base") q.push(`band=${state.band}`);
+  if (state.closing) q.push(`close=${encodeURIComponent(state.closing)}`);
   if (tourStep != null) q.push(`tour=${tourStep}`);
   return "#" + q.join("&");
 }
@@ -28,6 +39,11 @@ export function hashToPatch(hash) {
     else if (k === "collectors") patch.includeCollectors = v === "1" || v === "true";
     else if (k === "sel") { if (/^[\w-]+$/.test(v)) patch.selectedLocId = v; }
     else if (k === "basemap" && (v === "light" || v === "satellite")) patch.basemap = v;
+    else if (k === "dt" && DAYTYPES.has(v)) patch.daytype = v;
+    else if (k === "yr") { const n = Number(v); if (Number.isInteger(n) && n >= YEAR_RANGE[0] && n <= YEAR_RANGE[1]) patch.year = n; }
+    else if (k === "grow") { const n = Number(v) / 100; if (GROWTH_ADDS.includes(n)) patch.growthAdd = n; }
+    else if (k === "band" && BANDS.has(v)) patch.band = v;
+    else if (k === "close") { if (/^[\w-]+$/.test(v)) patch.closing = v; }
     else if (k === "tour") { const n = Number(v); if (Number.isInteger(n) && n >= 0) tour = n; }
   }
   return { patch, tour };

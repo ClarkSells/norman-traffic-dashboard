@@ -30,3 +30,14 @@ const calls = []; globalThis.location = { hash: "" }; globalThis.history = { rep
 writeHash(full, 2); writeHash(full, 2);
 assert.deepEqual(calls, ["#ward=2&metric=combined&los=E&years=2021-2025&sel=52500-158&tour=2"], "written once; unchanged hash is not rewritten");
 console.log("hash checks passed");
+
+// Simulate keys (C.14): short names, written only off the default scenario, validated on the way back.
+const sim = { ...full, ward: null, selectedLocId: null, daytype: "school_fri", year: 2025, growthAdd: 0, band: "base", closing: null };
+assert.equal(stateToHash(sim), "#metric=combined&los=E&years=2021-2025", "the default scenario adds nothing to the hash");
+assert.equal(stateToHash({ ...sim, daytype: "school_wkday", year: 2031, growthAdd: 0.01, band: "hi", closing: "52500-158" }), "#metric=combined&los=E&years=2021-2025&dt=school_wkday&yr=2031&grow=1&band=hi&close=52500-158");
+assert.deepEqual(hashToPatch("#dt=gameday&yr=2035&grow=2&band=lo&close=52500-12").patch, { daytype: "gameday", year: 2035, growthAdd: 0.02, band: "lo", closing: "52500-12" }, "every simulate key round trips");
+assert.deepEqual(hashToPatch("#dt=monday&yr=2040&grow=5&band=mid&close=<x>").patch, {}, "bad simulate values are dropped key by key");
+assert.deepEqual(hashToPatch("#yr=2025&grow=0").patch, { year: 2025, growthAdd: 0 }, "explicit defaults are accepted");
+const simFull = { ...sim, daytype: "weekend", year: 2029, growthAdd: 0.02, band: "lo", closing: "52500-7" };
+assert.equal(stateToHash({ ...simFull, ...hashToPatch(stateToHash(simFull)).patch }), stateToHash(simFull), "simulate hash -> patch -> hash is stable");
+console.log("simulate hash checks passed");
