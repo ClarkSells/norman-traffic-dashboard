@@ -88,6 +88,53 @@
           <label class="control switch"><input type="checkbox" id="flow-toggle" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Traffic flow</span></label>
         </section>
       </section>
+      <section class="simulate" id="simulate" aria-labelledby="simulate-toggle">
+        <div class="simulate-head">
+          <button id="simulate-toggle" class="btn small" type="button" aria-expanded="false" aria-controls="simulate-body">Simulate <span class="sim-chip" id="sim-chip" hidden>on</span></button>
+          <button id="sim-reset" class="btn small" type="button">Reset scenario</button>
+        </div>
+        <div class="simulate-body" id="simulate-body" hidden>
+          <div class="control"><span class="control-label" id="daytype-label">Day type</span>
+            <div class="segmented daytypes" id="daytype-toggle" role="group" aria-labelledby="daytype-label">
+              <button type="button" data-daytype="school_fri" class="active" aria-pressed="true">School Friday</button>
+              <button type="button" data-daytype="school_wkday" aria-pressed="false">School weekday</button>
+              <button type="button" data-daytype="weekend" aria-pressed="false">Weekend</button>
+              <button type="button" data-daytype="summer_wkday" aria-pressed="false">Summer weekday</button>
+              <button type="button" data-daytype="gameday" aria-pressed="false">OU game day</button>
+            </div>
+          </div>
+          <div class="control range sim-year">
+            <span class="control-label">Year <output id="sim-year-label" for="sim-year">2025</output></span>
+            <div class="sim-year-row">
+              <div class="range-pair single" id="sim-year-range">
+                <div class="range-track"><div class="range-fill" id="sim-year-fill"></div></div>
+                <input type="range" id="sim-year" aria-label="Projection year" min="2025" max="2035" step="1" value="2025">
+              </div>
+              <button id="sim-play" class="btn small" type="button" aria-pressed="false">Play</button>
+            </div>
+            <div class="range-ticks" id="sim-year-ticks" aria-hidden="true"></div>
+          </div>
+          <div class="sim-row">
+            <div class="control"><span class="control-label" id="growth-label">Growth lever, percent per year</span>
+              <div class="segmented" id="growth-toggle" role="group" aria-labelledby="growth-label">
+                <button type="button" data-growth="0" class="active" aria-pressed="true">+0</button>
+                <button type="button" data-growth="0.01" aria-pressed="false">+1</button>
+                <button type="button" data-growth="0.02" aria-pressed="false">+2</button>
+              </div>
+            </div>
+            <div class="control"><span class="control-label" id="band-label">Growth band</span>
+              <div class="segmented" id="band-toggle" role="group" aria-labelledby="band-label">
+                <button type="button" data-band="lo" aria-pressed="false">Low</button>
+                <button type="button" data-band="base" class="active" aria-pressed="true">Base</button>
+                <button type="button" data-band="hi" aria-pressed="false">High</button>
+              </div>
+            </div>
+          </div>
+          <label class="control switch"><input type="checkbox" id="closure-toggle" role="switch" aria-checked="false"><span class="switch-track" aria-hidden="true"></span><span>Close a segment <small class="switch-hint">then click one on the map</small></span></label>
+          <p class="sim-assumption" id="sim-assumption">School Friday: the count itself.</p>
+          <p class="sim-sample" id="sim-sample" hidden>Sample scenario data, not pipeline output.</p>
+        </div>
+      </section>
       <section class="stats" id="stats" aria-label="Headline numbers">
         <div class="stat"><div class="value" id="stat-segments">0</div><div class="label">segments shown</div></div>
         <div class="stat"><div class="value" id="stat-crashes">0</div><div class="label">crashes in window</div></div>

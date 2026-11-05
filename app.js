@@ -24,6 +24,7 @@ import { initLayout } from "./ui/layout.js";
 import { initMapChrome } from "./ui/mapchrome.js";
 import { readHash, writeHash } from "./hash.js";
 import { initSheet } from "./ui/sheet.js";
+import { closureArmed, initSimulate, playYears, setSampleNotice, stopYears, syncSimulate } from "./ui/simulate.js";
 
 initLoading();   // loading card over the map until the layers are on it
 setStage("map");
@@ -317,6 +318,7 @@ function render(state, patch) {
   renderLegend(document.getElementById("legend"), state);
   renderTable(state, (locId) => selectSegment(locId), { onHover: (locId) => setHover(map, locId) });
   syncControls(state);
+  syncSimulate(state);
   const bmBtn = document.getElementById("basemap-toggle");
   if (bmBtn) { bmBtn.textContent = state.basemap === "satellite" ? "Streets" : "Satellite"; bmBtn.setAttribute("aria-pressed", String(state.basemap === "satellite")); }
   if (presenting) { writeHash(state, tour && tour.getState().active ? tour.getState().index : null); return; }
@@ -332,6 +334,9 @@ async function main() {
   dataReady = true;
   performance.mark("dash:data-ready");
   initControls();
+  initSimulate({ daytypes: getRaw().daytypes });
+  // data/SAMPLE_DATA.txt exists only while scripts/stamp_sample.mjs output stands in for the pipeline.
+  fetch("data/SAMPLE_DATA.txt", { method: "HEAD" }).then(r => setSampleNotice(r.ok)).catch(() => setSampleNotice(false));
   addAllLayers();
   performance.mark("dash:layers-added");
   popup = attachPopup(map, (locId) => setState({ selectedLocId: locId }), () => !presenting);

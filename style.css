@@ -117,6 +117,29 @@ tbody tr:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; 
 .control.switch input:checked + .switch-track::after { transform: translateX(14px); }
 .control.switch input:focus-visible + .switch-track { outline: 2px solid var(--focus); outline-offset: 2px; }
 
+/* Simulate (C.14, C.17): a folded section under the controls so the table keeps its height. The body opens on the
+   Simulate button; the chip on the button reads "on" while the scenario differs from the default. */
+.simulate { flex: none; padding: 8px 20px; border-bottom: 1px solid var(--hairline); display: grid; gap: 8px; }
+.simulate-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#simulate-toggle[aria-expanded="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.sim-chip { font-family: var(--font-num); font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; margin-left: 6px; padding: 1px 5px; border-radius: 2px; background: var(--accent); color: #fff; }
+.sim-chip[hidden] { display: none; }
+#simulate-toggle[aria-expanded="true"] .sim-chip { background: var(--surface); color: var(--ink); }
+.simulate-body { display: grid; gap: 10px; }
+.simulate-body[hidden] { display: none; }
+.segmented.daytypes button { padding: 6px 8px; font-size: 11.5px; }
+.sim-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sim-year-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.range-pair.single input[type="range"] { pointer-events: auto; }
+#sim-play[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.switch-hint { display: block; font-size: 11px; color: var(--ink-muted); font-weight: 400; }
+.sim-assumption { margin: 0; font-size: 11.5px; line-height: 1.4; color: var(--ink-muted); text-wrap: pretty; }
+.sim-assumption strong { color: var(--ink); font-weight: 500; }
+.sim-sample { margin: 0; font-family: var(--font-num); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+.sim-sample[hidden] { display: none; }
+th.projected { color: var(--accent); }
+.map-tooltip .closure { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--hairline); color: var(--ink-muted); font-size: 11px; max-width: 240px; }
+
 /* "How to read this" overlay: four short cards over the panel, one mono figure each */
 .help { position: absolute; inset: 0; z-index: 5; flex: none; padding: 18px 20px 20px; background: var(--surface); font-size: 12.5px; line-height: 1.45; color: var(--ink); overflow: auto; }
 .help[hidden] { display: none; }
@@ -305,6 +328,8 @@ td.score span { position: relative; }
   .panel.sheet .stats-line { line-height: 40px; font-size: 11.5px; }
   .panel.sheet .controls { order: 2; flex: none; overflow: visible; touch-action: pan-y; gap: 10px; padding: 10px 16px; }
   .panel.sheet .help { order: 2; }
+  .panel.sheet .simulate { order: 2; padding: 8px 16px; touch-action: pan-y; }
+  .panel.sheet[data-snap="peek"] .simulate { visibility: hidden; }
   .panel.sheet .table-wrap { order: 3; flex: none; overflow: visible; touch-action: pan-y; }
   .panel.sheet[data-snap="full"] { overflow-y: auto; }   /* at full the whole briefing scrolls as one column */
   .panel.sheet.sheet-dragging { overflow: hidden; }

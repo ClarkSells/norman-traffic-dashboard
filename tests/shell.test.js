@@ -11,6 +11,7 @@ const html = readFileSync(join(here, "..", "index.html"), "utf8");
 for (const id of ["map", "panel", "layout", "ward-toggle", "metric-toggle", "los-toggle", "year-min", "year-max", "year-label", "year-fill", "year-ticks", "show-collectors", "stats", "rank-table", "table-empty", "legend", "basemap-toggle",
                   "help-toggle", "help-box", "loading", "loading-text", "loading-reload", "panel-toggle", "progress", "progress-fill", "present-toggle", "sheet-handle", "briefing", "briefing-title", "briefing-line", "reset-view", "stat-segments", "stat-crashes", "stat-top", "map-tooltip",
                   "settings-toggle", "settings", "heat-toggle", "flow-toggle", "map-north", "map-recenter",
+                  "simulate", "simulate-toggle", "simulate-body", "sim-chip", "sim-reset", "daytype-toggle", "sim-year", "sim-year-label", "sim-year-fill", "sim-year-ticks", "sim-play", "growth-toggle", "band-toggle", "closure-toggle", "sim-assumption", "sim-sample", "th-vc",
                   "present", "present-eyebrow", "present-scene-count", "present-card", "present-title", "present-caption", "present-stats", "present-legend", "present-list", "present-progress", "present-controls", "present-prev", "present-next", "present-autoplay", "present-exit", "present-closing", "present-replay", "present-explore"]) {
   assert.ok(html.includes(`id="${id}"`), `index.html is missing #${id}`);
 }
@@ -18,7 +19,10 @@ assert.ok(html.includes("mapbox-gl.js") && html.includes('type="module" src="app
 assert.ok(html.includes('aria-controls="help-box"') && html.includes('aria-expanded="false"'), "help toggle announces its state");
 assert.ok(html.includes('id="loading" role="status"'), "loading card is announced to screen readers");
 assert.ok(html.includes('aria-label="First collision year"') && html.includes('aria-label="Last collision year"'), "year selects are labelled");
-assert.equal((html.match(/aria-pressed="true"/g) || []).length, 3, "one pressed button per segmented control (ward, metric, LOS)");
+assert.equal((html.match(/aria-pressed="true"/g) || []).length, 6, "one pressed button per segmented control (ward, metric, LOS, day type, growth lever, band)");
+assert.equal((html.match(/data-daytype="/g) || []).length, 5, "five day types (C.13)");
+assert.ok(html.includes('type="range" id="sim-year"') && html.includes('min="2025"') && html.includes('max="2035"'), "projection year range 2025 to 2035");
+assert.ok(html.includes('id="closure-toggle" role="switch"'), "close a segment is a switch");
 assert.equal((html.match(/data-ward="/g) || []).length, 9, "All plus eight wards");
 assert.ok(html.includes('type="range" id="year-min"') && html.includes('type="range" id="year-max"'), "two handle year range");
 assert.ok(html.includes("fonts.googleapis.com") && html.includes("IBM+Plex+Mono") && !html.includes("Fraunces"), "one monospace face loaded");
