@@ -21,6 +21,7 @@ const STYLE = `
 .siteview-strip .empty{font-size:11.5px;color:var(--ink-muted,#6b6960);font-family:var(--font-mono,monospace);padding:6px 0}
 .siteview .btn{font:inherit}
 .siteview-marker{transform:translate(-50%,-100%)}
+.siteview-label-slot{pointer-events:none}
 `;
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) { e.className = cls; for (const c of cls.split(/\s+/)) if (c && e.classList) e.classList.add(c); } if (text != null) e.textContent = text; return e; }
@@ -65,7 +66,17 @@ export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u)
     return three;
   }
 
-  function labelEl(l) { const d = el("div", `siteview-label ${l.kind || ""}`, l.text); return d; }
+  // CSS2DRenderer owns the outer element's transform, so stacking offsets live on an inner element: labels that share
+  // a point (segment, its speed line, its forecast line) step up the screen instead of overprinting.
+  const STACK_PX = { segment: 0, speed: -28, forecast: -56, crashes: 72, station: 30, intersection: 0 };
+  function labelEl(l) {
+    const outer = el("div", "siteview-label-slot");
+    const inner = el("div", `siteview-label ${l.kind || ""}`, l.text);
+    const off = STACK_PX[l.kind] || 0;
+    if (off) inner.style.marginTop = `${off}px`;
+    outer.appendChild(inner);
+    return outer;
+  }
 
   async function renderMesh(site, siteId) {
     const { T, GLTFLoader, OrbitControls, CSS2DRenderer, CSS2DObject } = await loadThree();
@@ -108,7 +119,7 @@ export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u)
       map.flyTo({ center: [site.center.lon, site.center.lat], zoom: 17.6, pitch: 60, bearing: -20, duration: 1400 });
       for (const l of site.labels || []) {
         if (typeof mapboxgl === "undefined") break;
-        const d = labelEl(l); d.classList.add("siteview-marker");
+        const d = labelEl(l); d.classList.add("siteview-marker"); d.style.pointerEvents = "none";
         const m = new mapboxgl.Marker({ element: d, anchor: "bottom" }).setLngLat([l.lon, l.lat]).addTo(map);
         markers.push(m);
       }

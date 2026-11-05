@@ -1,0 +1,104 @@
+{
+ "site_id": "site05",
+ "name": "Flood Ave. at Tecumseh Rd.",
+ "center": {
+  "lon": -97.461084,
+  "lat": 35.247213
+ },
+ "bbox": {
+  "south": 35.24649,
+  "west": -97.461964,
+  "north": 35.247936,
+  "east": -97.460204
+ },
+ "size_m": 160.0,
+ "loc_ids": [
+  "52500-240",
+  "52500-243"
+ ],
+ "score": 207.343,
+ "mesh": "mesh.glb",
+ "mesh_frame": "x east, y up, z south, meters from the bbox center, lowest point at y = 0 (Aleph convention)",
+ "streetview_dir": "streetview",
+ "source": "Aleph capture (Belluxx/Aleph), Google imagery via undocumented endpoints; see the method notes",
+ "labels": [
+  {
+   "kind": "intersection",
+   "text": "Flood Ave. at Tecumseh Rd.",
+   "lon": -97.461084,
+   "lat": 35.247213,
+   "x": 0.0,
+   "y": 6.0,
+   "z": -0.0
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-240",
+   "text": "Flood Ave.: 4 lanes, 21,086 vpd (2018), v/c 0.62, 81 crashes",
+   "lon": -97.460766,
+   "lat": 35.246857,
+   "x": 28.92,
+   "y": 6.0,
+   "z": 39.41
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-240",
+   "text": "posted 45 mph, measured 58 mph",
+   "lon": -97.460766,
+   "lat": 35.246857,
+   "x": 28.92,
+   "y": 9.0,
+   "z": 39.41
+  },
+  {
+   "kind": "forecast",
+   "loc_id": "52500-240",
+   "text": "v/c 0.9 by 2048 (base), next tier 4 lane divided",
+   "lon": -97.460766,
+   "lat": 35.246857,
+   "x": 28.92,
+   "y": 12.0,
+   "z": 39.41
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-243",
+   "text": "Flood Ave.: 4 lanes, 24,837 vpd (2026), v/c 0.73, 125 crashes",
+   "lon": -97.461406,
+   "lat": 35.247576,
+   "x": -29.26,
+   "y": 6.0,
+   "z": -40.12
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-243",
+   "text": "posted 55 mph, measured 62 mph",
+   "lon": -97.461406,
+   "lat": 35.247576,
+   "x": -29.26,
+   "y": 9.0,
+   "z": -40.12
+  },
+  {
+   "kind": "forecast",
+   "loc_id": "52500-243",
+   "text": "v/c 0.9 by 2043 (base), next tier 4 lane divided",
+   "lon": -97.461406,
+   "lat": 35.247576,
+   "x": -29.26,
+   "y": 12.0,
+   "z": -40.12
+  },
+  {
+   "kind": "crashes",
+   "text": "64 crashes inside this box, 2021 to 2025",
+   "lon": -97.461084,
+   "lat": 35.247213,
+   "x": 0.0,
+   "y": 15.0,
+   "z": -0.0
+  }
+ ]
+}

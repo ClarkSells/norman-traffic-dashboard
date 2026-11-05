@@ -1,0 +1,114 @@
+{
+ "site_id": "site02",
+ "name": "12th Ave NE at Alameda",
+ "center": {
+  "lon": -97.423595,
+  "lat": 35.220009
+ },
+ "bbox": {
+  "south": 35.219286,
+  "west": -97.424475,
+  "north": 35.220732,
+  "east": -97.422715
+ },
+ "size_m": 160.0,
+ "loc_ids": [
+  "52500-260",
+  "52500-261"
+ ],
+ "score": 237.536,
+ "mesh": "mesh.glb",
+ "mesh_frame": "x east, y up, z south, meters from the bbox center, lowest point at y = 0 (Aleph convention)",
+ "streetview_dir": "streetview",
+ "source": "Aleph capture (Belluxx/Aleph), Google imagery via undocumented endpoints; see the method notes",
+ "labels": [
+  {
+   "kind": "intersection",
+   "text": "12th Ave NE at Alameda",
+   "lon": -97.423595,
+   "lat": 35.220009,
+   "x": 0.0,
+   "y": 6.0,
+   "z": -0.0
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-260",
+   "text": "12th Ave NE: 5 lanes, 29,131 vpd (2026), v/c 0.81, 88 crashes",
+   "lon": -97.423592,
+   "lat": 35.220371,
+   "x": 0.23,
+   "y": 6.0,
+   "z": -40.03
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-260",
+   "text": "posted 40 mph, measured 44 mph",
+   "lon": -97.423592,
+   "lat": 35.220371,
+   "x": 0.23,
+   "y": 9.0,
+   "z": -40.03
+  },
+  {
+   "kind": "forecast",
+   "loc_id": "52500-260",
+   "text": "v/c 0.9 by 2050 (base), next tier 6 lane divided",
+   "lon": -97.423592,
+   "lat": 35.220371,
+   "x": 0.23,
+   "y": 12.0,
+   "z": -40.03
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-261",
+   "text": "12th Ave NE: 4 lanes divided, 27,604 vpd (2026), v/c 0.73, 148 crashes",
+   "lon": -97.423597,
+   "lat": 35.219647,
+   "x": -0.17,
+   "y": 6.0,
+   "z": 39.97
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-261",
+   "text": "posted 40 mph, measured 36 mph",
+   "lon": -97.423597,
+   "lat": 35.219647,
+   "x": -0.17,
+   "y": 9.0,
+   "z": 39.97
+  },
+  {
+   "kind": "forecast",
+   "loc_id": "52500-261",
+   "text": "v/c 0.9 by 2043 (base), next tier 6 lane divided",
+   "lon": -97.423597,
+   "lat": 35.219647,
+   "x": -0.17,
+   "y": 12.0,
+   "z": 39.97
+  },
+  {
+   "kind": "station",
+   "loc_id": "52500-261",
+   "text": "ACOG station 52500-261",
+   "lon": -97.4236142635345,
+   "lat": 35.2196265804808,
+   "x": -1.75,
+   "y": 3.0,
+   "z": 42.29
+  },
+  {
+   "kind": "crashes",
+   "text": "66 crashes inside this box, 2021 to 2025",
+   "lon": -97.423595,
+   "lat": 35.220009,
+   "x": 0.0,
+   "y": 15.0,
+   "z": -0.0
+  }
+ ]
+}

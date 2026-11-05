@@ -1,0 +1,105 @@
+{
+ "site_id": "site01",
+ "name": "W Main St at 24th Ave NW",
+ "center": {
+  "lon": -97.476665,
+  "lat": 35.218422
+ },
+ "bbox": {
+  "south": 35.217699,
+  "west": -97.477545,
+  "north": 35.219145,
+  "east": -97.475785
+ },
+ "size_m": 160.0,
+ "loc_ids": [
+  "52500-144",
+  "52500-158",
+  "52500-283"
+ ],
+ "score": 328.771,
+ "mesh": "mesh.glb",
+ "mesh_frame": "x east, y up, z south, meters from the bbox center, lowest point at y = 0 (Aleph convention)",
+ "streetview_dir": "streetview",
+ "source": "Aleph capture (Belluxx/Aleph), Google imagery via undocumented endpoints; see the method notes",
+ "labels": [
+  {
+   "kind": "intersection",
+   "text": "W Main St at 24th Ave NW",
+   "lon": -97.476665,
+   "lat": 35.218422,
+   "x": 0.0,
+   "y": 6.0,
+   "z": -0.0
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-144",
+   "text": "W Main St: 5 lanes, 25,937 vpd (2024), v/c 0.72, 94 crashes",
+   "lon": -97.476225,
+   "lat": 35.218426,
+   "x": 40.01,
+   "y": 6.0,
+   "z": -0.39
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-144",
+   "text": "posted 35 mph, measured 40 mph",
+   "lon": -97.476225,
+   "lat": 35.218426,
+   "x": 40.01,
+   "y": 9.0,
+   "z": -0.39
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-158",
+   "text": "W Main St: 6 lanes divided, 31,886 vpd (2022), v/c 0.55, 168 crashes",
+   "lon": -97.477105,
+   "lat": 35.218424,
+   "x": -39.99,
+   "y": 6.0,
+   "z": -0.17
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-158",
+   "text": "posted 40 mph, measured 40 mph",
+   "lon": -97.477105,
+   "lat": 35.218424,
+   "x": -39.99,
+   "y": 9.0,
+   "z": -0.17
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-283",
+   "text": "24th Ave NW: 5 lanes, 18,011 vpd (2022), v/c 0.50, 65 crashes",
+   "lon": -97.476663,
+   "lat": 35.218784,
+   "x": 0.17,
+   "y": 6.0,
+   "z": -40.03
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-283",
+   "text": "posted 35 mph, measured 40 mph",
+   "lon": -97.476663,
+   "lat": 35.218784,
+   "x": 0.17,
+   "y": 9.0,
+   "z": -40.03
+  },
+  {
+   "kind": "crashes",
+   "text": "252 crashes inside this box, 2021 to 2025",
+   "lon": -97.476665,
+   "lat": 35.218422,
+   "x": 0.0,
+   "y": 15.0,
+   "z": -0.0
+  }
+ ]
+}

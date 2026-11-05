@@ -1,0 +1,84 @@
+{
+ "site_id": "site04",
+ "name": "12th Ave.SE at E Lindsey St",
+ "center": {
+  "lon": -97.423605,
+  "lat": 35.203831
+ },
+ "bbox": {
+  "south": 35.203108,
+  "west": -97.424485,
+  "north": 35.204554,
+  "east": -97.422725
+ },
+ "size_m": 160.0,
+ "loc_ids": [
+  "52500-127",
+  "52500-254"
+ ],
+ "score": 220.047,
+ "mesh": "mesh.glb",
+ "mesh_frame": "x east, y up, z south, meters from the bbox center, lowest point at y = 0 (Aleph convention)",
+ "streetview_dir": "streetview",
+ "source": "Aleph capture (Belluxx/Aleph), Google imagery via undocumented endpoints; see the method notes",
+ "labels": [
+  {
+   "kind": "intersection",
+   "text": "12th Ave.SE at E Lindsey St",
+   "lon": -97.423605,
+   "lat": 35.203831,
+   "x": 0.0,
+   "y": 6.0,
+   "z": -0.0
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-127",
+   "text": "E Lindsey St: 4 lanes divided, 11,301 vpd (2023), v/c 0.30, 66 crashes",
+   "lon": -97.423165,
+   "lat": 35.203833,
+   "x": 40.01,
+   "y": 6.0,
+   "z": -0.24
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-127",
+   "text": "posted 35 mph, measured 44 mph",
+   "lon": -97.423165,
+   "lat": 35.203833,
+   "x": 40.01,
+   "y": 9.0,
+   "z": -0.24
+  },
+  {
+   "kind": "segment",
+   "loc_id": "52500-254",
+   "text": "12th Ave.SE: 4 lanes, 25,648 vpd (2026), v/c 0.75, 153 crashes",
+   "lon": -97.423602,
+   "lat": 35.204193,
+   "x": 0.25,
+   "y": 6.0,
+   "z": -39.97
+  },
+  {
+   "kind": "speed",
+   "loc_id": "52500-254",
+   "text": "posted 40 mph, measured 50 mph",
+   "lon": -97.423602,
+   "lat": 35.204193,
+   "x": 0.25,
+   "y": 9.0,
+   "z": -39.97
+  },
+  {
+   "kind": "crashes",
+   "text": "106 crashes inside this box, 2021 to 2025",
+   "lon": -97.423605,
+   "lat": 35.203831,
+   "x": 0.0,
+   "y": 15.0,
+   "z": -0.0
+  }
+ ]
+}

@@ -1,0 +1,69 @@
+{
+ "site01": {
+  "name": "W Main St at 24th Ave NW",
+  "lat": 35.218422,
+  "lon": -97.476665,
+  "loc_ids": [
+   "52500-144",
+   "52500-158",
+   "52500-283"
+  ],
+  "score": 328.771,
+  "has_mesh": true,
+  "streetview": [
+   "heading_000.jpg",
+   "heading_090.jpg",
+   "heading_180.jpg",
+   "heading_270.jpg"
+  ]
+ },
+ "site02": {
+  "name": "12th Ave NE at Alameda",
+  "lat": 35.220009,
+  "lon": -97.423595,
+  "loc_ids": [
+   "52500-260",
+   "52500-261"
+  ],
+  "score": 237.536,
+  "has_mesh": false,
+  "streetview": []
+ },
+ "site03": {
+  "name": "24TH AVE NW at W Robinson St",
+  "lat": 35.232942,
+  "lon": -97.480404,
+  "loc_ids": [
+   "52500-187",
+   "52500-282",
+   "52500-5003"
+  ],
+  "score": 230.539,
+  "has_mesh": false,
+  "streetview": []
+ },
+ "site04": {
+  "name": "12th Ave.SE at E Lindsey St",
+  "lat": 35.203831,
+  "lon": -97.423605,
+  "loc_ids": [
+   "52500-127",
+   "52500-254"
+  ],
+  "score": 220.047,
+  "has_mesh": false,
+  "streetview": []
+ },
+ "site05": {
+  "name": "Flood Ave. at Tecumseh Rd.",
+  "lat": 35.247213,
+  "lon": -97.461084,
+  "loc_ids": [
+   "52500-240",
+   "52500-243"
+  ],
+  "score": 207.343,
+  "has_mesh": false,
+  "streetview": []
+ }
+}
