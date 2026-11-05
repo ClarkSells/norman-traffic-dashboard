@@ -1,0 +1,4082 @@
+{
+ "52500-1": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_001.jpg",
+    "heading": 1,
+    "date": "2021-02",
+    "pano_id": "_WlGmQ3XuXZY9_qoSCdu0Q",
+    "distance_m": 7.11
+   },
+   {
+    "file": "sv_181.jpg",
+    "heading": 181,
+    "date": "2021-02",
+    "pano_id": "_WlGmQ3XuXZY9_qoSCdu0Q",
+    "distance_m": 7.11
+   }
+  ],
+  "bearing": 0.6
+ },
+ "52500-10": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-03",
+    "pano_id": "VaUKDrmOxD9RSKX2y0MWvA",
+    "distance_m": 4.22
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-03",
+    "pano_id": "VaUKDrmOxD9RSKX2y0MWvA",
+    "distance_m": 4.22
+   }
+  ],
+  "bearing": 359.9
+ },
+ "52500-100": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_243.jpg",
+    "heading": 243,
+    "date": "2024-08",
+    "pano_id": "KFfF-CMRTjrPDKd7u-InJQ",
+    "distance_m": 3.02
+   },
+   {
+    "file": "sv_063.jpg",
+    "heading": 63,
+    "date": "2024-08",
+    "pano_id": "KFfF-CMRTjrPDKd7u-InJQ",
+    "distance_m": 3.02
+   }
+  ],
+  "bearing": 243.3
+ },
+ "52500-109": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_269.jpg",
+    "heading": 269,
+    "date": "2024-08",
+    "pano_id": "HGQYzOi2mV5eBGSbt9oQsQ",
+    "distance_m": 2.65
+   },
+   {
+    "file": "sv_089.jpg",
+    "heading": 89,
+    "date": "2024-08",
+    "pano_id": "HGQYzOi2mV5eBGSbt9oQsQ",
+    "distance_m": 2.65
+   }
+  ],
+  "bearing": 269.3
+ },
+ "52500-11": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2026-10",
+    "pano_id": "PxSac8I-2c2ImXHggGxdKA",
+    "distance_m": 2.8
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2026-10",
+    "pano_id": "PxSac8I-2c2ImXHggGxdKA",
+    "distance_m": 2.8
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-110": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2022-04",
+    "pano_id": "ICvjBCrTsCqbedxccLtNow",
+    "distance_m": 2.12
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2022-04",
+    "pano_id": "ICvjBCrTsCqbedxccLtNow",
+    "distance_m": 2.12
+   }
+  ],
+  "bearing": 269.6
+ },
+ "52500-111": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_089.jpg",
+    "heading": 89,
+    "date": "2024-08",
+    "pano_id": "_4lehzVgA_fCqwgBXRllkg",
+    "distance_m": 6.28
+   },
+   {
+    "file": "sv_269.jpg",
+    "heading": 269,
+    "date": "2024-08",
+    "pano_id": "_4lehzVgA_fCqwgBXRllkg",
+    "distance_m": 6.28
+   }
+  ],
+  "bearing": 88.5
+ },
+ "52500-112": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_089.jpg",
+    "heading": 89,
+    "date": "2024-08",
+    "pano_id": "aaaA6zgZLiIBdOE6WLgmsQ",
+    "distance_m": 4.07
+   },
+   {
+    "file": "sv_269.jpg",
+    "heading": 269,
+    "date": "2024-08",
+    "pano_id": "aaaA6zgZLiIBdOE6WLgmsQ",
+    "distance_m": 4.07
+   }
+  ],
+  "bearing": 89.3
+ },
+ "52500-113": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "MOCR1pGsIb-Vkal1Em7alQ",
+    "distance_m": 23.25
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "MOCR1pGsIb-Vkal1Em7alQ",
+    "distance_m": 23.25
+   }
+  ],
+  "bearing": 269.9
+ },
+ "52500-114": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_271.jpg",
+    "heading": 271,
+    "date": "2024-06",
+    "pano_id": "4jLru6Rryw6dzrU9qkj5mA",
+    "distance_m": 8.08
+   },
+   {
+    "file": "sv_091.jpg",
+    "heading": 91,
+    "date": "2024-06",
+    "pano_id": "4jLru6Rryw6dzrU9qkj5mA",
+    "distance_m": 8.08
+   }
+  ],
+  "bearing": 271.4
+ },
+ "52500-115": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-02",
+    "pano_id": "l9F9O6v-6U_pvhCrvUFTlQ",
+    "distance_m": 24.23
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-02",
+    "pano_id": "l9F9O6v-6U_pvhCrvUFTlQ",
+    "distance_m": 24.23
+   }
+  ],
+  "bearing": 270.3
+ },
+ "52500-116": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_267.jpg",
+    "heading": 267,
+    "date": "2024-06",
+    "pano_id": "OgNOsCAQWYvt1DuwVxh4SQ",
+    "distance_m": 15.58
+   },
+   {
+    "file": "sv_087.jpg",
+    "heading": 87,
+    "date": "2024-06",
+    "pano_id": "OgNOsCAQWYvt1DuwVxh4SQ",
+    "distance_m": 15.58
+   }
+  ],
+  "bearing": 267.5
+ },
+ "52500-117": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2026-10",
+    "pano_id": "SyeS0vLK_Qu-DY70hKxqQw",
+    "distance_m": 4.61
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2026-10",
+    "pano_id": "SyeS0vLK_Qu-DY70hKxqQw",
+    "distance_m": 4.61
+   }
+  ],
+  "bearing": 269.8
+ },
+ "52500-118": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2026-10",
+    "pano_id": "EtCGF6Ze1nuoQY5UosD2vQ",
+    "distance_m": 2.46
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2026-10",
+    "pano_id": "EtCGF6Ze1nuoQY5UosD2vQ",
+    "distance_m": 2.46
+   }
+  ],
+  "bearing": 269.8
+ },
+ "52500-119": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2026-10",
+    "pano_id": "oIxKVjx0weFSJkkA5KBHVw",
+    "distance_m": 1.24
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2026-10",
+    "pano_id": "oIxKVjx0weFSJkkA5KBHVw",
+    "distance_m": 1.24
+   }
+  ],
+  "bearing": 269.8
+ },
+ "52500-12": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "xNwl4Zt-ZCZaxnOdwmnsOA",
+    "distance_m": 7.37
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "xNwl4Zt-ZCZaxnOdwmnsOA",
+    "distance_m": 7.37
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-120": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-06",
+    "pano_id": "KFZmcKWVVWg3SCsk1FQIhQ",
+    "distance_m": 8.7
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-06",
+    "pano_id": "KFZmcKWVVWg3SCsk1FQIhQ",
+    "distance_m": 8.7
+   }
+  ],
+  "bearing": 270.1
+ },
+ "52500-123": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "a-7vcqzyhW4EGZJRKcAYkQ",
+    "distance_m": 8.8
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "a-7vcqzyhW4EGZJRKcAYkQ",
+    "distance_m": 8.8
+   }
+  ],
+  "bearing": 180.1
+ },
+ "52500-124": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "R_myKvnM92WOuM7L-yagKQ",
+    "distance_m": 7.7
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "R_myKvnM92WOuM7L-yagKQ",
+    "distance_m": 7.7
+   }
+  ],
+  "bearing": 179.9
+ },
+ "52500-125": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2023-08",
+    "pano_id": "c2rYkaVCsXvMznW1Vwvhrg",
+    "distance_m": 2.6
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2023-08",
+    "pano_id": "c2rYkaVCsXvMznW1Vwvhrg",
+    "distance_m": 2.6
+   }
+  ],
+  "bearing": 180.1
+ },
+ "52500-127": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "-TVEpTDlKSt2k0jwQmkhng",
+    "distance_m": 5.65
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "-TVEpTDlKSt2k0jwQmkhng",
+    "distance_m": 5.65
+   }
+  ],
+  "bearing": 89.8
+ },
+ "52500-128": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "bUc9kt9V3jIkpBHXhA8Qtg",
+    "distance_m": 20.59
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "bUc9kt9V3jIkpBHXhA8Qtg",
+    "distance_m": 20.59
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-129": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_091.jpg",
+    "heading": 91,
+    "date": "2024-08",
+    "pano_id": "yA4LFp7OfVafxK7SPTkj2w",
+    "distance_m": 8.32
+   },
+   {
+    "file": "sv_271.jpg",
+    "heading": 271,
+    "date": "2024-08",
+    "pano_id": "yA4LFp7OfVafxK7SPTkj2w",
+    "distance_m": 8.32
+   }
+  ],
+  "bearing": 90.9
+ },
+ "52500-13": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "hHeNPbQh_v3x2bl07AP_wg",
+    "distance_m": 15.67
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "hHeNPbQh_v3x2bl07AP_wg",
+    "distance_m": 15.67
+   }
+  ],
+  "bearing": 359.6
+ },
+ "52500-131": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "EomIxAULz5HECsB0TRCaiQ",
+    "distance_m": 7.45
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "EomIxAULz5HECsB0TRCaiQ",
+    "distance_m": 7.45
+   }
+  ],
+  "bearing": 89.8
+ },
+ "52500-132": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "aBJ4ZP7Feil6Bq6XH1wt3w",
+    "distance_m": 5.37
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "aBJ4ZP7Feil6Bq6XH1wt3w",
+    "distance_m": 5.37
+   }
+  ],
+  "bearing": 90.1
+ },
+ "52500-133": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "KUkCAq0SKGx9lX-5Ic4W2w",
+    "distance_m": 5.59
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "KUkCAq0SKGx9lX-5Ic4W2w",
+    "distance_m": 5.59
+   }
+  ],
+  "bearing": 269.9
+ },
+ "52500-134": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "Or7TJI4MQ3MMNFHUrRn6gA",
+    "distance_m": 3.86
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "Or7TJI4MQ3MMNFHUrRn6gA",
+    "distance_m": 3.86
+   }
+  ],
+  "bearing": 90.1
+ },
+ "52500-135": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "EOC1onTCOUy7uNQBbL8j0Q",
+    "distance_m": 3.36
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "EOC1onTCOUy7uNQBbL8j0Q",
+    "distance_m": 3.36
+   }
+  ],
+  "bearing": 90.1
+ },
+ "52500-136": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "gow_A_zz1WFCx73uARO2TA",
+    "distance_m": 2.55
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "gow_A_zz1WFCx73uARO2TA",
+    "distance_m": 2.55
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-14": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "16BByVqsJeUzn16xp1oKrA",
+    "distance_m": 1.01
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "16BByVqsJeUzn16xp1oKrA",
+    "distance_m": 1.01
+   }
+  ],
+  "bearing": 0.3
+ },
+ "52500-144": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-10",
+    "pano_id": "yaveZNYtVJMpPq00kvYwVQ",
+    "distance_m": 3.34
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-10",
+    "pano_id": "yaveZNYtVJMpPq00kvYwVQ",
+    "distance_m": 3.34
+   }
+  ],
+  "bearing": 269.8
+ },
+ "52500-145": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-10",
+    "pano_id": "OiAVkClwu-bmGoa28uQaDw",
+    "distance_m": 1.34
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-10",
+    "pano_id": "OiAVkClwu-bmGoa28uQaDw",
+    "distance_m": 1.34
+   }
+  ],
+  "bearing": 270.0
+ },
+ "52500-146": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "RCkaRcHNLvREzYxsg_n6lQ",
+    "distance_m": 6.35
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "RCkaRcHNLvREzYxsg_n6lQ",
+    "distance_m": 6.35
+   }
+  ],
+  "bearing": 270.1
+ },
+ "52500-148": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "uvjZwTzFbGywhLDTj_XqmQ",
+    "distance_m": 4.42
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "uvjZwTzFbGywhLDTj_XqmQ",
+    "distance_m": 4.42
+   }
+  ],
+  "bearing": 270.0
+ },
+ "52500-149": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_271.jpg",
+    "heading": 271,
+    "date": "2025-10",
+    "pano_id": "lb9FkntXZaXhclk9iaNIug",
+    "distance_m": 2.91
+   },
+   {
+    "file": "sv_091.jpg",
+    "heading": 91,
+    "date": "2025-10",
+    "pano_id": "lb9FkntXZaXhclk9iaNIug",
+    "distance_m": 2.91
+   }
+  ],
+  "bearing": 270.9
+ },
+ "52500-15": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "4zM0_OHfplLsaUp6ebkGTA",
+    "distance_m": 5.0
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "4zM0_OHfplLsaUp6ebkGTA",
+    "distance_m": 5.0
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-150": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-10",
+    "pano_id": "za1RlkHvG0K5VrAWrBF8iQ",
+    "distance_m": 2.72
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-10",
+    "pano_id": "za1RlkHvG0K5VrAWrBF8iQ",
+    "distance_m": 2.72
+   }
+  ],
+  "bearing": 269.7
+ },
+ "52500-151": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_269.jpg",
+    "heading": 269,
+    "date": "2024-03",
+    "pano_id": "L3UfLolEUC4iTApx5bsadA",
+    "distance_m": 12.19
+   },
+   {
+    "file": "sv_089.jpg",
+    "heading": 89,
+    "date": "2024-03",
+    "pano_id": "L3UfLolEUC4iTApx5bsadA",
+    "distance_m": 12.19
+   }
+  ],
+  "bearing": 269.3
+ },
+ "52500-152": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2026-01",
+    "pano_id": "GtzrG0FQvtIXw9Qa5_KWnw",
+    "distance_m": 7.39
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2026-01",
+    "pano_id": "GtzrG0FQvtIXw9Qa5_KWnw",
+    "distance_m": 7.39
+   }
+  ],
+  "bearing": 269.5
+ },
+ "52500-153": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2026-01",
+    "pano_id": "g-9eJUUmPFbJEDcTmKnZKg",
+    "distance_m": 9.03
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2026-01",
+    "pano_id": "g-9eJUUmPFbJEDcTmKnZKg",
+    "distance_m": 9.03
+   }
+  ],
+  "bearing": 270.0
+ },
+ "52500-154": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_263.jpg",
+    "heading": 263,
+    "date": "2025-10",
+    "pano_id": "R28tbE0b7zxgFiIM1wbzPw",
+    "distance_m": 4.63
+   },
+   {
+    "file": "sv_083.jpg",
+    "heading": 83,
+    "date": "2025-10",
+    "pano_id": "R28tbE0b7zxgFiIM1wbzPw",
+    "distance_m": 4.63
+   }
+  ],
+  "bearing": 262.5
+ },
+ "52500-155": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_242.jpg",
+    "heading": 242,
+    "date": "2024-08",
+    "pano_id": "1WUiSDrJsj9ZXU_tjmp3Fw",
+    "distance_m": 5.06
+   },
+   {
+    "file": "sv_062.jpg",
+    "heading": 62,
+    "date": "2024-08",
+    "pano_id": "1WUiSDrJsj9ZXU_tjmp3Fw",
+    "distance_m": 5.06
+   }
+  ],
+  "bearing": 242.4
+ },
+ "52500-157": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-04",
+    "pano_id": "vNOQdZqE8BpRNMX0ef1x1Q",
+    "distance_m": 8.43
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-04",
+    "pano_id": "vNOQdZqE8BpRNMX0ef1x1Q",
+    "distance_m": 8.43
+   }
+  ],
+  "bearing": 269.5
+ },
+ "52500-158": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-10",
+    "pano_id": "J3iTyywZ__GEHdz_KpaPvA",
+    "distance_m": 4.02
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-10",
+    "pano_id": "J3iTyywZ__GEHdz_KpaPvA",
+    "distance_m": 4.02
+   }
+  ],
+  "bearing": 270.2
+ },
+ "52500-16": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "ynhK_LENVhiLTaDwodv3yw",
+    "distance_m": 6.72
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "ynhK_LENVhiLTaDwodv3yw",
+    "distance_m": 6.72
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-160": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_243.jpg",
+    "heading": 243,
+    "date": "2025-10",
+    "pano_id": "gjUwk0YjxiWOcQW9l17h8Q",
+    "distance_m": 4.72
+   },
+   {
+    "file": "sv_063.jpg",
+    "heading": 63,
+    "date": "2025-10",
+    "pano_id": "gjUwk0YjxiWOcQW9l17h8Q",
+    "distance_m": 4.72
+   }
+  ],
+  "bearing": 242.9
+ },
+ "52500-161": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_333.jpg",
+    "heading": 333,
+    "date": "2023-08",
+    "pano_id": "9ftqBWYW5jaSqg5c6Y4ahA",
+    "distance_m": 2.5
+   },
+   {
+    "file": "sv_153.jpg",
+    "heading": 153,
+    "date": "2023-08",
+    "pano_id": "9ftqBWYW5jaSqg5c6Y4ahA",
+    "distance_m": 2.5
+   }
+  ],
+  "bearing": 332.7
+ },
+ "52500-162": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "4V0HGTnnilLH2EVs8op4gQ",
+    "distance_m": 1.93
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "4V0HGTnnilLH2EVs8op4gQ",
+    "distance_m": 1.93
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-163": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_354.jpg",
+    "heading": 354,
+    "date": "2024-06",
+    "pano_id": "iZH-Ba15V-2qBvWDtOeCEg",
+    "distance_m": 8.23
+   },
+   {
+    "file": "sv_174.jpg",
+    "heading": 174,
+    "date": "2024-06",
+    "pano_id": "iZH-Ba15V-2qBvWDtOeCEg",
+    "distance_m": 8.23
+   }
+  ],
+  "bearing": 353.9
+ },
+ "52500-164": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_333.jpg",
+    "heading": 333,
+    "date": "2022-04",
+    "pano_id": "hMv8PLjUFxAdkvRpSEb6pw",
+    "distance_m": 0.8
+   },
+   {
+    "file": "sv_153.jpg",
+    "heading": 153,
+    "date": "2022-04",
+    "pano_id": "hMv8PLjUFxAdkvRpSEb6pw",
+    "distance_m": 0.8
+   }
+  ],
+  "bearing": 332.8
+ },
+ "52500-165": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "biVeqv2fB-MDmc6f5VuNGg",
+    "distance_m": 1.96
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "biVeqv2fB-MDmc6f5VuNGg",
+    "distance_m": 1.96
+   }
+  ],
+  "bearing": 0.4
+ },
+ "52500-167": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-03",
+    "pano_id": "Tx91f8FS1oOV_9qOx_DS6A",
+    "distance_m": 7.19
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-03",
+    "pano_id": "Tx91f8FS1oOV_9qOx_DS6A",
+    "distance_m": 7.19
+   }
+  ],
+  "bearing": 359.6
+ },
+ "52500-169": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_359.jpg",
+    "heading": 359,
+    "date": "2024-07",
+    "pano_id": "ndUBzmY3sbNVgYglB5nqtw",
+    "distance_m": 11.75
+   },
+   {
+    "file": "sv_179.jpg",
+    "heading": 179,
+    "date": "2024-07",
+    "pano_id": "ndUBzmY3sbNVgYglB5nqtw",
+    "distance_m": 11.75
+   }
+  ],
+  "bearing": 359.5
+ },
+ "52500-170": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "4yOCxQUzv9XfQQl0MCidKg",
+    "distance_m": 4.43
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "4yOCxQUzv9XfQQl0MCidKg",
+    "distance_m": 4.43
+   }
+  ],
+  "bearing": 359.9
+ },
+ "52500-173": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_091.jpg",
+    "heading": 91,
+    "date": "2024-04",
+    "pano_id": "YlnzqaxgIvGLCDnrHytiCA",
+    "distance_m": 9.43
+   },
+   {
+    "file": "sv_271.jpg",
+    "heading": 271,
+    "date": "2024-04",
+    "pano_id": "YlnzqaxgIvGLCDnrHytiCA",
+    "distance_m": 9.43
+   }
+  ],
+  "bearing": 90.5
+ },
+ "52500-174": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "AWNTDQHrXqBr--1Kgg_vsg",
+    "distance_m": 11.06
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "AWNTDQHrXqBr--1Kgg_vsg",
+    "distance_m": 11.06
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-175": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "tsXHbzDwgjy-DBzeWdNuCw",
+    "distance_m": 18.71
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "tsXHbzDwgjy-DBzeWdNuCw",
+    "distance_m": 18.71
+   }
+  ],
+  "bearing": 90.3
+ },
+ "52500-176": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "9-M3e7Y1LdgKIDHs8LqjXg",
+    "distance_m": 7.03
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "9-M3e7Y1LdgKIDHs8LqjXg",
+    "distance_m": 7.03
+   }
+  ],
+  "bearing": 89.9
+ },
+ "52500-177": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "UAzR72YAxxWqK9-EsJtf9w",
+    "distance_m": 13.67
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "UAzR72YAxxWqK9-EsJtf9w",
+    "distance_m": 13.67
+   }
+  ],
+  "bearing": 90.1
+ },
+ "52500-178": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-03",
+    "pano_id": "zPgKybErNvmrlu-giAeqAg",
+    "distance_m": 6.42
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-03",
+    "pano_id": "zPgKybErNvmrlu-giAeqAg",
+    "distance_m": 6.42
+   }
+  ],
+  "bearing": 89.6
+ },
+ "52500-179": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "XIdJXyAQ_VynuFxmuF9K2Q",
+    "distance_m": 5.29
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "XIdJXyAQ_VynuFxmuF9K2Q",
+    "distance_m": 5.29
+   }
+  ],
+  "bearing": 89.8
+ },
+ "52500-18": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2023-08",
+    "pano_id": "JP2-1faM9KAN0whLeqLOQw",
+    "distance_m": 6.34
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2023-08",
+    "pano_id": "JP2-1faM9KAN0whLeqLOQw",
+    "distance_m": 6.34
+   }
+  ],
+  "bearing": 0.2
+ },
+ "52500-181": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "-YPGeDfJKl5iKpo-frRs-Q",
+    "distance_m": 2.64
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "-YPGeDfJKl5iKpo-frRs-Q",
+    "distance_m": 2.64
+   }
+  ],
+  "bearing": 89.9
+ },
+ "52500-182": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "cIhtWJJtRU6Psyw05myadg",
+    "distance_m": 14.23
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "cIhtWJJtRU6Psyw05myadg",
+    "distance_m": 14.23
+   }
+  ],
+  "bearing": 90.3
+ },
+ "52500-183": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_091.jpg",
+    "heading": 91,
+    "date": "2024-03",
+    "pano_id": "yd2BVo8Il6xyCfoopFtndw",
+    "distance_m": 5.26
+   },
+   {
+    "file": "sv_271.jpg",
+    "heading": 271,
+    "date": "2024-03",
+    "pano_id": "yd2BVo8Il6xyCfoopFtndw",
+    "distance_m": 5.26
+   }
+  ],
+  "bearing": 90.5
+ },
+ "52500-185": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "ODW4x3nmyVZ2HUDL2tI6vQ",
+    "distance_m": 2.11
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "ODW4x3nmyVZ2HUDL2tI6vQ",
+    "distance_m": 2.11
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-187": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2021-02",
+    "pano_id": "ViS0rZdg2sz4BlYGKhfSSA",
+    "distance_m": 3.41
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2021-02",
+    "pano_id": "ViS0rZdg2sz4BlYGKhfSSA",
+    "distance_m": 3.41
+   }
+  ],
+  "bearing": 89.9
+ },
+ "52500-189": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-06",
+    "pano_id": "Babh0RnbFg6FE9aOrmzWNg",
+    "distance_m": 6.66
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-06",
+    "pano_id": "Babh0RnbFg6FE9aOrmzWNg",
+    "distance_m": 6.66
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-19": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "5vCB9kBX-kKDW9INReTbFw",
+    "distance_m": 1.03
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "5vCB9kBX-kKDW9INReTbFw",
+    "distance_m": 1.03
+   }
+  ],
+  "bearing": 0.0
+ },
+ "52500-192": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "CwCmYPDTLnc7fqwqNq0Gkw",
+    "distance_m": 3.42
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "CwCmYPDTLnc7fqwqNq0Gkw",
+    "distance_m": 3.42
+   }
+  ],
+  "bearing": 89.8
+ },
+ "52500-194": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "jCrfwNvZ2W28Qr6uMV3nvQ",
+    "distance_m": 6.52
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "jCrfwNvZ2W28Qr6uMV3nvQ",
+    "distance_m": 6.52
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-195": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "XPrtkpuJbhwhUynrnSqbSQ",
+    "distance_m": 7.01
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "XPrtkpuJbhwhUynrnSqbSQ",
+    "distance_m": 7.01
+   }
+  ],
+  "bearing": 90.1
+ },
+ "52500-198": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "KYXyTha9srPwEHTUbnE1BQ",
+    "distance_m": 5.72
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "KYXyTha9srPwEHTUbnE1BQ",
+    "distance_m": 5.72
+   }
+  ],
+  "bearing": 270.2
+ },
+ "52500-2": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2023-07",
+    "pano_id": "WB6UFeDJyTGRWn9nWiVjQA",
+    "distance_m": 8.54
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2023-07",
+    "pano_id": "WB6UFeDJyTGRWn9nWiVjQA",
+    "distance_m": 8.54
+   }
+  ],
+  "bearing": 359.7
+ },
+ "52500-200": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "R5MQdFDMX749PebQ30Q3eQ",
+    "distance_m": 2.1
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "R5MQdFDMX749PebQ30Q3eQ",
+    "distance_m": 2.1
+   }
+  ],
+  "bearing": 90.4
+ },
+ "52500-201": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_088.jpg",
+    "heading": 88,
+    "date": "2024-07",
+    "pano_id": "pF0-U2MQQFwOd4-5e3mYKg",
+    "distance_m": 1.78
+   },
+   {
+    "file": "sv_268.jpg",
+    "heading": 268,
+    "date": "2024-07",
+    "pano_id": "pF0-U2MQQFwOd4-5e3mYKg",
+    "distance_m": 1.78
+   }
+  ],
+  "bearing": 88.3
+ },
+ "52500-202": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-06",
+    "pano_id": "Ryc4942yD9NdxOEfqjNS-w",
+    "distance_m": 5.23
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-06",
+    "pano_id": "Ryc4942yD9NdxOEfqjNS-w",
+    "distance_m": 5.23
+   }
+  ],
+  "bearing": 90.0
+ },
+ "52500-204": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "8MMvSPVCfqdpYhuTLus5zQ",
+    "distance_m": 4.95
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "8MMvSPVCfqdpYhuTLus5zQ",
+    "distance_m": 4.95
+   }
+  ],
+  "bearing": 89.8
+ },
+ "52500-205": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-06",
+    "pano_id": "SKhl_bgnNrzRzTotzzsQLg",
+    "distance_m": 4.7
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-06",
+    "pano_id": "SKhl_bgnNrzRzTotzzsQLg",
+    "distance_m": 4.7
+   }
+  ],
+  "bearing": 270.0
+ },
+ "52500-206": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-02",
+    "pano_id": "GdHDtN7OrTk0FFIhdrH2MQ",
+    "distance_m": 10.7
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-02",
+    "pano_id": "GdHDtN7OrTk0FFIhdrH2MQ",
+    "distance_m": 10.7
+   }
+  ],
+  "bearing": 270.2
+ },
+ "52500-21": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "8sA9R-Cvsv6B-_SnDl-F6Q",
+    "distance_m": 12.37
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "8sA9R-Cvsv6B-_SnDl-F6Q",
+    "distance_m": 12.37
+   }
+  ],
+  "bearing": 0.1
+ },
+ "52500-218": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_084.jpg",
+    "heading": 84,
+    "date": "2026-01",
+    "pano_id": "uGN8pRSClwkEvaQKp9mz0A",
+    "distance_m": 7.24
+   },
+   {
+    "file": "sv_264.jpg",
+    "heading": 264,
+    "date": "2026-01",
+    "pano_id": "uGN8pRSClwkEvaQKp9mz0A",
+    "distance_m": 7.24
+   }
+  ],
+  "bearing": 83.5
+ },
+ "52500-219": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_256.jpg",
+    "heading": 256,
+    "date": "2024-03",
+    "pano_id": "D2v9JDNXngkDUp-GhxahWQ",
+    "distance_m": 2.98
+   },
+   {
+    "file": "sv_076.jpg",
+    "heading": 76,
+    "date": "2024-03",
+    "pano_id": "D2v9JDNXngkDUp-GhxahWQ",
+    "distance_m": 2.98
+   }
+  ],
+  "bearing": 256.3
+ },
+ "52500-222": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "fUYHfQIzzxOY-G50ewtGeg",
+    "distance_m": 5.53
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "fUYHfQIzzxOY-G50ewtGeg",
+    "distance_m": 5.53
+   }
+  ],
+  "bearing": 269.8
+ },
+ "52500-223": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2023-07",
+    "pano_id": "s_WzFljmH1hd0fBgTUmtGA",
+    "distance_m": 3.91
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2023-07",
+    "pano_id": "s_WzFljmH1hd0fBgTUmtGA",
+    "distance_m": 3.91
+   }
+  ],
+  "bearing": 269.9
+ },
+ "52500-224": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "o8b1zaUVa_2lWxK8h1Q7Ew",
+    "distance_m": 1.7
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "o8b1zaUVa_2lWxK8h1Q7Ew",
+    "distance_m": 1.7
+   }
+  ],
+  "bearing": 270.1
+ },
+ "52500-226": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_269.jpg",
+    "heading": 269,
+    "date": "2024-08",
+    "pano_id": "dimGSzHm2xViLb1SadV6TQ",
+    "distance_m": 5.23
+   },
+   {
+    "file": "sv_089.jpg",
+    "heading": 89,
+    "date": "2024-08",
+    "pano_id": "dimGSzHm2xViLb1SadV6TQ",
+    "distance_m": 5.23
+   }
+  ],
+  "bearing": 269.4
+ },
+ "52500-228": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "Te0H7j6ZqOrf4CYIhfRO7w",
+    "distance_m": 7.47
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "Te0H7j6ZqOrf4CYIhfRO7w",
+    "distance_m": 7.47
+   }
+  ],
+  "bearing": 270.2
+ },
+ "52500-23": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-03",
+    "pano_id": "0My1uMVIBq7tIWL1-SmJzg",
+    "distance_m": 6.13
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-03",
+    "pano_id": "0My1uMVIBq7tIWL1-SmJzg",
+    "distance_m": 6.13
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-231": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "VMAPo7tKB2G4QLH-JgIRdw",
+    "distance_m": 13.48
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "VMAPo7tKB2G4QLH-JgIRdw",
+    "distance_m": 13.48
+   }
+  ],
+  "bearing": 90.1
+ },
+ "52500-233": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_332.jpg",
+    "heading": 332,
+    "date": "2024-04",
+    "pano_id": "iq0uugGLqNBhN5M8iCwkmg",
+    "distance_m": 10.14
+   },
+   {
+    "file": "sv_152.jpg",
+    "heading": 152,
+    "date": "2024-04",
+    "pano_id": "iq0uugGLqNBhN5M8iCwkmg",
+    "distance_m": 10.14
+   }
+  ],
+  "bearing": 332.1
+ },
+ "52500-234": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_333.jpg",
+    "heading": 333,
+    "date": "2023-08",
+    "pano_id": "QS6UQDeVJLLAlzQNSt04kw",
+    "distance_m": 4.87
+   },
+   {
+    "file": "sv_153.jpg",
+    "heading": 153,
+    "date": "2023-08",
+    "pano_id": "QS6UQDeVJLLAlzQNSt04kw",
+    "distance_m": 4.87
+   }
+  ],
+  "bearing": 332.9
+ },
+ "52500-236": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_354.jpg",
+    "heading": 354,
+    "date": "2024-04",
+    "pano_id": "1WzYy5JR9DasdGE8YEkgIA",
+    "distance_m": 4.23
+   },
+   {
+    "file": "sv_174.jpg",
+    "heading": 174,
+    "date": "2024-04",
+    "pano_id": "1WzYy5JR9DasdGE8YEkgIA",
+    "distance_m": 4.23
+   }
+  ],
+  "bearing": 354.2
+ },
+ "52500-237": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_153.jpg",
+    "heading": 153,
+    "date": "2024-08",
+    "pano_id": "p-IpS0eKUHP280jkjLTpAg",
+    "distance_m": 8.6
+   },
+   {
+    "file": "sv_333.jpg",
+    "heading": 333,
+    "date": "2024-08",
+    "pano_id": "p-IpS0eKUHP280jkjLTpAg",
+    "distance_m": 8.6
+   }
+  ],
+  "bearing": 152.9
+ },
+ "52500-24": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "Qvo9cEeWY3a2u_zvR5Dfvw",
+    "distance_m": 3.68
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "Qvo9cEeWY3a2u_zvR5Dfvw",
+    "distance_m": 3.68
+   }
+  ],
+  "bearing": 360.0
+ },
+ "52500-240": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_336.jpg",
+    "heading": 336,
+    "date": "2024-07",
+    "pano_id": "fJYKXYdmsLG4q8ygQ4PKRA",
+    "distance_m": 11.16
+   },
+   {
+    "file": "sv_156.jpg",
+    "heading": 156,
+    "date": "2024-07",
+    "pano_id": "fJYKXYdmsLG4q8ygQ4PKRA",
+    "distance_m": 11.16
+   }
+  ],
+  "bearing": 336.5
+ },
+ "52500-241": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_336.jpg",
+    "heading": 336,
+    "date": "2024-07",
+    "pano_id": "HbNeOS5OA68RHyf20GmWVg",
+    "distance_m": 13.82
+   },
+   {
+    "file": "sv_156.jpg",
+    "heading": 156,
+    "date": "2024-07",
+    "pano_id": "HbNeOS5OA68RHyf20GmWVg",
+    "distance_m": 13.82
+   }
+  ],
+  "bearing": 336.5
+ },
+ "52500-243": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_324.jpg",
+    "heading": 324,
+    "date": "2024-08",
+    "pano_id": "FlxN1b9hKaBoovKYwExFNg",
+    "distance_m": 12.57
+   },
+   {
+    "file": "sv_144.jpg",
+    "heading": 144,
+    "date": "2024-08",
+    "pano_id": "FlxN1b9hKaBoovKYwExFNg",
+    "distance_m": 12.57
+   }
+  ],
+  "bearing": 323.7
+ },
+ "52500-244": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_152.jpg",
+    "heading": 152,
+    "date": "2024-03",
+    "pano_id": "_0PUxTMEY1tdCnhhc-Eu9w",
+    "distance_m": 4.01
+   },
+   {
+    "file": "sv_332.jpg",
+    "heading": 332,
+    "date": "2024-03",
+    "pano_id": "_0PUxTMEY1tdCnhhc-Eu9w",
+    "distance_m": 4.01
+   }
+  ],
+  "bearing": 152.3
+ },
+ "52500-245": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_152.jpg",
+    "heading": 152,
+    "date": "2024-03",
+    "pano_id": "6AUU5v7zuvp9WRiG5gOavg",
+    "distance_m": 2.85
+   },
+   {
+    "file": "sv_332.jpg",
+    "heading": 332,
+    "date": "2024-03",
+    "pano_id": "6AUU5v7zuvp9WRiG5gOavg",
+    "distance_m": 2.85
+   }
+  ],
+  "bearing": 152.2
+ },
+ "52500-247": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "64uMgLPV3Vfi7kxFS1088A",
+    "distance_m": 10.05
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "64uMgLPV3Vfi7kxFS1088A",
+    "distance_m": 10.05
+   }
+  ],
+  "bearing": 359.6
+ },
+ "52500-25": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "I7jx6XCFrwmJX7TBiTRAJw",
+    "distance_m": 2.99
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "I7jx6XCFrwmJX7TBiTRAJw",
+    "distance_m": 2.99
+   }
+  ],
+  "bearing": 0.1
+ },
+ "52500-250": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "3ve85ekDPARPw0c_PFdpjQ",
+    "distance_m": 8.92
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "3ve85ekDPARPw0c_PFdpjQ",
+    "distance_m": 8.92
+   }
+  ],
+  "bearing": 269.9
+ },
+ "52500-254": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2025-04",
+    "pano_id": "hoLIkHSUAljfpCtraHP4jA",
+    "distance_m": 7.63
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2025-04",
+    "pano_id": "hoLIkHSUAljfpCtraHP4jA",
+    "distance_m": 7.63
+   }
+  ],
+  "bearing": 360.0
+ },
+ "52500-255": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "0LjTUO2JA3Apx3Xd6s5vug",
+    "distance_m": 7.02
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "0LjTUO2JA3Apx3Xd6s5vug",
+    "distance_m": 7.02
+   }
+  ],
+  "bearing": 359.7
+ },
+ "52500-256": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_359.jpg",
+    "heading": 359,
+    "date": "2024-08",
+    "pano_id": "G0MMcCs5lIW4aBdpyJ6dGg",
+    "distance_m": 3.2
+   },
+   {
+    "file": "sv_179.jpg",
+    "heading": 179,
+    "date": "2024-08",
+    "pano_id": "G0MMcCs5lIW4aBdpyJ6dGg",
+    "distance_m": 3.2
+   }
+  ],
+  "bearing": 359.0
+ },
+ "52500-257": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-03",
+    "pano_id": "nAUHBjzY8ICh0-boq8RFyw",
+    "distance_m": 7.48
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-03",
+    "pano_id": "nAUHBjzY8ICh0-boq8RFyw",
+    "distance_m": 7.48
+   }
+  ],
+  "bearing": 0.1
+ },
+ "52500-26": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "vqJKgbt1sfm78J-zkSgnYg",
+    "distance_m": 6.76
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "vqJKgbt1sfm78J-zkSgnYg",
+    "distance_m": 6.76
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-260": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2025-04",
+    "pano_id": "nHEZWaZL0w68Vc_6x7ECtg",
+    "distance_m": 7.5
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2025-04",
+    "pano_id": "nHEZWaZL0w68Vc_6x7ECtg",
+    "distance_m": 7.5
+   }
+  ],
+  "bearing": 0.3
+ },
+ "52500-261": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2018-06",
+    "pano_id": "dW7KNgGLneWxfhl-s1b68A",
+    "distance_m": 4.3
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2018-06",
+    "pano_id": "dW7KNgGLneWxfhl-s1b68A",
+    "distance_m": 4.3
+   }
+  ],
+  "bearing": 0.3
+ },
+ "52500-264": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "WOtxNM7c06XvDQmieYjUbQ",
+    "distance_m": 3.38
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "WOtxNM7c06XvDQmieYjUbQ",
+    "distance_m": 3.38
+   }
+  ],
+  "bearing": 0.2
+ },
+ "52500-265": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "BC8huZ3Ftb63GIHJTwLQ5g",
+    "distance_m": 7.89
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "BC8huZ3Ftb63GIHJTwLQ5g",
+    "distance_m": 7.89
+   }
+  ],
+  "bearing": 359.6
+ },
+ "52500-266": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "WPtNk_bfgYB2jKoFGJ0PEQ",
+    "distance_m": 2.62
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "WPtNk_bfgYB2jKoFGJ0PEQ",
+    "distance_m": 2.62
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-267": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "2JfaNoubiYGuF2OJ5mI-YQ",
+    "distance_m": 7.35
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "2JfaNoubiYGuF2OJ5mI-YQ",
+    "distance_m": 7.35
+   }
+  ],
+  "bearing": 360.0
+ },
+ "52500-268": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "JLszmRWUHNg3tnGkrqFRTw",
+    "distance_m": 2.88
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "JLszmRWUHNg3tnGkrqFRTw",
+    "distance_m": 2.88
+   }
+  ],
+  "bearing": 0.2
+ },
+ "52500-270": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "stanjTNfKVmr8zZOPSJm-w",
+    "distance_m": 11.34
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "stanjTNfKVmr8zZOPSJm-w",
+    "distance_m": 11.34
+   }
+  ],
+  "bearing": 359.6
+ },
+ "52500-271": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "i7aWVj1ZWyHQcnIFHxmRrA",
+    "distance_m": 5.7
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "i7aWVj1ZWyHQcnIFHxmRrA",
+    "distance_m": 5.7
+   }
+  ],
+  "bearing": 359.7
+ },
+ "52500-272": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "zwEYCAxHdqjPtGALmgwEnQ",
+    "distance_m": 6.83
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "zwEYCAxHdqjPtGALmgwEnQ",
+    "distance_m": 6.83
+   }
+  ],
+  "bearing": 0.3
+ },
+ "52500-273": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "siSsw7v50shSIIgre0oW-g",
+    "distance_m": 16.66
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "siSsw7v50shSIIgre0oW-g",
+    "distance_m": 16.66
+   }
+  ],
+  "bearing": 0.2
+ },
+ "52500-274": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "dE5aAxVs7CqLXc_ToiBxqw",
+    "distance_m": 1.93
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "dE5aAxVs7CqLXc_ToiBxqw",
+    "distance_m": 1.93
+   }
+  ],
+  "bearing": 359.5
+ },
+ "52500-275": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_001.jpg",
+    "heading": 1,
+    "date": "2024-08",
+    "pano_id": "_6-eD8rr-oEN2NONWROOhQ",
+    "distance_m": 1.3
+   },
+   {
+    "file": "sv_181.jpg",
+    "heading": 181,
+    "date": "2024-08",
+    "pano_id": "_6-eD8rr-oEN2NONWROOhQ",
+    "distance_m": 1.3
+   }
+  ],
+  "bearing": 0.6
+ },
+ "52500-277": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "WbSvgjVLzNf7Jq31nvNP-Q",
+    "distance_m": 6.73
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "WbSvgjVLzNf7Jq31nvNP-Q",
+    "distance_m": 6.73
+   }
+  ],
+  "bearing": 0.4
+ },
+ "52500-278": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "xiPDUcm7F5Lm9rhRKVUhlg",
+    "distance_m": 4.05
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "xiPDUcm7F5Lm9rhRKVUhlg",
+    "distance_m": 4.05
+   }
+  ],
+  "bearing": 179.8
+ },
+ "52500-279": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "qbM0D20y5sSWhEB4n70hKQ",
+    "distance_m": 8.13
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "qbM0D20y5sSWhEB4n70hKQ",
+    "distance_m": 8.13
+   }
+  ],
+  "bearing": 180.5
+ },
+ "52500-28": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "u-XO6ajiIZcvzq7-dbAoFA",
+    "distance_m": 5.6
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "u-XO6ajiIZcvzq7-dbAoFA",
+    "distance_m": 5.6
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-280": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "ssoqf6nSenb0virZO5NGmA",
+    "distance_m": 4.8
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "ssoqf6nSenb0virZO5NGmA",
+    "distance_m": 4.8
+   }
+  ],
+  "bearing": 179.6
+ },
+ "52500-282": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_158.jpg",
+    "heading": 158,
+    "date": "2024-08",
+    "pano_id": "dTdUR6MJcaLDaeXh8U6Z6A",
+    "distance_m": 4.65
+   },
+   {
+    "file": "sv_338.jpg",
+    "heading": 338,
+    "date": "2024-08",
+    "pano_id": "dTdUR6MJcaLDaeXh8U6Z6A",
+    "distance_m": 4.65
+   }
+  ],
+  "bearing": 158.3
+ },
+ "52500-283": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_177.jpg",
+    "heading": 177,
+    "date": "2024-08",
+    "pano_id": "YyIb3c3gkxkC4R0X7FIfvA",
+    "distance_m": 2.44
+   },
+   {
+    "file": "sv_357.jpg",
+    "heading": 357,
+    "date": "2024-08",
+    "pano_id": "YyIb3c3gkxkC4R0X7FIfvA",
+    "distance_m": 2.44
+   }
+  ],
+  "bearing": 176.7
+ },
+ "52500-285": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_001.jpg",
+    "heading": 1,
+    "date": "2024-08",
+    "pano_id": "eMv5f2FylNYJ2aAEZExpXA",
+    "distance_m": 5.21
+   },
+   {
+    "file": "sv_181.jpg",
+    "heading": 181,
+    "date": "2024-08",
+    "pano_id": "eMv5f2FylNYJ2aAEZExpXA",
+    "distance_m": 5.21
+   }
+  ],
+  "bearing": 0.5
+ },
+ "52500-286": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "4DmhLpFyXd8AC5qlkWzHhA",
+    "distance_m": 2.76
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "4DmhLpFyXd8AC5qlkWzHhA",
+    "distance_m": 2.76
+   }
+  ],
+  "bearing": 359.8
+ },
+ "52500-288": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_359.jpg",
+    "heading": 359,
+    "date": "2024-04",
+    "pano_id": "X2dEMQKVuwGVDdy6Stcu1w",
+    "distance_m": 0.51
+   },
+   {
+    "file": "sv_179.jpg",
+    "heading": 179,
+    "date": "2024-04",
+    "pano_id": "X2dEMQKVuwGVDdy6Stcu1w",
+    "distance_m": 0.51
+   }
+  ],
+  "bearing": 359.4
+ },
+ "52500-289": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "rzWQh8U-eoeiO0g25Kuv5Q",
+    "distance_m": 2.39
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "rzWQh8U-eoeiO0g25Kuv5Q",
+    "distance_m": 2.39
+   }
+  ],
+  "bearing": 0.5
+ },
+ "52500-29": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "aNQEwL-IdS7Mj_c-Zt7oPg",
+    "distance_m": 39.96
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "aNQEwL-IdS7Mj_c-Zt7oPg",
+    "distance_m": 39.96
+   }
+  ],
+  "bearing": 90.5
+ },
+ "52500-290": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2026-10",
+    "pano_id": "1eGLdquQrUz2vVMhCjLSBQ",
+    "distance_m": 1.85
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2026-10",
+    "pano_id": "1eGLdquQrUz2vVMhCjLSBQ",
+    "distance_m": 1.85
+   }
+  ],
+  "bearing": 359.6
+ },
+ "52500-292": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2023-08",
+    "pano_id": "0-ClKrqUhbf0WKr8ibLu9g",
+    "distance_m": 2.64
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2023-08",
+    "pano_id": "0-ClKrqUhbf0WKr8ibLu9g",
+    "distance_m": 2.64
+   }
+  ],
+  "bearing": 180.1
+ },
+ "52500-293": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-11",
+    "pano_id": "KOz4a9TItj2mtj37xJScAw",
+    "distance_m": 6.52
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-11",
+    "pano_id": "KOz4a9TItj2mtj37xJScAw",
+    "distance_m": 6.52
+   }
+  ],
+  "bearing": 269.8
+ },
+ "52500-295": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "e9yu_lTF7RVacTxd9MkUAg",
+    "distance_m": 3.3
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "e9yu_lTF7RVacTxd9MkUAg",
+    "distance_m": 3.3
+   }
+  ],
+  "bearing": 269.9
+ },
+ "52500-3": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-03",
+    "pano_id": "5Ve_tQCevZjZ6bQYOa35BA",
+    "distance_m": 9.89
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-03",
+    "pano_id": "5Ve_tQCevZjZ6bQYOa35BA",
+    "distance_m": 9.89
+   }
+  ],
+  "bearing": 359.7
+ },
+ "52500-30": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "2ACmTgossNkg4cKpbzPeeQ",
+    "distance_m": 7.78
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "2ACmTgossNkg4cKpbzPeeQ",
+    "distance_m": 7.78
+   }
+  ],
+  "bearing": 89.6
+ },
+ "52500-312": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "rP9V1gMtNqCWtQbqPAX5zw",
+    "distance_m": 6.05
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "rP9V1gMtNqCWtQbqPAX5zw",
+    "distance_m": 6.05
+   }
+  ],
+  "bearing": 0.3
+ },
+ "52500-315": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "ltWONrzV2irbox-qoSiLEw",
+    "distance_m": 3.96
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "ltWONrzV2irbox-qoSiLEw",
+    "distance_m": 3.96
+   }
+  ],
+  "bearing": 180.4
+ },
+ "52500-316": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_091.jpg",
+    "heading": 91,
+    "date": "2024-04",
+    "pano_id": "dg2y7Afo-4YScD5x8Jv-6Q",
+    "distance_m": 2.01
+   },
+   {
+    "file": "sv_271.jpg",
+    "heading": 271,
+    "date": "2024-04",
+    "pano_id": "dg2y7Afo-4YScD5x8Jv-6Q",
+    "distance_m": 2.01
+   }
+  ],
+  "bearing": 90.6
+ },
+ "52500-318": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "ZI8Hf-rlSlgkwEsae3kvyQ",
+    "distance_m": 4.54
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "ZI8Hf-rlSlgkwEsae3kvyQ",
+    "distance_m": 4.54
+   }
+  ],
+  "bearing": 90.2
+ },
+ "52500-32": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "Umhvwp6gfAnYa-NkGXunFA",
+    "distance_m": 4.3
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "Umhvwp6gfAnYa-NkGXunFA",
+    "distance_m": 4.3
+   }
+  ],
+  "bearing": 90.5
+ },
+ "52500-33": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "XLP_cExT15H7UYmtgb19kA",
+    "distance_m": 25.41
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "XLP_cExT15H7UYmtgb19kA",
+    "distance_m": 25.41
+   }
+  ],
+  "bearing": 89.5
+ },
+ "52500-35": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2022-01",
+    "pano_id": "cmSayBbNEwGvf6wqNrCtgw",
+    "distance_m": 19.24
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2022-01",
+    "pano_id": "cmSayBbNEwGvf6wqNrCtgw",
+    "distance_m": 19.24
+   }
+  ],
+  "bearing": 89.8
+ },
+ "52500-36": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_070.jpg",
+    "heading": 70,
+    "date": "2024-04",
+    "pano_id": "FzRoYh1fyhRJFR_jy9X9gQ",
+    "distance_m": 2.09
+   },
+   {
+    "file": "sv_250.jpg",
+    "heading": 250,
+    "date": "2024-04",
+    "pano_id": "FzRoYh1fyhRJFR_jy9X9gQ",
+    "distance_m": 2.09
+   }
+  ],
+  "bearing": 70.3
+ },
+ "52500-37": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "KZfsMea2wgEVGiuavrwlSg",
+    "distance_m": 6.23
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "KZfsMea2wgEVGiuavrwlSg",
+    "distance_m": 6.23
+   }
+  ],
+  "bearing": 359.5
+ },
+ "52500-38": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "kgtavTl-E4RBP9nQhc_-lA",
+    "distance_m": 5.11
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "kgtavTl-E4RBP9nQhc_-lA",
+    "distance_m": 5.11
+   }
+  ],
+  "bearing": 179.7
+ },
+ "52500-39": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "3z5P7cUiiWThYKI9c6z2Ug",
+    "distance_m": 8.48
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "3z5P7cUiiWThYKI9c6z2Ug",
+    "distance_m": 8.48
+   }
+  ],
+  "bearing": 180.1
+ },
+ "52500-4": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "jkBLB7HH663NqYy6ninAmw",
+    "distance_m": 2.15
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "jkBLB7HH663NqYy6ninAmw",
+    "distance_m": 2.15
+   }
+  ],
+  "bearing": 180.4
+ },
+ "52500-42": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_181.jpg",
+    "heading": 181,
+    "date": "2024-08",
+    "pano_id": "EwFX7272I3CDtNRRhDGHeA",
+    "distance_m": 2.0
+   },
+   {
+    "file": "sv_001.jpg",
+    "heading": 1,
+    "date": "2024-08",
+    "pano_id": "EwFX7272I3CDtNRRhDGHeA",
+    "distance_m": 2.0
+   }
+  ],
+  "bearing": 180.5
+ },
+ "52500-45": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-07",
+    "pano_id": "C-BreGWr2sZeG5ST_kSWxw",
+    "distance_m": 3.84
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-07",
+    "pano_id": "C-BreGWr2sZeG5ST_kSWxw",
+    "distance_m": 3.84
+   }
+  ],
+  "bearing": 179.8
+ },
+ "52500-46": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "cTXoyNBD7p0gJpXOAlIQWg",
+    "distance_m": 16.85
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "cTXoyNBD7p0gJpXOAlIQWg",
+    "distance_m": 16.85
+   }
+  ],
+  "bearing": 179.9
+ },
+ "52500-47": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_271.jpg",
+    "heading": 271,
+    "date": "2024-03",
+    "pano_id": "ItVv8bwc9_rGGaZel8SU7A",
+    "distance_m": 3.89
+   },
+   {
+    "file": "sv_091.jpg",
+    "heading": 91,
+    "date": "2024-03",
+    "pano_id": "ItVv8bwc9_rGGaZel8SU7A",
+    "distance_m": 3.89
+   }
+  ],
+  "bearing": 271.5
+ },
+ "52500-49": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2023-08",
+    "pano_id": "Wo0UGT3kaN-Jkb4II7EvdQ",
+    "distance_m": 3.18
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2023-08",
+    "pano_id": "Wo0UGT3kaN-Jkb4II7EvdQ",
+    "distance_m": 3.18
+   }
+  ],
+  "bearing": 270.2
+ },
+ "52500-5": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_002.jpg",
+    "heading": 2,
+    "date": "2026-01",
+    "pano_id": "r0-kllJAuM4apnebwnWC5g",
+    "distance_m": 5.19
+   },
+   {
+    "file": "sv_182.jpg",
+    "heading": 182,
+    "date": "2026-01",
+    "pano_id": "r0-kllJAuM4apnebwnWC5g",
+    "distance_m": 5.19
+   }
+  ],
+  "bearing": 2.0
+ },
+ "52500-50": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "ZocM8lB7LCZ9t1MMpW6oXg",
+    "distance_m": 2.29
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "ZocM8lB7LCZ9t1MMpW6oXg",
+    "distance_m": 2.29
+   }
+  ],
+  "bearing": 269.6
+ },
+ "52500-5000": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2023-07",
+    "pano_id": "3Fo3TgPiJOjb9AwALnAZeQ",
+    "distance_m": 8.71
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2023-07",
+    "pano_id": "3Fo3TgPiJOjb9AwALnAZeQ",
+    "distance_m": 8.71
+   }
+  ],
+  "bearing": 269.6
+ },
+ "52500-5001": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_187.jpg",
+    "heading": 187,
+    "date": "2024-03",
+    "pano_id": "HoCBDk8BGwIrtZUsf43lKQ",
+    "distance_m": 4.54
+   },
+   {
+    "file": "sv_007.jpg",
+    "heading": 7,
+    "date": "2024-03",
+    "pano_id": "HoCBDk8BGwIrtZUsf43lKQ",
+    "distance_m": 4.54
+   }
+  ],
+  "bearing": 187.5
+ },
+ "52500-5002": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_195.jpg",
+    "heading": 195,
+    "date": "2024-08",
+    "pano_id": "LBeaznrAwQFEjqD7tbSo8A",
+    "distance_m": 18.03
+   },
+   {
+    "file": "sv_015.jpg",
+    "heading": 15,
+    "date": "2024-08",
+    "pano_id": "LBeaznrAwQFEjqD7tbSo8A",
+    "distance_m": 18.03
+   }
+  ],
+  "bearing": 194.8
+ },
+ "52500-5003": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_165.jpg",
+    "heading": 165,
+    "date": "2024-08",
+    "pano_id": "XPNx2_ReURsIc-mwq3SSpw",
+    "distance_m": 3.22
+   },
+   {
+    "file": "sv_345.jpg",
+    "heading": 345,
+    "date": "2024-08",
+    "pano_id": "XPNx2_ReURsIc-mwq3SSpw",
+    "distance_m": 3.22
+   }
+  ],
+  "bearing": 165.0
+ },
+ "52500-5004": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_266.jpg",
+    "heading": 266,
+    "date": "2024-03",
+    "pano_id": "yXeXknj996uL_CdsP_NbIg",
+    "distance_m": 5.62
+   },
+   {
+    "file": "sv_086.jpg",
+    "heading": 86,
+    "date": "2024-03",
+    "pano_id": "yXeXknj996uL_CdsP_NbIg",
+    "distance_m": 5.62
+   }
+  ],
+  "bearing": 266.1
+ },
+ "52500-5005": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_273.jpg",
+    "heading": 273,
+    "date": "2024-03",
+    "pano_id": "dAOxOZBdyr_6d8u1iiwbQA",
+    "distance_m": 10.45
+   },
+   {
+    "file": "sv_093.jpg",
+    "heading": 93,
+    "date": "2024-03",
+    "pano_id": "dAOxOZBdyr_6d8u1iiwbQA",
+    "distance_m": 10.45
+   }
+  ],
+  "bearing": 273.5
+ },
+ "52500-52": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2023-08",
+    "pano_id": "IPXKC67Kn46VjyDbYnafZA",
+    "distance_m": 7.15
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2023-08",
+    "pano_id": "IPXKC67Kn46VjyDbYnafZA",
+    "distance_m": 7.15
+   }
+  ],
+  "bearing": 270.0
+ },
+ "52500-53": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "fSrdmlVvuV2AYQzfxRlCqw",
+    "distance_m": 2.18
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "fSrdmlVvuV2AYQzfxRlCqw",
+    "distance_m": 2.18
+   }
+  ],
+  "bearing": 270.3
+ },
+ "52500-54": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "O9Ot6shu2zIR4IMrSOfjuw",
+    "distance_m": 11.41
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "O9Ot6shu2zIR4IMrSOfjuw",
+    "distance_m": 11.41
+   }
+  ],
+  "bearing": 270.5
+ },
+ "52500-55": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_269.jpg",
+    "heading": 269,
+    "date": "2023-08",
+    "pano_id": "UeAQ95YnVoah8I4d2LnsQA",
+    "distance_m": 9.91
+   },
+   {
+    "file": "sv_089.jpg",
+    "heading": 89,
+    "date": "2023-08",
+    "pano_id": "UeAQ95YnVoah8I4d2LnsQA",
+    "distance_m": 9.91
+   }
+  ],
+  "bearing": 269.2
+ },
+ "52500-56": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_323.jpg",
+    "heading": 323,
+    "date": "2024-06",
+    "pano_id": "BCMrayiFQDnL3Pb8IdTpNw",
+    "distance_m": 4.72
+   },
+   {
+    "file": "sv_143.jpg",
+    "heading": 143,
+    "date": "2024-06",
+    "pano_id": "BCMrayiFQDnL3Pb8IdTpNw",
+    "distance_m": 4.72
+   }
+  ],
+  "bearing": 322.5
+ },
+ "52500-57": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-08",
+    "pano_id": "1WLCOK2Hp4TXLVMNFiHUzA",
+    "distance_m": 14.83
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-08",
+    "pano_id": "1WLCOK2Hp4TXLVMNFiHUzA",
+    "distance_m": 14.83
+   }
+  ],
+  "bearing": 270.4
+ },
+ "52500-58": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "6O-iix1pUyQpG2HYOZR1Xw",
+    "distance_m": 5.84
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "6O-iix1pUyQpG2HYOZR1Xw",
+    "distance_m": 5.84
+   }
+  ],
+  "bearing": 180.4
+ },
+ "52500-59": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "oF4fh_W4W34iao9wnjAQog",
+    "distance_m": 9.29
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "oF4fh_W4W34iao9wnjAQog",
+    "distance_m": 9.29
+   }
+  ],
+  "bearing": 179.7
+ },
+ "52500-6": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2026-01",
+    "pano_id": "Lxf9H1OF0hkDBAPrvOKMfg",
+    "distance_m": 7.22
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2026-01",
+    "pano_id": "Lxf9H1OF0hkDBAPrvOKMfg",
+    "distance_m": 7.22
+   }
+  ],
+  "bearing": 360.0
+ },
+ "52500-62": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "ZHy7X_cs4xIOqtKTEYgFeA",
+    "distance_m": 4.15
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "ZHy7X_cs4xIOqtKTEYgFeA",
+    "distance_m": 4.15
+   }
+  ],
+  "bearing": 180.0
+ },
+ "52500-63": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_179.jpg",
+    "heading": 179,
+    "date": "2025-04",
+    "pano_id": "avNpFvHo-nyHjkuo1HtbFg",
+    "distance_m": 7.33
+   },
+   {
+    "file": "sv_359.jpg",
+    "heading": 359,
+    "date": "2025-04",
+    "pano_id": "avNpFvHo-nyHjkuo1HtbFg",
+    "distance_m": 7.33
+   }
+  ],
+  "bearing": 178.7
+ },
+ "52500-64": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_179.jpg",
+    "heading": 179,
+    "date": "2022-04",
+    "pano_id": "zB3uoJl-1iTbtymadh0NWQ",
+    "distance_m": 6.47
+   },
+   {
+    "file": "sv_359.jpg",
+    "heading": 359,
+    "date": "2022-04",
+    "pano_id": "zB3uoJl-1iTbtymadh0NWQ",
+    "distance_m": 6.47
+   }
+  ],
+  "bearing": 179.4
+ },
+ "52500-66": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_153.jpg",
+    "heading": 153,
+    "date": "2022-01",
+    "pano_id": "aLccesyOLf5-0z1CErTAYw",
+    "distance_m": 1.27
+   },
+   {
+    "file": "sv_333.jpg",
+    "heading": 333,
+    "date": "2022-01",
+    "pano_id": "aLccesyOLf5-0z1CErTAYw",
+    "distance_m": 1.27
+   }
+  ],
+  "bearing": 153.1
+ },
+ "52500-67": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_148.jpg",
+    "heading": 148,
+    "date": "2022-01",
+    "pano_id": "F7_q0E_YyID0Imn9fFr_kQ",
+    "distance_m": 2.48
+   },
+   {
+    "file": "sv_328.jpg",
+    "heading": 328,
+    "date": "2022-01",
+    "pano_id": "F7_q0E_YyID0Imn9fFr_kQ",
+    "distance_m": 2.48
+   }
+  ],
+  "bearing": 148.3
+ },
+ "52500-68": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_154.jpg",
+    "heading": 154,
+    "date": "2025-04",
+    "pano_id": "ue4SDkxI-B03H1NK18wKyw",
+    "distance_m": 7.38
+   },
+   {
+    "file": "sv_334.jpg",
+    "heading": 334,
+    "date": "2025-04",
+    "pano_id": "ue4SDkxI-B03H1NK18wKyw",
+    "distance_m": 7.38
+   }
+  ],
+  "bearing": 154.0
+ },
+ "52500-69": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_152.jpg",
+    "heading": 152,
+    "date": "2024-08",
+    "pano_id": "224pxz-sj2oEapqxWkQDzQ",
+    "distance_m": 6.19
+   },
+   {
+    "file": "sv_332.jpg",
+    "heading": 332,
+    "date": "2024-08",
+    "pano_id": "224pxz-sj2oEapqxWkQDzQ",
+    "distance_m": 6.19
+   }
+  ],
+  "bearing": 151.9
+ },
+ "52500-7": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "Kg75Z7OWMjvyDVnHf5IWoQ",
+    "distance_m": 15.1
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "Kg75Z7OWMjvyDVnHf5IWoQ",
+    "distance_m": 15.1
+   }
+  ],
+  "bearing": 180.3
+ },
+ "52500-70": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_150.jpg",
+    "heading": 150,
+    "date": "2024-04",
+    "pano_id": "5qB_ixHC8zXmh0SutGk83g",
+    "distance_m": 3.9
+   },
+   {
+    "file": "sv_330.jpg",
+    "heading": 330,
+    "date": "2024-04",
+    "pano_id": "5qB_ixHC8zXmh0SutGk83g",
+    "distance_m": 3.9
+   }
+  ],
+  "bearing": 150.0
+ },
+ "52500-71": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_144.jpg",
+    "heading": 144,
+    "date": "2022-04",
+    "pano_id": "TK3cBSRYWC6ht9QGdlTUZA",
+    "distance_m": 10.97
+   },
+   {
+    "file": "sv_324.jpg",
+    "heading": 324,
+    "date": "2022-04",
+    "pano_id": "TK3cBSRYWC6ht9QGdlTUZA",
+    "distance_m": 10.97
+   }
+  ],
+  "bearing": 143.9
+ },
+ "52500-72": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-04",
+    "pano_id": "ADXR_ZzBNk1rC9QMSzcrKw",
+    "distance_m": 8.72
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-04",
+    "pano_id": "ADXR_ZzBNk1rC9QMSzcrKw",
+    "distance_m": 8.72
+   }
+  ],
+  "bearing": 90.0
+ },
+ "52500-74": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_243.jpg",
+    "heading": 243,
+    "date": "2024-03",
+    "pano_id": "czH-Wbqr7Eu59cWIBbJNjg",
+    "distance_m": 2.28
+   },
+   {
+    "file": "sv_063.jpg",
+    "heading": 63,
+    "date": "2024-03",
+    "pano_id": "czH-Wbqr7Eu59cWIBbJNjg",
+    "distance_m": 2.28
+   }
+  ],
+  "bearing": 242.6
+ },
+ "52500-76": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_155.jpg",
+    "heading": 155,
+    "date": "2024-08",
+    "pano_id": "G_YwKYsZn04BZtP7S2j_6g",
+    "distance_m": 7.15
+   },
+   {
+    "file": "sv_335.jpg",
+    "heading": 335,
+    "date": "2024-08",
+    "pano_id": "G_YwKYsZn04BZtP7S2j_6g",
+    "distance_m": 7.15
+   }
+  ],
+  "bearing": 154.9
+ },
+ "52500-77": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_063.jpg",
+    "heading": 63,
+    "date": "2023-08",
+    "pano_id": "uNh0VCFxCD-BY7rngRhSjQ",
+    "distance_m": 2.97
+   },
+   {
+    "file": "sv_243.jpg",
+    "heading": 243,
+    "date": "2023-08",
+    "pano_id": "uNh0VCFxCD-BY7rngRhSjQ",
+    "distance_m": 2.97
+   }
+  ],
+  "bearing": 62.5
+ },
+ "52500-78": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_062.jpg",
+    "heading": 62,
+    "date": "2024-03",
+    "pano_id": "5C7Trz2wZsxra3C8_4HCYg",
+    "distance_m": 4.03
+   },
+   {
+    "file": "sv_242.jpg",
+    "heading": 242,
+    "date": "2024-03",
+    "pano_id": "5C7Trz2wZsxra3C8_4HCYg",
+    "distance_m": 4.03
+   }
+  ],
+  "bearing": 62.4
+ },
+ "52500-79": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-08",
+    "pano_id": "S6bhG0EuCfJ84Y2OmF6iCw",
+    "distance_m": 3.53
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-08",
+    "pano_id": "S6bhG0EuCfJ84Y2OmF6iCw",
+    "distance_m": 3.53
+   }
+  ],
+  "bearing": 0.3
+ },
+ "52500-8": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "ghRq3LoC6wyRUeG9zIKlrw",
+    "distance_m": 0.12
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "ghRq3LoC6wyRUeG9zIKlrw",
+    "distance_m": 0.12
+   }
+  ],
+  "bearing": 180.3
+ },
+ "52500-81": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_359.jpg",
+    "heading": 359,
+    "date": "2018-05",
+    "pano_id": "T9wTVd6eHAyuCP3N7RKuQw",
+    "distance_m": 13.3
+   },
+   {
+    "file": "sv_179.jpg",
+    "heading": 179,
+    "date": "2018-05",
+    "pano_id": "T9wTVd6eHAyuCP3N7RKuQw",
+    "distance_m": 13.3
+   }
+  ],
+  "bearing": 359.1
+ },
+ "52500-82": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-03",
+    "pano_id": "Gs0FClK3pXyQF4VqkWzDfA",
+    "distance_m": 11.01
+   },
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-03",
+    "pano_id": "Gs0FClK3pXyQF4VqkWzDfA",
+    "distance_m": 11.01
+   }
+  ],
+  "bearing": 0.4
+ },
+ "52500-84": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_357.jpg",
+    "heading": 357,
+    "date": "2024-07",
+    "pano_id": "M6ilviqO4-dMl5VHZNyiPA",
+    "distance_m": 1.8
+   },
+   {
+    "file": "sv_177.jpg",
+    "heading": 177,
+    "date": "2024-07",
+    "pano_id": "M6ilviqO4-dMl5VHZNyiPA",
+    "distance_m": 1.8
+   }
+  ],
+  "bearing": 356.8
+ },
+ "52500-87": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "VeCpxwLnnv1ufQoNYAWKVA",
+    "distance_m": 5.54
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "VeCpxwLnnv1ufQoNYAWKVA",
+    "distance_m": 5.54
+   }
+  ],
+  "bearing": 89.8
+ },
+ "52500-88": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-03",
+    "pano_id": "l4C4bJnOYbGGu7FjOj-UhA",
+    "distance_m": 24.98
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-03",
+    "pano_id": "l4C4bJnOYbGGu7FjOj-UhA",
+    "distance_m": 24.98
+   }
+  ],
+  "bearing": 89.9
+ },
+ "52500-89": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2025-11",
+    "pano_id": "NWAYGyXKyObPohcmxQASCQ",
+    "distance_m": 12.3
+   },
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2025-11",
+    "pano_id": "NWAYGyXKyObPohcmxQASCQ",
+    "distance_m": 12.3
+   }
+  ],
+  "bearing": 270.2
+ },
+ "52500-9": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_180.jpg",
+    "heading": 180,
+    "date": "2024-04",
+    "pano_id": "wFvYqMm5UYJtC6aVcOF6dQ",
+    "distance_m": 1.12
+   },
+   {
+    "file": "sv_000.jpg",
+    "heading": 0,
+    "date": "2024-04",
+    "pano_id": "wFvYqMm5UYJtC6aVcOF6dQ",
+    "distance_m": 1.12
+   }
+  ],
+  "bearing": 179.9
+ },
+ "52500-90": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-06",
+    "pano_id": "o8GOdrY66PNOEDzmY_-0sg",
+    "distance_m": 0.66
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-06",
+    "pano_id": "o8GOdrY66PNOEDzmY_-0sg",
+    "distance_m": 0.66
+   }
+  ],
+  "bearing": 90.0
+ },
+ "52500-91": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-07",
+    "pano_id": "ApwB7J_iXgoot9Sehfw5pQ",
+    "distance_m": 3.81
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-07",
+    "pano_id": "ApwB7J_iXgoot9Sehfw5pQ",
+    "distance_m": 3.81
+   }
+  ],
+  "bearing": 90.3
+ },
+ "52500-92": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_090.jpg",
+    "heading": 90,
+    "date": "2024-06",
+    "pano_id": "IrFTftB7Cez6Tq5s9ZNw4A",
+    "distance_m": 6.23
+   },
+   {
+    "file": "sv_270.jpg",
+    "heading": 270,
+    "date": "2024-06",
+    "pano_id": "IrFTftB7Cez6Tq5s9ZNw4A",
+    "distance_m": 6.23
+   }
+  ],
+  "bearing": 90.3
+ },
+ "52500-95": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_152.jpg",
+    "heading": 152,
+    "date": "2022-04",
+    "pano_id": "nloYaD9RySmEw8JbDpXxsw",
+    "distance_m": 10.35
+   },
+   {
+    "file": "sv_332.jpg",
+    "heading": 332,
+    "date": "2022-04",
+    "pano_id": "nloYaD9RySmEw8JbDpXxsw",
+    "distance_m": 10.35
+   }
+  ],
+  "bearing": 152.0
+ },
+ "52500-96": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_152.jpg",
+    "heading": 152,
+    "date": "2023-08",
+    "pano_id": "CcpdIKuOB8BUKSEL7TDDkw",
+    "distance_m": 4.74
+   },
+   {
+    "file": "sv_332.jpg",
+    "heading": 332,
+    "date": "2023-08",
+    "pano_id": "CcpdIKuOB8BUKSEL7TDDkw",
+    "distance_m": 4.74
+   }
+  ],
+  "bearing": 152.3
+ },
+ "52500-99": {
+  "aerial": true,
+  "streetview": [
+   {
+    "file": "sv_242.jpg",
+    "heading": 242,
+    "date": "2024-03",
+    "pano_id": "eq1YGcAM6fz5pa6f6qZVYA",
+    "distance_m": 2.16
+   },
+   {
+    "file": "sv_062.jpg",
+    "heading": 62,
+    "date": "2024-03",
+    "pano_id": "eq1YGcAM6fz5pa6f6qZVYA",
+    "distance_m": 2.16
+   }
+  ],
+  "bearing": 242.0
+ }
+}
