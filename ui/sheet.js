@@ -1,3 +1,8 @@
+// ## WHAT THIS FILE DOES
+// On phones the panel becomes a bottom sheet with three snap points (peek, half, full). This module handles
+// the drag on the handle and the briefing header with Pointer Events, settles to a snap on release (with a
+// flick rule), supports tap to toggle and keyboard cycling, and keeps the map from receiving the gesture.
+// Imports motion.js. Called from app.js (initSheet) and the sheet tests, which inject timers and viewport.
 // Bottom sheet for narrow screens: three snap points (peek, half, full), driven by Pointer Events on the
 // handle so any pointer (mouse, touch, pen) works. A tap on the handle toggles peek and half; a drag
 // follows the pointer live and settles to the nearest snap. The map never receives the drag: the handle
@@ -15,6 +20,7 @@ const TAP_MS = 300;   // a press shorter than this ...
 const TAP_PX = 10;    // ... with less movement than this is a tap, not a drag
 const FLICK = 0.6;    // px per ms; faster releases jump one snap in the flick direction
 
+// ## snapHeights and pickSnap: the pure rules
 // Visible px of panel per snap for a viewport height. Peek is clamped to the viewport, half stays
 // between peek and full so small phones never get an inverted order.
 export function snapHeights(viewportH, snaps) {
@@ -38,6 +44,7 @@ export function pickSnap(height, velocity, heights) {
   return asc[nearest][0];
 }
 
+// ## initSheet: the DOM binding
 // DOM binding. `panel` is the sheet itself; `handle` (and the briefing `header`) receive the pointer
 // events. snaps: { peek: px, half: vh fraction, full: vh fraction }. Timing and tween are injectable
 // (now, raf, caf) so tests run without a browser; reduced motion collapses the snap animation to a jump.
@@ -56,6 +63,7 @@ export function initSheet({ panel, handle, header, peekEls, snaps, isNarrow, onS
   const heights = () => snapHeights(viewportH, snaps);
   const currentPx = () => (heightPx != null ? heightPx : heights()[snap]);
 
+  // ## apply, chrome, measure: write the transform, the classes and the aria state
   const apply = (px) => {
     heightPx = px;
     if (!panel) return;
@@ -82,6 +90,7 @@ export function initSheet({ panel, handle, header, peekEls, snaps, isNarrow, onS
     viewportH = box;
   };
 
+  // ## snapTo: animate to a named snap
   const snapTo = (name) => {
     if (!SNAPS.includes(name) || destroyed) return;
     if (cancelAnim) { cancelAnim(); cancelAnim = null; }
@@ -97,6 +106,7 @@ export function initSheet({ panel, handle, header, peekEls, snaps, isNarrow, onS
     });
   };
 
+  // ## Pointer handlers: onDown starts a drag, onMove follows the finger, onUp settles
   const onDown = (e) => {
     if (destroyed || !narrow() || e.isPrimary === false) return;
     measure();
@@ -130,6 +140,7 @@ export function initSheet({ panel, handle, header, peekEls, snaps, isNarrow, onS
     const velocity = dt > 0 ? dy / dt : 0;         // positive = dragging up
     snapTo(pickSnap(px, -velocity, h));
   };
+  // ## Keyboard and resize
   // Keyboard: the drag has a single-pointer-free alternative (WCAG 2.5.7). Enter/Space cycles,
   // arrows step; aria-expanded on the handle reports the state.
   const onKey = (e) => {

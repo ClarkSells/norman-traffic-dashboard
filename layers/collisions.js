@@ -1,3 +1,8 @@
+// ## WHAT THIS FILE DOES
+// The crash records: a heatmap layer for the zoomed out view and a circle layer for the dots that take over
+// past zoom 13.6, plus the year filter, the heat fade, the dots mode used by scenes, the per segment crash
+// reveal and the ward dim. Imports config.js (COLL short keys, blue ramp), theme.js and motion.js. Called from
+// app.js (addAllLayers, render, applySceneLayers, flyToWard) and the layers and tour tests.
 import { BLUE_RAMP, COLL } from "../config.js";
 import { COLLISION_COLORS } from "../theme.js";
 import { DUR, clamp01, lerp, tween } from "../motion.js";
@@ -5,6 +10,9 @@ import { DUR, clamp01, lerp, tween } from "../motion.js";
 // Paint transitions are module constants that nothing else zeroes, so they are built from the reduced motion flag.
 const transitionFor = (reducedMotion) => ({ duration: reducedMotion ? 0 : DUR.mid });
 
+// ## Heat paint
+// A heatmap layer sums a kernel around every point and colors the density. Radius and intensity grow with
+// zoom so the surface stays readable; the color ramp is the blue sequential ramp from config.js.
 // Heat, explore supporting role (design section 8): quiet surface that hands off to dots at 13.6.
 export const HEAT_OPACITY = 0.45;
 const HEAT_RADIUS = ["interpolate", ["linear"], ["zoom"], 10, 8, 14, 18];
@@ -12,6 +20,9 @@ const HEAT_INTENSITY = ["interpolate", ["linear"], ["zoom"], 10, 0.3, 14, 0.8];
 const HEAT_COLOR = ["interpolate", ["linear"], ["heatmap-density"],
   0, "rgba(134,182,239,0)", 0.3, BLUE_RAMP[0], 0.5, BLUE_RAMP[1], 0.7, BLUE_RAMP[2], 0.85, BLUE_RAMP[3], 1, BLUE_RAMP[4]];
 
+// ## Dots paint and the reveal expressions
+// Mapbox concept: an expression with ["zoom"] as the input of a top level interpolate is a zoom curve; the
+// library only accepts zoom at the top level, so per feature factors (the reveal t) go inside the outputs.
 // Below 13 the crashes read as a density surface; the dots crossfade in across 0.6 zoom.
 export const CROSSFADE = { from: 13.0, to: 13.6 };
 const DOTS_OPACITY = ["interpolate", ["linear"], ["zoom"], CROSSFADE.from, 0, CROSSFADE.to, 0.85];
@@ -22,6 +33,9 @@ const REVEAL_OPACITY = ["*", DOTS_OPACITY, ["case", ["!=", ["feature-state", "t"
 const REVEAL_T = ["coalesce", ["feature-state", "t"], 1];
 const DOTS_RADIUS = ["interpolate", ["linear"], ["zoom"], CROSSFADE.from, ["*", 1.6, REVEAL_T], 16, ["*", 4.2, REVEAL_T]];
 
+// ## Year filters
+// Mapbox concept: a layer filter is an expression that decides which features draw at all. The year window
+// is a filter so crashes outside it cost nothing to render.
 // Collisions outside the selected years are filtered, not dimmed. Property names come from COLL (the slim short keys).
 const yearClauses = (state) => (state && state.yearMin != null
   ? [[">=", ["get", COLL.year], state.yearMin], ["<=", ["get", COLL.year], state.yearMax]]
@@ -34,11 +48,14 @@ const windowFilter = (state) => {
   return c.length > 1 ? ["all", ...c] : c[0] || null;
 };
 
+// ## circleColor: dot color by assignment category
 // Slim data carries category codes; theme colors are keyed by the full names. x falls back to the muted color.
 export const circleColor = ["match", ["get", COLL.cat],
   "a", COLLISION_COLORS.assigned, "s", COLLISION_COLORS.shared_intersection_resolved,
   "n", COLLISION_COLORS.on_road_no_segment, "r", COLLISION_COLORS.road_not_counted, COLLISION_COLORS.on_road_no_segment];
 
+// ## Per map bookkeeping
+// Stored in a WeakMap keyed by the map object so tests with several map doubles do not share state.
 // Per-map bookkeeping: year window, dots mode, current heat opacity and the crash index the reveal tweens.
 const maps = new WeakMap();
 function metaFor(map) {
@@ -55,6 +72,9 @@ function dotsFilter(meta) {
   return clauses.length > 1 ? ["all", ...clauses] : clauses[0] || null;
 }
 
+// ## addCollisionsLayer: one source, two layers, plus the crash index for the reveal
+// generateId gives every crash a numeric feature id (the slim file has none), which the reveal needs to write
+// feature state per dot. The index maps loc_id to year to those ids.
 export function addCollisionsLayer(map, collisions, state) {
   const T = transitionFor(!!(state && state.reducedMotion));
   const meta = metaFor(map);
@@ -86,6 +106,7 @@ export function addCollisionsLayer(map, collisions, state) {
              "circle-opacity-transition": T, "circle-color-transition": T } });
 }
 
+// ## updateCollisions: reapply the year window on every render
 export function updateCollisions(map, state) {
   const meta = metaFor(map);
   if (state) meta.state = state;
@@ -93,6 +114,7 @@ export function updateCollisions(map, state) {
   if (map.getLayer("collisions-dots") && meta.mode !== "none") map.setFilter("collisions-dots", dotsFilter(meta));
 }
 
+// ## setHeatVisible: the heat fade used by the Settings switch and the heat scene
 // Fades the heat layer in or out (present scene 3) with the injectable tween; 600 ms by default.
 // Guards the layer: a scene entered before the style finished loading records the intent and no-ops.
 export function setHeatVisible(map, visible, { fadeMs = 600, tween: tweenFn } = {}) {
@@ -104,6 +126,7 @@ export function setHeatVisible(map, visible, { fadeMs = 600, tween: tweenFn } = 
   return tw({ duration: fadeMs, onUpdate: (p) => { if (map.getLayer("collisions-heat")) map.setPaintProperty("collisions-heat", "heatmap-opacity", lerp(from, to, p)); } });
 }
 
+// ## setDotsMode: which crash dots a scene shows
 // "all" shows the year window, "segment" narrows the dots to one loc id, "none" hides them.
 export function setDotsMode(map, mode, { locId } = {}) {
   const meta = metaFor(map);
@@ -115,6 +138,9 @@ export function setDotsMode(map, mode, { locId } = {}) {
   map.setFilter("collisions-dots", dotsFilter(meta));
 }
 
+// ## Crash reveal: clearReveal and revealSegmentCrashes
+// On a segment scene the segment's own crashes grow in one year at a time (2021 first) while every other
+// dot dims, so the eye reads the count on the road. Each dot's progress lives in feature state "t".
 function clearReveal(map, meta) {
   if (meta.cancelReveal) { meta.cancelReveal(); meta.cancelReveal = null; }
   if (!meta.revealIds.length) return;
@@ -161,6 +187,7 @@ export function revealSegmentCrashes(map, locId, { duration: ms = 900, reduced =
   return () => clearReveal(map, meta);
 }
 
+// ## dimOutsideWard: the ["within", polygon] expression
 // Ward select: crashes outside the ward dim to 25 percent. null restores.
 export function dimOutsideWard(map, wardFeature) {
   if (!map.getLayer("collisions-dots")) return;

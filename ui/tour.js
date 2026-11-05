@@ -1,3 +1,8 @@
+// ## WHAT THIS FILE DOES
+// The present mode player (CONTRACTS.md C.10): a pure reducer over { active, index, total, autoplay, saved },
+// the key and swipe maps, and initTourPlayer, which connects the reducer to the chrome (ui/present.js) and to
+// app.js applyScene. It decides which scene is current and when autoplay advances; it draws nothing. Imports
+// nothing. Called from app.js (initTourPlayer, dispatch, getState) and the tour tests.
 // Present mode player (C.10): a pure reducer for the tour state plus the glue that drives the C.9
 // present chrome. The player owns scene order, autoplay timing and keyboard; ui/present.js owns every
 // pixel, including pausing while the pointer is over the caption card.
@@ -7,6 +12,9 @@ export const initialTour = { active: false, index: 0, total: 0, autoplay: false,
 
 const clamp01 = (t) => Math.max(0, Math.min(1, t));
 
+// ## tourReduce: the state machine
+// enter saves the explore snapshot the exit will restore; next stops at the last scene and turns autoplay
+// off there; exit returns to the initial state.
 // Pure. Actions: enter {total, saved, index?}, next, prev, goto {index}, toggleAutoplay, exit.
 export function tourReduce(s, action) {
   switch (action.type) {
@@ -20,6 +28,7 @@ export function tourReduce(s, action) {
   }
 }
 
+// ## keyAction and swipeAction: input to actions, pure
 // Which key does what. Returns an action or null. Ignored while typing in a form control.
 export function keyAction(key, inField = false) {
   if (inField) return null;
@@ -39,6 +48,7 @@ export function swipeAction(dx, dy, minPx = 48) {
   return dx < 0 ? { type: "next" } : { type: "prev" };
 }
 
+// ## dotsHtml
 // Legacy progress dots; the C.9 chrome renders its own segmented bar. Kept for one release.
 export function dotsHtml(index, total) {
   let h = "";
@@ -46,6 +56,11 @@ export function dotsHtml(index, total) {
   return h;
 }
 
+// ## initTourPlayer: the glue
+// dispatch runs the reducer, then does the side effects for what changed: show the scene in the chrome and
+// call applyScene when the index or active flag changed, hide and call onExit on exit, and restart the
+// autoplay heartbeat (a 100 ms interval that fills the progress segment and dispatches next when the scene's
+// autoplayMs is up, only after applyScene's camera flight has settled).
 // The player. opts: {
 //   scenes: C.2 scene list,
 //   applyScene(scene, prev): drives map/camera/layers; may return a promise,
@@ -134,6 +149,7 @@ export function initTourPlayer(opts) {
     });
   }
 
+  // ## Keyboard and swipe listeners, active only while the tour runs
   if (typeof document !== "undefined" && document.addEventListener) {
     document.addEventListener("keydown", (e) => {
       if (!s.active) return;

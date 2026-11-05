@@ -1,8 +1,14 @@
+// ## WHAT THIS FILE DOES
+// The data quality notes attached to specific segments: approximate geometry, a duplicate count pair, an
+// unassignable crash record, a ward assigned by fallback, a single count year. caveatsFor(locId) returns the
+// sentences that apply so the popup can print them under the numbers. Imports nothing. Imported by
+// ui/popup.js and the caveats tests. The wording matches the report so both say the same thing.
 // One place for the segment caveats quoted by the popup, the tour and the slides.
 // Wording follows docs/report/sections/08_data_quality.md so the dashboard and the report agree.
 export const FALLBACK_GEOMETRY_IDS = ["52500-76", "52500-133", "52500-183", "52500-206", "52500-228", "52500-237"];
 export const DUPLICATE_PAIR_IDS = ["52500-240", "52500-241"];
 
+// ## CAVEATS: the sentences, keyed by kind or by the one loc_id they apply to
 export const CAVEATS = {
   fallback_geometry: "Approximate geometry: this segment's line is an 800 meter window around the count point because its endpoints do not match the city centerlines, so its length and its per mile crash rate are approximate.",
   "52500-133": "The fallback line runs about 250 meters past 24th Ave SW, one of the two documented spot check failures.",
@@ -12,6 +18,7 @@ export const CAVEATS = {
   "52500-192": "Volume is from a single FY21 count, so this v/c rests on one count year.",
 };
 
+// ## caveatsFor and hasCaveat
 // All caveat sentences that apply to a segment, in display order. Empty for a clean segment.
 export function caveatsFor(locId) {
   const out = [];

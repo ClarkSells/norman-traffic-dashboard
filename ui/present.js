@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// The visible chrome of present mode (CONTRACTS.md C.9): the caption card (title, caption, stats, legend chip,
+// ward list, closing buttons), the segmented progress tablist and the prev, next, autoplay and exit controls
+// with auto hide. It renders whatever Scene object it is given and emits actions; ui/tour.js owns the logic.
+// Imports config.js and motion.js. Called from app.js (initPresent) and the present tests, which inject
+// timers.
 // Presentation chrome (CONTRACTS.md C.9): caption card, segmented progress tablist, controls with auto-hide.
 // All scene content comes from the Scene object (C.2); this module never computes a fact.
 // Motion: contents crossfade via data-anim on the card (250 ms, CSS carries the stagger); skipped under
@@ -16,6 +22,7 @@ const LEGEND_METRICS = ["combined", "v_c", "collisions"];
 const on = (el, ev, fn) => { if (el && el.addEventListener) el.addEventListener(ev, fn); };
 const clamp01 = (t) => Math.max(0, Math.min(1, t));
 
+// ## initPresent: wire the DOM once, return the small API the player calls
 export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout: ct } = {}) {
   const _st = st || ((fn, ms) => setTimeout(fn, ms));
   const _ct = ct || ((h) => clearTimeout(h));
@@ -34,6 +41,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     replay: $("present-replay"), explore: $("present-explore"),
   };
 
+  // ## Actions: button clicks become strings the player maps to reducer actions
   // --- actions ------------------------------------------------------------------
   const cbs = [];
   const emit = (action) => { for (const cb of cbs) cb(action); };
@@ -47,6 +55,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     emit("autoplay");
   });
 
+  // ## Controls auto hide
   // --- controls visibility + auto-hide -------------------------------------------
   let hideTimer = null;
   const controlButtons = [els.prev, els.next, els.autoplay, els.exit].filter(Boolean);
@@ -71,6 +80,9 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
   // addEventListener, so it falls back to the root listener
   on(typeof document !== "undefined" && document.addEventListener ? document : root, "keydown", wake);
 
+  // ## Scene rendering: renderStats, renderLegend, renderList, renderScene
+  // Pure DOM building from the scene's fields. A stat with live: "year" gets a data attribute so app.js can
+  // update its value while the year player runs.
   // --- scene rendering -------------------------------------------------------------
   const block = (className, text) => {
     const el = document.createElement("div");
@@ -169,6 +181,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     els.closing.hidden = scene.kind !== "closing";
   }
 
+  // ## show and hide: the card crossfade between scenes
   // --- show/hide with the crossfade ---------------------------------------------------
   let swapTimer = null;
   const cancelSwap = () => { if (swapTimer != null) { _ct(swapTimer); swapTimer = null; } };
@@ -197,6 +210,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     if (els.card) els.card.removeAttribute("data-anim");
   }
 
+  // ## Progress tablist: setProgress and its keyboard handling
   // --- progress tablist -----------------------------------------------------------------
   // WAI-ARIA tabs pattern (3.7-03): one tab per scene, roving tabindex, Arrow/Home/End move
   // focus with automatic activation (emitting { goto } through onAction). This handler owns
@@ -254,6 +268,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     syncTabOrder();
   }
 
+  // ## setControlsVisible and setAutoplay: the player's two write backs
   function setControlsVisible(visible) {
     applyControls(!!visible);
     if (visible) scheduleHide(); else cancelHide();

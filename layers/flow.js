@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// The traffic flow animation: three dashed line layers over the segments source, one per volume band, whose
+// dash pattern is stepped forward on a timer so the dashes appear to travel along the road. Also the per
+// update cost instrumentation the perf check reads. Imports config.js and layers/segments.js (filter and
+// width expressions). Called from app.js (addAllLayers, the flow loop) and layers/gameday.js reuses
+// dashSequence; the flow tests drive startFlow with fake timers.
 // Traffic flow animation (contract C.6, design section 7). Three line layers over the segments source,
 // one per VPD band, because line-dasharray is not data driven. The ant path trick: a dasharray whose
 // dash plus gap is constant cycles the phase along the line; line-dasharray units are multiples of line width.
@@ -6,6 +12,9 @@ import { primaryExpression, widthExpression } from "./segments.js";
 
 export const FLOW_LAYERS = ["segments-flow-lo", "segments-flow-mid", "segments-flow-hi"];
 
+// ## CLASSES: dash and gap per band
+// Mapbox concept: line-dasharray is [dash, gap, dash, gap, ...] in units of the line width and it cannot be
+// data driven, which is why there are three layers instead of one with an expression.
 // Dash and gap per VPD band, in multiples of line width (config FLOW.bands: under 8000, 8000-18000, over 18000).
 const CLASSES = [
   { cls: "lo", dash: 1.2, gap: 4 },
@@ -16,6 +25,7 @@ const CLASSES = [
 const BEFORE_ID = "segments-selected-casing";
 const r3 = (v) => Math.round(v * 1000) / 1000;
 
+// ## flowUpdateStats: how long each dash update took
 // Per-update cost instrumentation (3.4-05; design section 11 budgets under 4 ms per update at 20 per
 // second). One Float64 write per update step, computed only when flowUpdateStats() is called. startFlow
 // resets the buffer so a run measures only itself.
@@ -31,6 +41,10 @@ export function flowUpdateStats() {
   return { count: statsCount, p50: pct(50), p95: pct(95), max: sorted[n - 1] };
 }
 
+// ## dashSequence: the frames of the ant path
+// Each frame is a dasharray with the same total period but the dash shifted a little further along. Stepping
+// through the frames in order reads as motion. The leading zero dash in the second half of the cycle lets
+// the pattern wrap without a visible seam.
 // The dasharray cycle for one class. Phase p sweeps the period in even steps; every frame's dash plus gap
 // sums to dash + gap, so the last frame wraps onto the first without a seam.
 export function dashSequence(dash, gap) {
@@ -45,6 +59,7 @@ export function dashSequence(dash, gap) {
   return seq;
 }
 
+// ## flowFilter
 // One filter per band. Flow is drawn on the primary (arterial) network only; state.includeCollectors is not
 // part of the C.6 signature, so collectors never animate.
 export function flowFilter(cls) {
@@ -56,6 +71,7 @@ export function flowFilter(cls) {
   return ["all", primary, [">=", vpd, b1]];
 }
 
+// ## flowWidthExpression
 // 45 percent of the segments width curve. The scale is applied inside the per-zoom VPD outputs: the real
 // library only accepts ["zoom"] as the input of a top level step or interpolate, so wrapping the curve in
 // ["*", 0.45, ...] would be refused.
@@ -72,6 +88,7 @@ export function flowWidthExpression(k = 0.45) {
   return out;
 }
 
+// ## addFlowLayers and setFlowVisible
 // Three dashed layers above segments-line and below the selection frame. White at 85 percent is the
 // present/dusk default from the design; explore theming is the caller's job via setPaintProperty.
 // state.flow / state.reducedMotion are C.1 keys that land in Wave 2, so reads use tolerant fallbacks.
@@ -103,6 +120,9 @@ export function setFlowVisible(map, visible) {
   }
 }
 
+// ## startFlow: the loop
+// One requestAnimationFrame loop. At most every 50 ms it computes each layer's frame index from the clock and
+// its step interval, and writes line-dasharray only when the index changed. Hidden tabs skip the work.
 // The animation loop. stepMsByLayer carries the per-layer phase rates (the caller picks each layer's rate
 // from the median v/c of its segments, per design section 7). Frame budget: at most one setPaintProperty
 // per layer per 50 ms (20 updates per second), nothing while hidden() is true, stop() cancels. The reduced

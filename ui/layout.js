@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// Keeps the Mapbox canvas the same size as its box. A WebGL map does not notice when CSS changes its
+// container, so this module watches the map element with a ResizeObserver and calls map.resize(), at most
+// once per frame, and again after the layout transition into or out of present mode. It also toggles the
+// presenting class and reports the caption card's box for the camera padding. Imports nothing. Called from
+// app.js (initLayout, setPresenting, captionBox) and the layout tests.
 // Layout keeper, contract C.4. Fixes audit bugs A1/D1: the layout grid changes
 // the map's box (panel drag, narrow screens, present mode) and nothing ever
 // called map.resize(), so the canvas stayed sized for the old box and the map
@@ -5,6 +11,7 @@
 // every size change, at most once per frame, and once more after the CSS
 // transition that follows a present-mode toggle.
 
+// ## initLayout
 export function initLayout(map, { layoutEl, mapEl }) {
   let presenting = false;
   let destroyed = false;
@@ -19,6 +26,7 @@ export function initLayout(map, { layoutEl, mapEl }) {
     ? (id) => globalThis.cancelAnimationFrame(id)
     : (id) => clearTimeout(id);
 
+  // ## scheduleResize: one resize per frame
   // Coalesce a burst of size changes into one map.resize() per frame.
   function scheduleResize() {
     if (destroyed || frame !== null) return;
@@ -45,6 +53,7 @@ export function initLayout(map, { layoutEl, mapEl }) {
     layoutEl.addEventListener("transitionend", onTransitionEnd);
   }
 
+  // ## setPresenting, captionBox, onResize, destroy: the returned API
   function setPresenting(next) {
     presenting = !!next;
     if (layoutEl && layoutEl.classList) layoutEl.classList.toggle("presenting", presenting);

@@ -1,12 +1,24 @@
+// ## WHAT THIS FILE DOES
+// The color system for the chrome (panel, buttons, popup) and for the parts of the map our own layers draw
+// (casings, halos, ward lines and labels). THEMES holds the light, dark and present palettes; applyTheme
+// writes one onto <html> as CSS custom properties; applyMode switches the explore and present chrome;
+// themeFor maps a basemap to a palette. Imports config.js. Imported by app.js, every layers/*.js module that
+// paints chrome, ui/legend.js, layers/collisions.js (COLLISION_COLORS) and the theme tests.
 // UI palette and type for the dashboard, as CSS custom properties.
 // The five step metric ramp stays in config.js (it is the report's ramp too); this file builds the chrome around it.
 // The type system is three IBM Plex families (Serif titles, Sans UI, Mono figures) delivered by tokens.css;
 // THEMES mirrors the token values tokens.css defines under :root (explore) and :root[data-mode="present"].
 import { BLUE_RAMP, MUTED } from "./config.js";
 
+// ## Fonts
+// Three IBM Plex families: Serif for titles, Sans for UI text, Mono for figures. tokens.css loads them.
 export const FONTS = { serif: "IBM Plex Serif", sans: "IBM Plex Sans", mono: "IBM Plex Mono" };
 export const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap";
 
+// ## THEMES: the three palettes
+// Keys match the CSS custom property names in tokens.css without the leading dashes. The map chrome keys
+// (map-casing, selection-halo, ward-line, ward-label, ward-halo) are read by the layer modules directly
+// because Mapbox paint cannot read CSS variables.
 export const THEMES = {
   // Explore (light): the token values from handoff/02_DESIGN_DIRECTION.md section 3, mirrored from tokens.css :root.
   light: {
@@ -33,6 +45,7 @@ export const THEMES = {
   },
 };
 
+// ## themeFor and cssVars
 // The satellite basemap is a dark scene, so it gets the dark chrome.
 export function themeFor(basemap) { return basemap === "satellite" ? "dark" : "light"; }
 
@@ -41,6 +54,7 @@ export function cssVars(name) {
   return Object.entries(t).map(([k, v]) => `--${k}: ${v};`).join(" ");
 }
 
+// ## applyTheme: set data-theme and the inline custom properties on <html>
 // Writes the theme onto the document root. Returns the applied name so callers can chain.
 export function applyTheme(name, root) {
   const el = root || (typeof document !== "undefined" ? document.documentElement : null);
@@ -51,6 +65,7 @@ export function applyTheme(name, root) {
   return name;
 }
 
+// ## applyMode: explore or present chrome
 // Explore vs present chrome (tokens.css keys the dark set off :root[data-mode="present"]). applyTheme's
 // inline custom properties would beat the stylesheet, so present mode strips them and lets tokens.css
 // cascade; the caller re-applies applyTheme on the way back to explore.
@@ -65,6 +80,7 @@ export function applyMode(mode, root) {
   return m;
 }
 
+// ## contrastRatio: a test helper that keeps the palettes legible
 // WCAG contrast ratio for two hex colors. Pure, used by the tests to check both themes.
 export function contrastRatio(hexA, hexB) {
   const lum = (hex) => {
@@ -76,5 +92,6 @@ export function contrastRatio(hexA, hexB) {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
+// ## COLLISION_COLORS: dot colors by how the crash was assigned
 // Collision dot colors by the pipeline's assignment category ("cat" in collisions.geojson).
 export const COLLISION_COLORS = { assigned: BLUE_RAMP[2], shared_intersection_resolved: BLUE_RAMP[1], on_road_no_segment: MUTED, road_not_counted: "#b7b4ab" };

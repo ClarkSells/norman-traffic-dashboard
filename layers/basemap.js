@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// Everything about the Mapbox Standard basemap itself, as opposed to our data layers: the config properties
+// (which labels show, the light preset, the faded theme in present), the slot names our layers use, and the
+// style switch with a snapshot crossfade so swapping between Standard and Standard Satellite never shows a
+// black frame. Imports config.js and motion.js. Called from app.js (boot, setBasemap, applyScene, exit) and
+// the basemap tests, which drive it with a recording map double and an injectable tween.
 // Basemap control: Mapbox Standard config, layer slots, and the snapshot crossfade for style switches.
 // The data reads first: POI and transit labels off, place and road labels on, 3D objects on, and the
 // "faded" theme while presenting so the thematic layers carry the frame (handoff/02_DESIGN_DIRECTION.md).
@@ -15,6 +21,9 @@ const LABEL_CONFIG = {
   showRoadLabels: true,
 };
 
+// ## isStandardStyle, safeStyle, isSatelliteStyle: what kind of style is loaded
+// Mapbox Standard is delivered as a style that imports a basemap fragment, which is what makes it
+// configurable through setConfigProperty. Classic styles have no imports and reject config calls.
 export function isStandardStyle(style) { return !!(style && style.imports && style.imports.length); }
 
 // getStyle() THROWS "Style is not done loading" in GL JS v3 when the style has not loaded yet
@@ -30,8 +39,12 @@ function isSatelliteStyle(style) {
   return !!(style && style.name && /satellite/i.test(style.name));
 }
 
+// ## setConfig: one Standard config write
+// Mapbox concept: Standard exposes a small set of named config properties on its "basemap" import (label
+// groups, lightPreset, theme, show3dObjects). Setting one restyles the whole basemap without a style reload.
 function setConfig(map, key, value) { map.setConfigProperty("basemap", key, value); }
 
+// ## configureStandard: the design's basemap settings
 // Applies the design's Standard config. No-op on non Standard styles (classic styles, or a map
 // whose style has not loaded yet). lightPreset comes from the caller ("dusk" present, "day" explore).
 export function configureStandard(map, { lightPreset, presenting } = {}) {
@@ -45,12 +58,16 @@ export function configureStandard(map, { lightPreset, presenting } = {}) {
   }
 }
 
+// ## setLightPreset: "day" in explore, "dusk" in most present scenes
+// The light preset changes the basemap's lighting and sky. Our data layers use emissive strength so the
+// orange ramp keeps its color under the dusk light.
 export function setLightPreset(map, preset) {
   const style = safeStyle(map);
   if (!isStandardStyle(style) || !preset) return;
   setConfig(map, "lightPreset", preset);
 }
 
+// ## slotFor: which Standard slot a layer kind belongs in
 // Slots into the Standard style: wards under roads, heat above roads behind 3D buildings,
 // everything else above POI labels (cheatsheet section 2).
 export function slotFor(layerKind) {
@@ -59,6 +76,12 @@ export function slotFor(layerKind) {
   return "top";
 }
 
+// ## switchBasemap: setStyle with a crossfade
+// setStyle throws away every source and layer, downloads the new style and fires style.load. The sequence
+// here: photograph the canvas into an <img> over the map, call setStyle, on style.load re-apply the config and
+// run onReady (app.js adds the layers back through its own style.load handler), then fade the photo away
+// once the map is idle or after a bounded wait. A style that errors or throws resolves at once so callers
+// awaiting the promise never hang.
 // Style switch without a black frame: freeze the current canvas into an overlay img, swap the
 // style under it, re-apply config and hand control to onReady after style.load, then fade the
 // overlay away once the map is idle. The snapshot needs preserveDrawingBuffer: true on the Map
@@ -123,6 +146,7 @@ export function switchBasemap(map, next, { lightPreset, presenting, onReady, twe
   });
 }
 
+// ## tuneBasemap: the older label tuning, kept for tests
 // --- Legacy API (Wave 0). app.js and tests/layers.test.js still call tuneBasemap; the lead
 // rewires them to configureStandard/switchBasemap in Wave 2. Kept so neighbors keep working.
 const HIDE_SOURCE_LAYERS = new Set(["poi_label", "transit_stop_label", "airport_label", "natural_label", "natural_point_label", "natural_line_label", "water_point_label", "water_line_label", "housenum_label"]);

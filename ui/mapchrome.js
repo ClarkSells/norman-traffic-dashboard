@@ -1,9 +1,14 @@
+// ## WHAT THIS FILE DOES
+// The small map furniture: a scale bar (Mapbox ScaleControl), a north button that appears once the map is
+// rotated, and a recenter button that appears once the center leaves the city bounds. All of it hides in
+// present mode. Imports nothing. Called from app.js (initMapChrome, setPresenting) and the mapchrome tests.
 // Map chrome: scale control bottom left, a north arrow that appears once the bearing leaves 0,
 // and a recenter button that appears when the center leaves the city bounds. Everything hides in
 // present mode (setPresenting(true) also removes the scale control; exiting restores it).
 //
 // ScaleControl comes from mapboxgl in the browser; tests inject the class via options. When neither
 // exists (the e2e stub has no ScaleControl) the scale is skipped and the rest still works.
+// ## initMapChrome
 export function initMapChrome(map, { northEl, recenterEl, cityBounds, ScaleControl, scaleOptions } = {}) {
   let presenting = false;
 
@@ -23,6 +28,7 @@ export function initMapChrome(map, { northEl, recenterEl, cityBounds, ScaleContr
     return lng >= west && lng <= east && lat >= south && lat <= north;
   };
 
+  // ## refresh: on every move or rotate, decide which buttons show
   const refresh = () => {
     if (presenting) return;
     const bearing = map.getBearing ? map.getBearing() : 0;

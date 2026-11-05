@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// A development only node script that writes made up Simulate data in the exact shape of CONTRACTS.md C.13
+// to C.16 (forecast fields on every segment, closure_impacts.json, daytypes.json, horizon.json) so the app
+// could be built before the pipeline produced the real files. The real files now ship in data/, so this is
+// kept for tests and for working on the Simulate UI against a known shape. Imports node:fs, node:path,
+// node:url. The stamp_sample test exercises the exported pure functions.
 // Stamps SAMPLE Simulate data onto data/segments.geojson and writes data/closure_impacts.json,
 // data/daytypes.json and data/horizon.json per CONTRACTS.md C.13 to C.16, so the dashboard can be
 // built before the pipeline (another repo) produces the real files.
@@ -15,6 +21,7 @@ import { fileURLToPath } from "node:url";
 
 export const BANNER = "SAMPLE DATA, not pipeline output";
 
+// ## DAYTYPE_FACTORS and GAMEDAY: the sample assumptions
 // Day type factors relative to the school year Friday count (night build spec section 3.3).
 export const DAYTYPE_FACTORS = {
   school_fri: { factor: 1.0, source: "the count itself" },
@@ -40,6 +47,7 @@ export const GAMEDAY = {
 const CAMPUS = [-97.4440, 35.2058];
 const CURRENT_YEAR = 2025, MAX_YEAR = 2050, K = 2, CLIP = [-0.03, 0.06];
 
+// ## Deterministic randomness: the same loc_id always stamps the same values
 // ---- deterministic randomness -------------------------------------------------------------------
 export function seedFrom(text) {
   let h = 2166136261;
@@ -54,6 +62,7 @@ const r4 = (v) => (v == null ? null : Math.round(v * 1e4) / 1e4);
 const r1 = (v) => (v == null ? null : Math.round(v * 10) / 10);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
+// ## Geometry helpers
 // ---- geometry helpers ------------------------------------------------------------------------------
 export function distKm(a, b) {
   const R = 6371, toRad = (d) => (d * Math.PI) / 180;
@@ -68,6 +77,7 @@ export function pathLengthMi(path) {
   return km * 0.621371;
 }
 
+// ## Growth, horizon and the upgrade ladder
 // ---- growth and horizon (mirrors src/forecast in the pipeline, with made up inputs) --------------
 export function projectVpd(vpd, volumeYear, g, year) { return vpd * (1 + g) ** (year - volumeYear); }
 
@@ -90,6 +100,7 @@ export function upgradeTier(lanes, divided, oneWay) {
 }
 const TIER_CAPACITY = { "5 lane center turn": 36000, "4 lane divided": 38000, "6 lane divided": 58000 };
 
+// ## stampSegment: every C.13 field for one segment
 export function stampSegment(p) {
   const rand = rng(seedFrom(p.loc_id));
   const nObs = [1, 2, 2, 3, 3, 4][Math.floor(rand() * 6)];
@@ -146,6 +157,7 @@ export function stampSegment(p) {
   return out;
 }
 
+// ## stampClosures, stampDaytypes, stampHorizon: the three side files
 // Closure of X: one to three nearby counted segments carry its whole volume (the pipeline puts the volume on the
 // shortest detour path; here the path threads the detour segments' midpoints between X's end nodes).
 export function stampClosures(features) {
@@ -192,6 +204,7 @@ export function stampHorizon(features) {
   return { params: { k: K, clip: CLIP, years: [2025, 2030, 2035], thresholds: [0.7, 0.9] }, backtest: { n: 93, mape: 0.14, by_class: byClass }, growth_sensitivity: sensitivity };
 }
 
+// ## stampAll and main
 export function stampAll(fc) {
   const features = fc.features.map(f => {
     const stamped = stampSegment({ ...f.properties, __coords: f.geometry.coordinates });

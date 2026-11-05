@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// The Simulate section of the panel (CONTRACTS.md C.14 and C.17): day type, projection year with a Play
+// button, growth lever, growth band, the Close a segment switch, the assumption line, the sample notice and
+// Reset. Controls write state.js; syncSimulate reflects state back on every render. The year player steps
+// state.year on a timer. Imports data.js, state.js and ui/panel.js (rangeFill). Called from app.js
+// (initSimulate, syncSimulate, closureArmed, playYears, stopYears, setSampleNotice) and the simulate tests.
 // Simulate section of the panel (CONTRACTS C.14, C.17): day type, projection year with Play, growth lever,
 // growth band, the "Close a segment" switch, the assumption line and Reset. Every control writes state.js;
 // syncSimulate reflects state back (hash restores, scenes, reset). The year player steps one year per
@@ -11,6 +17,7 @@ const BANDS = ["lo", "base", "hi"];
 
 const n = (v, d = 0) => Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 
+// ## assumptionText: the sentence under the controls, from daytypes.json
 // The one line under the controls: the active day type's factor and where it comes from, read from
 // daytypes.json (C.16). Pure. Without the file it says so instead of inventing a factor.
 export function assumptionText(daytype, daytypes) {
@@ -33,6 +40,7 @@ export function assumptionText(daytype, daytypes) {
   return `${label}: ${parts.join(", ")}.`;
 }
 
+// ## Segmented controls, same pattern as ui/panel.js
 // Shared segmented behaviour, mirrored from ui/panel.js (one pressed button, data-<dataKey> carries the value
 // that lands in state[stateKey]).
 function wireSegmented(id, dataKey, stateKey, parse) {
@@ -58,11 +66,15 @@ function syncSegmented(id, dataKey, value) {
 
 const clampYear = (y) => Math.min(SIM_YEARS[1], Math.max(SIM_YEARS[0], Math.round(Number(y) || SIM_YEARS[0])));
 
+// ## Module state: the armed switch, the running player, the loaded daytypes and injected timers
 let armed = false;          // the "Close a segment" switch: the next map click closes a segment
 let stopPlay = null;        // cancel for the running year player
 let daytypesJson = null;
 let timers = {};
 
+// ## closureArmed and setClosureArmed
+// The switch itself is not in state.js; only the resulting closing loc_id is. app.js asks closureArmed on
+// every segment click to decide between closing the segment and opening the popup.
 // True while the switch is on: app.js routes segment clicks to state.closing instead of the popup.
 export function closureArmed() { return armed; }
 export function setClosureArmed(on) {
@@ -72,6 +84,9 @@ export function setClosureArmed(on) {
   if (!armed && getState().closing) setState({ closing: null });
 }
 
+// ## playYears and stopYears: the year player
+// Each tick writes state.year, which runs the whole render loop (map repaint, table, legend), so one tick per
+// 900 ms is the pace the map can follow. The run out scene calls playYears after its camera arrives.
 // Steps state.year one year per 900 ms up to 2035 and pauses there. Pressing play at 2035 restarts from 2025.
 // Under reduced motion the year jumps straight to 2035. Returns stop(); stopping clears simPlaying.
 export function playYears({ reduced, setTimeout: st, clearTimeout: ct } = {}) {
@@ -107,6 +122,7 @@ export function playYears({ reduced, setTimeout: st, clearTimeout: ct } = {}) {
 }
 export function stopYears() { if (stopPlay) { const s = stopPlay; stopPlay = null; s(); } }
 
+// ## resetScenario
 // Back to the default scenario: nothing projected, nothing closed, the switch off, the player stopped.
 export function resetScenario() {
   stopYears();
@@ -114,6 +130,7 @@ export function resetScenario() {
   setState({ ...SIM_DEFAULT, simPlaying: false });
 }
 
+// ## initSimulate: wire the controls once at startup
 // opts: { daytypes: parsed daytypes.json or null, timers: { setTimeout, clearTimeout } for tests }
 export function initSimulate(opts = {}) {
   daytypesJson = opts.daytypes || null;
@@ -147,12 +164,14 @@ export function initSimulate(opts = {}) {
   syncSimulate(getState());
 }
 
+// ## setSampleNotice
 // Marks the section when the scenario data is the stamped sample (data/SAMPLE_DATA.txt exists).
 export function setSampleNotice(on) {
   const el = document.getElementById("sim-sample");
   if (el) el.hidden = !on;
 }
 
+// ## syncSimulate: state to the controls, on every render
 // Reflects state into the controls. The closure switch reads on while a segment is closed, even after a hash restore.
 export function syncSimulate(state) {
   syncSegmented("daytype-toggle", "daytype", state.daytype || SIM_DEFAULT.daytype);

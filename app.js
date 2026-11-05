@@ -1,3 +1,10 @@
+// ## WHAT THIS FILE DOES
+// The entry point and the only file that knows about everything else. It creates the Mapbox map, loads the
+// data, adds every layer, wires every UI module, subscribes the render loop to the state store, and runs
+// present mode (scenes, camera, player). It imports config, data, state, theme, camera, geo, scenes, hash,
+// every layers/*.js and every ui/*.js. Nothing imports app.js; index.html loads it as the one module script.
+// Read it top to bottom: boot, map creation, the flow loop, addAllLayers, the explore camera, present mode,
+// render (the one function the state store calls), then main (the startup sequence).
 import { CITY_BOUNDS, CENTER, FLOW, MAPBOX_TOKEN, PRESETS, STYLES, ZOOM } from "./config.js";
 import { applyState, deriveProps, getRaw, loadAll } from "./data.js";
 import { configureStandard, setLightPreset, switchBasemap } from "./layers/basemap.js";
@@ -29,6 +36,11 @@ import { closureArmed, initSimulate, playYears, setSampleNotice, stopYears, sync
 import { addClosureLayers, setClosure, setClosureTheme } from "./layers/closure.js";
 import { addGamedayLayers, setGamedayTheme, setGamedayVisible, startGamedayFlow } from "./layers/gameday.js";
 
+// ## Boot, before the map exists
+// The loading card goes up first so the user sees something while the style and the data download. The
+// reduced motion preference is read once from the OS and stored in state so every animation can check it.
+// applyTheme writes the light palette onto <html> as CSS custom properties; applyMode("explore") sets
+// data-mode so tokens.css knows which chrome to show.
 initLoading();   // loading card over the map until the layers are on it
 setStage("map");
 const reduceMotion = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -36,11 +48,21 @@ setState({ reducedMotion: reduceMotion });
 applyTheme(themeFor(getState().basemap));
 applyMode("explore");
 
+// ## applyMapTheme: one call that recolors every layer module
+// Each layers/*.js module keeps its own copy of the theme for the paint it owns (casings, halos, labels).
+// This fans one theme name out to all of them, so a basemap switch or a present exit repaints the map
+// chrome in one line.
 // The chrome theme and the map chrome (casings, ward lines, labels) move together.
 function applyMapTheme(name) {
   setSegmentsTheme(map, name); setWardsTheme(map, name); setPointsTheme(map, name); setClosureTheme(map, name); setGamedayTheme(map, name);
 }
 
+// ## Map creation and the built in controls
+// One Mapbox GL JS v3 map, started on the Standard style at the city center. Mapbox concept: a "style" is
+// the basemap recipe (sources, layers, lights, fog); our own data layers are added on top of it after it
+// loads. preserveDrawingBuffer keeps the last frame readable so switchBasemap can photograph the canvas.
+// The controls (zoom, fullscreen, geolocate) are Mapbox UI widgets, added only on desktop and removed in
+// present mode so the film has no chrome.
 mapboxgl.accessToken = MAPBOX_TOKEN;
 // preserveDrawingBuffer lets switchBasemap snapshot the canvas for the crossfade (no black frame).
 const map = new mapboxgl.Map({ container: "map", style: STYLES.light, center: CENTER, zoom: ZOOM, preserveDrawingBuffer: true });
@@ -66,9 +88,16 @@ if (secure && typeof navigator !== "undefined" && "geolocation" in navigator && 
   });
 }
 
+// ## Layout keeper and map chrome
+// initLayout watches the map element and calls map.resize() whenever its box changes (panel collapse, bottom
+// sheet, present mode). Without it the WebGL canvas would stay at the old size and the map would go blank.
+// initMapChrome owns the north arrow, the recenter button and the scale bar.
 const layout = initLayout(map, { layoutEl: document.getElementById("layout"), mapEl: document.getElementById("map") });
 const mapchrome = initMapChrome(map, { northEl: document.getElementById("map-north"), recenterEl: document.getElementById("map-recenter"), cityBounds: CITY_BOUNDS });
 
+// ## Readiness flags shared by the whole file
+// styleReady and dataReady gate addAllLayers. presenting and currentScene tell every handler whether the
+// film is running so explore only behavior (hover tooltip, popup, ward fly) stays quiet during a scene.
 // The style and the data load in parallel. Whichever finishes last adds the layers (style.load
 // also fires after every setStyle, which is how layers survive a basemap switch).
 let styleReady = false;
@@ -76,6 +105,11 @@ let dataReady = false;
 let presenting = false;
 let currentScene = null;
 
+// ## Traffic flow loop
+// The flow layers (layers/flow.js) are three dashed line layers whose dash pattern steps forward on a timer,
+// which reads as moving traffic. flowStepMs decides how fast each band steps: it buckets every segment by
+// vehicles per day (FLOW.bands), takes the median v/c of each bucket, and maps that to a step interval, so
+// congested bands crawl and free flowing bands run. startFlowLoop and stopFlowLoop own the one running loop.
 // --- Traffic flow loop (design section 7): one rAF loop, per-band speed from the median v/c ----
 let stopFlow = null;
 function flowStepMs(data) {
@@ -103,6 +137,15 @@ function stopFlowLoop({ keepVisible = false } = {}) {
   if (!keepVisible) setFlowVisible(map, false);
 }
 
+// ## addAllLayers: put every data layer on the map, in order, in the right slots
+// Called when both the style and the data are ready, and again after every style switch (setStyle wipes all
+// custom layers, then fires style.load, which calls this again). Mapbox concepts used here:
+//   source: a named dataset the map holds (our GeoJSON files).
+//   layer: a drawing of one source (line, fill, circle, heatmap, symbol) with layout and paint properties.
+//   slot: a named position inside the Standard style ("bottom" under roads, "middle" under buildings,
+//         "top" above labels) so our layers interleave with the basemap instead of sitting on top of it.
+// Order matters within a slot: later addLayer calls draw on top, and moveLayer places flow under the
+// selection frame. After the layers exist the update functions paint them for the current state.
 function addAllLayers() {
   if (!styleReady || !dataReady) return;
   if (map.getLayer("segments-line")) return;   // already added for this style
@@ -135,10 +178,17 @@ function addAllLayers() {
   setTimeout(markReady, 4000);
 }
 
+// ## Style events
+// style.load fires once at boot and once after every setStyle; both paths run addAllLayers. A map error
+// before the first style load means the token or the network failed, so the loading card becomes an error.
 map.on("style.load", () => { styleReady = true; setStage("segments"); addAllLayers(); });
 // A style that never arrives (bad token, blocked host) would otherwise leave a blank map behind the loading card.
 map.on("error", (e) => { if (!styleReady) showLoadError((e && e.error) || new Error("the map style did not load")); });
 
+// ## Explore camera
+// The camera is the map's viewpoint: center, zoom, pitch (tilt) and bearing (rotation). In explore mode the
+// moves are simple: dolly to a segment on select, fit a ward on ward change, and a plain flyTo home on reset.
+// camera.js owns the math; these wrappers just look up the feature and pass the explore padding.
 // --- Explore camera --------------------------------------------------------------
 const EXPLORE_PAD = { top: 96, right: 96, bottom: 96, left: 96 };
 
@@ -160,6 +210,9 @@ function flyToWard(ward) {
   dimOutsideWard(map, f);   // crashes outside the ward sink to 25 percent (C8)
 }
 
+// ## Module level handles
+// Objects created in main() that handlers elsewhere in this file need: the popup, the tour player, the help
+// box, and the cancel functions for in flight scene effects so a scene change can stop the previous one.
 let popup = null;
 let tour = null;          // the Present mode player
 let panelToggle = null;   // setter from initPanelToggle
@@ -167,6 +220,11 @@ let helpBox = null;       // { close } from initHelp
 let cancelReveal = null;  // in-flight crash reveal cancel
 let cancelSceneSpin = null; // in-flight orbit/drift cancel
 
+// ## setBasemap: the explore mode style switch
+// "light" is Mapbox Standard, "satellite" is Standard Satellite. A style switch replaces the whole basemap,
+// which also wipes our layers; switchBasemap (layers/basemap.js) covers the gap with a snapshot crossfade and
+// resolves once the new style is loaded and faded in. The state write comes after, so render() sees the new
+// basemap only when the map already shows it, and applyMapTheme recolors the chrome for the dark scene.
 async function setBasemap(next) {
   if (getState().basemap === next) return;
   applyTheme(themeFor(next));
@@ -175,6 +233,7 @@ async function setBasemap(next) {
   applyMapTheme(themeFor(next));
 }
 
+// ## applyClosure: draw the closed segment and its detour
 // Closure mode (C.14): the closed segment and its detour path from closure_impacts.json. The detour segments
 // repaint through updateSegments (projected v/c carries the added volume), so only the two overlays live here.
 function applyClosure(state) {
@@ -183,6 +242,7 @@ function applyClosure(state) {
   setClosure(map, f || null, f && impacts ? impacts[state.closing] : null);
 }
 
+// ## applyGameday: show or hide the stadium routes and run their dash
 // Game day (C.16): the routed stadium traffic and its origins show only on that day type; the dash runs
 // unless the user prefers reduced motion. Stops on exit, on hidden tabs (inside the loop) and on any other day type.
 let stopGameday = null;
@@ -193,6 +253,7 @@ function applyGameday(state) {
   if (on && !state.reducedMotion) stopGameday = startGamedayFlow(map);
 }
 
+// ## closureIntercept: the popup asks this before opening
 // A segment click while the Close a segment switch is on closes that segment (a second click reopens it).
 function closureIntercept(locId) {
   if (presenting || !closureArmed()) return false;
@@ -200,6 +261,9 @@ function closureIntercept(locId) {
   return true;
 }
 
+// ## selectSegment and resetView: the two explore actions behind most clicks
+// Selecting writes selectedLocId (render then highlights the row and the line), flies the camera and opens
+// the popup. Reset clears the ward and the selection and flies home.
 function selectSegment(locId, { fly = true, openPopup = true } = {}) {
   setState({ selectedLocId: locId });
   if (fly) flyToSegment(locId);
@@ -213,7 +277,13 @@ function resetView() {
   map.flyTo({ center: CENTER, zoom: ZOOM, pitch: 0, bearing: 0, duration: getState().reducedMotion ? 0 : 900 });
 }
 
+// ## Present mode
+// A scripted walkthrough of 17 scenes (scenes.js). Each scene is pure data: a full dashboard state, a basemap
+// and light preset, a camera move, layer flags (flow, heat, dots, callouts, pulse, ward mask) and motion
+// (orbit or drift). The tour player (ui/tour.js) decides which scene is current and calls applyScene; the
+// chrome (ui/present.js) renders the caption card. The functions below turn a scene object into map calls.
 // --- Present mode ----------------------------------------------------------------
+// ## calloutItems: scene loc ids to labeled points for the callout layer
 // Callout items from a scene's loc id list: the segment's own citywide rank and road from the data,
 // its midpoint for the anchor point. Scene 13 overrides the text with its lanes/VPD callout.
 function calloutItems(scene) {
@@ -229,6 +299,9 @@ function calloutItems(scene) {
   }).filter(Boolean);
 }
 
+// ## applySceneLayers: the layer side of a scene
+// Segment opacity, heat fade, which crash dots show, callouts, and the ward mask (a veil over everything
+// outside one ward). Kept separate from applyScene so addAllLayers can replay it after a style switch.
 // Everything a scene does to the layers (no camera, no state). Also used to re-apply a scene after a style swap.
 function applySceneLayers(scene) {
   const reduced = getState().reducedMotion;
@@ -243,6 +316,12 @@ function applySceneLayers(scene) {
   if (map.getLayer("wards-label")) map.setLayoutProperty("wards-label", "visibility", L.mask != null ? "visible" : "none");
 }
 
+// ## applyScene: the full sequence for one scene
+// Order: cancel whatever the previous scene left running, switch basemap or light preset, write the scene's
+// full state (render() repaints the layers and the panel), apply the layer flags, fly the camera with
+// padding that keeps the subject clear of the caption card, wait for arrival, then start the emphasis
+// (pulse, crash reveal, flow, year player, orbit or drift). If another scene was applied while the camera
+// was still flying, the currentScene check bails out so two scenes never fight over the map.
 // One scene: state, basemap, layers, camera, then the after-arrival emphasis (pulse, crash reveal, orbit).
 async function applyScene(scene, prev) {
   const reduced = getState().reducedMotion;
@@ -283,11 +362,16 @@ async function applyScene(scene, prev) {
   else if (scene.motion.driftDeg) cancelSceneSpin = drift(map, scene.motion.driftDeg, ms, { reduced });
 }
 
+// ## User input during a scene
 // Interruptions: wheel, drag or pinch cancels the orbit/drift but keeps the scene (design section 6).
 for (const ev of ["mousedown", "wheel", "touchstart"]) {
   map.on(ev, () => { if (presenting && cancelSceneSpin) { cancelSceneSpin(); cancelSceneSpin = null; } });
 }
 
+// ## onEnterPresent and onExitPresent: the mode boundary
+// Entering hides the panel and the map controls, puts <html> into present mode for the CSS, and moves focus
+// into the present region. Exiting undoes all of it, clears every scene effect, restores the saved explore
+// state and camera (the snapshot taken when the tour started), and rewrites the URL hash without tour=.
 function onEnterPresent() {
   presenting = true;
   if (popup) popup.remove();
@@ -346,6 +430,13 @@ function onExitPresent(saved) {
   }
 }
 
+// ## render: the one subscriber of the state store
+// Every setState call lands here with the full state and the patch that changed. The order is: recompute the
+// derived data (applyState), push it into the map layers (updateSegments writes feature state, updateWards
+// and updateCollisions set filters and paint), redraw the legend, the table, the controls and the Simulate
+// section, then react to specific keys in the patch (closure overlay, game day routes, ward fly, heat fade,
+// flow loop, popup refresh) and finally mirror the state into the URL hash. In present mode the scene owns
+// the camera and the overlays, so the explore reactions are skipped and only the hash is written.
 function render(state, patch) {
   const data = applyState(state);
   updateSegments(map, state, data);
@@ -371,6 +462,11 @@ function render(state, patch) {
   writeHash(state, null);
 }
 
+// ## main: the startup sequence
+// Load the data (with progress), build the controls, add the layers, attach the popup, help, panel toggle and
+// bottom sheet, expose window.__dash for the Playwright checks, build the scenes and the tour player, then
+// subscribe render and restore the deep link from the URL hash. Everything after subscribe(render) is event
+// wiring: hashchange, reset, empty table action, map hover and click, basemap toggle.
 async function main() {
   await loadAll(setProgress);
   dataReady = true;
@@ -410,6 +506,9 @@ async function main() {
   if (patch.ward != null) flyToWard(patch.ward);
   if (patch.selectedLocId) { flyToSegment(patch.selectedLocId); if (popup) popup.open(patch.selectedLocId); }
   if (tourIndex != null) tour.dispatch({ type: "enter", total: scenes.length, saved: snapshot(), index: tourIndex });
+  // ## hashchange: the URL is a second set of controls
+  // Pasting or editing the hash while the page is open applies it: tour=N enters or moves the tour, no tour
+  // key exits it, and any other keys patch the explore state.
   window.addEventListener("hashchange", () => {
     const { patch: p0, tour: t } = readHash();
     const p = clampPatchYears(p0);
@@ -440,6 +539,9 @@ async function main() {
   document.getElementById("basemap-toggle").addEventListener("click", () => setBasemap(getState().basemap === "light" ? "satellite" : "light"));
 }
 
+// ## Fatal errors
+// A failed fetch or a thrown error during startup turns the loading card into an error card with a reload
+// button, and the briefing line says what failed.
 main().catch(err => {
   console.error(err);
   showLoadError(err);

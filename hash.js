@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// Deep links. The URL hash (the part after #) mirrors the dashboard state so a view can be copied and pasted:
+// ward, metric, LOS, year window, collectors, selected segment, basemap, the Simulate keys, and tour=N for a
+// present scene. stateToHash and hashToPatch are pure and unit tested; readHash and writeHash touch the
+// browser. Imports nothing. Called from app.js (render writes it after every state change, main reads it at
+// boot and on hashchange) and from the tests.
 // URL hash <-> UI state. #ward=2&metric=combined&los=E&years=2021-2025&sel=52500-158&tour=10
 // Simulate keys (C.14) are short and written only when they leave the default scenario:
 // dt=school_wkday&yr=2031&grow=1&band=hi&close=52500-158
@@ -7,6 +13,9 @@ const BANDS = new Set(["lo", "base", "hi"]);
 const GROWTH_ADDS = [0, 0.01, 0.02];
 export const YEAR_RANGE = [2025, 2035];
 
+// ## stateToHash: state to a "#key=value&key=value" string
+// Default values are left out where possible so the common hash stays short; metric, los and years are always
+// written so a pasted link is explicit about what it shows.
 export function stateToHash(state, tourStep) {
   const q = [];
   if (state.ward != null) q.push(`ward=${state.ward}`);
@@ -25,6 +34,9 @@ export function stateToHash(state, tourStep) {
   return "#" + q.join("&");
 }
 
+// ## hashToPatch: parse a hash into a state patch, validating every value
+// A hash is user input, so every value is checked against the allowed set (ward 1 to 8, known metrics, a
+// four digit year pair, a loc id pattern) before it lands in the patch. Bad values are dropped silently.
 // Returns {patch, tour} where patch holds only the valid keys found. Unknown or malformed values are ignored.
 export function hashToPatch(hash) {
   const patch = {}; let tour = null;
@@ -49,6 +61,7 @@ export function hashToPatch(hash) {
   return { patch, tour };
 }
 
+// ## readHash and writeHash: the browser side
 export function readHash() { return typeof location !== "undefined" ? hashToPatch(location.hash) : { patch: {}, tour: null }; }
 
 // replaceState keeps the history clean while the controls change; the hash is still copyable at any moment.

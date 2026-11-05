@@ -1,9 +1,16 @@
+// ## WHAT THIS FILE DOES
+// The 3D site view opened from a popup's View site button: a full screen overlay with a three.js render of
+// the intersection mesh (sites/<id>/mesh.glb) and CSS2D labels from sites/<id>/site.json, or, when no mesh
+// exists, a Mapbox aerial fly in with the same labels as markers. It builds its own DOM and styles. three.js
+// is loaded on first open through the import map in index.html. Imports nothing statically. Called from
+// app.js (initSiteView, sitesForLoc, open) and the siteview tests, which inject fetchJson and a fake document.
 // Site view: a 3D capture of an intersection (Aleph mesh.glb) with labels from sites/<id>/site.json, or, when no mesh
 // has been captured yet, a Mapbox aerial fly in with the same labels as markers. One module, injects its own DOM and
 // styles, opened from the segment popup. Three.js is imported on first open only (import map in index.html).
 //
 // initSiteView(map, opts) -> { ready: Promise, sitesForLoc(locId) -> [{ id, name }], open(siteId), close() }
 
+// ## STYLE: the overlay's CSS, injected once
 const STYLE = `
 .siteview{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:var(--surface,#fbfaf7);color:var(--ink,#16150f)}
 .siteview[hidden]{display:none}
@@ -24,10 +31,14 @@ const STYLE = `
 .siteview-label-slot{pointer-events:none}
 `;
 
+// ## DOM helpers
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) { e.className = cls; for (const c of cls.split(/\s+/)) if (c && e.classList) e.classList.add(c); } if (text != null) e.textContent = text; return e; }
 function append(parent, ...kids) { for (const k of kids) parent.appendChild(k); }
 function clear(node) { if (typeof node.replaceChildren === "function") node.replaceChildren(); else for (const c of [...(node.children || [])]) c.remove(); }
 
+// ## initSiteView
+// Fetches sites/index.json right away (the list of captured sites and the loc_ids each covers), builds the
+// overlay lazily on first open, and returns the API app.js and the popup use.
 export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u).then(r => r.ok ? r.json() : Promise.reject(new Error(`${r.status} ${u}`))),
                                     threeBase = "https://cdn.jsdelivr.net/npm/three@0.160.0", doc = document } = {}) {
   let index = {};
@@ -50,10 +61,12 @@ export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u)
     doc.addEventListener("keydown", (e) => { if (e.key === "Escape" && !root.hidden) api.close(); });
   }
 
+  // ## sitesForLoc: which captures mention this segment
   function sitesForLoc(locId) {
     return Object.entries(index).filter(([, s]) => (s.loc_ids || []).includes(locId)).map(([id, s]) => ({ id, name: s.name, hasMesh: !!s.has_mesh }));
   }
 
+  // ## loadThree: dynamic import of three.js and its addons, once
   async function loadThree() {
     if (three) return three;
     const [T, { GLTFLoader }, { OrbitControls }, { CSS2DRenderer, CSS2DObject }] = await Promise.all([
@@ -66,6 +79,7 @@ export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u)
     return three;
   }
 
+  // ## labelEl: one HTML label, stacked by kind so labels at the same point do not overprint
   // CSS2DRenderer owns the outer element's transform, so stacking offsets live on an inner element: labels that share
   // a point (segment, its speed line, its forecast line) step up the screen instead of overprinting.
   const STACK_PX = { segment: 0, speed: -28, forecast: -56, crashes: 72, station: 30, intersection: 0 };
@@ -78,6 +92,10 @@ export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u)
     return outer;
   }
 
+  // ## renderMesh: the three.js scene
+  // A WebGL renderer for the mesh, a CSS2D renderer for the labels, a perspective camera placed by the site
+  // size, orbit controls, two lights, the GLB loaded by GLTFLoader, then a render loop. cleanup tears it all
+  // down so a second open starts clean.
   async function renderMesh(site, siteId) {
     const { T, GLTFLoader, OrbitControls, CSS2DRenderer, CSS2DObject } = await loadThree();
     const w = stage.clientWidth || 800, h = stage.clientHeight || 500;
@@ -109,6 +127,7 @@ export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u)
     note.textContent = `3D capture via Aleph (Google imagery through undocumented endpoints; see the method notes). Drag to orbit, scroll to zoom. Labels are placed from the pipeline's site.json.`;
   }
 
+  // ## renderFallback: no mesh, so the Mapbox map is the stage
   function renderFallback(site) {
     // No mesh yet: the map itself is the stage. Hide the overlay stage, fly the map, pin the labels as markers.
     root.style.background = "transparent"; root.style.pointerEvents = "none";
@@ -127,6 +146,7 @@ export function initSiteView(map, { base = "sites/", fetchJson = (u) => fetch(u)
     cleanup = () => { markers.forEach(m => m.remove()); markers = []; root.style.background = ""; root.style.pointerEvents = ""; stage.style.pointerEvents = ""; };
   }
 
+  // ## The API: ready, sitesForLoc, open(siteId), close()
   const api = {
     ready, sitesForLoc,
     async open(siteId) {

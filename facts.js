@@ -1,9 +1,16 @@
+// ## WHAT THIS FILE DOES
+// Verified constants: the counts, the top five list, the per ward leaders and the public URLs that captions
+// and the loading card may quote. They are copied from the pipeline's QA output and the workbook so the
+// dashboard, the slides and the report say the same numbers. Imports nothing. Imported by scenes.js,
+// ui/loading.js and the scene tests (factTokens lets a test check that every number in a caption is either
+// a listed fact or computed by data.js).
 // Numbers the UI and the tour may quote. Every value here traces to output/qa.json or the workbook
 // (Segments_Master, Collision_Audit). Quote them exactly; never recompute or round differently.
 export const LIVE_URL = "https://clarksells.github.io/norman-traffic-dashboard/";
 export const PRIVATE_REPO = "https://github.com/ClarkSells/norman-traffic-case";
 export const PUBLIC_REPO = "https://github.com/ClarkSells/norman-traffic-dashboard";
 
+// ## FACTS: the headline counts and phrases
 export const FACTS = {
   segments: 204, lanes_verified: 204, shared_boundary: 43, ward_fallback: 4, fallback_geometry: 6,
   collision_rows: 23595, assigned_in_window: 5307, year_min: 2021, year_max: 2025,
@@ -14,6 +21,7 @@ export const FACTS = {
   v_c_max: "0.88",
 };
 
+// ## TOP5: the five segments the present scenes visit, with their formatted figures
 // Citywide top 5 by combined score (combined = crashes + v/c, 2 decimals).
 export const TOP5 = [
   { rank: 1, loc_id: "52500-158", name: "W Main St", span: "26th Dr W to 24th Ave W", v_c: "0.55", crashes: 168, combined: "168.55" },
@@ -23,9 +31,11 @@ export const TOP5 = [
   { rank: 5, loc_id: "52500-178", name: "W Robinson St", span: "36th Ave NW to I-35", v_c: "0.59", crashes: 119, combined: "119.59" },
 ];
 
+// ## WARD_TOP
 // Per ward #1 by combined score.
 export const WARD_TOP = { 1: ["52500-254", "153.75"], 2: ["52500-158", "168.55"], 3: ["52500-178", "119.59"], 4: ["52500-254", "153.75"], 5: ["52500-237", "61.58"], 6: ["52500-261", "148.73"], 7: ["52500-237", "61.58"], 8: ["52500-243", "125.73"] };
 
+// ## factTokens: the set of allowed literal numbers, for the caption test
 // Every numeric token that may appear in a caption without being computed from the data.
 export function factTokens() {
   const out = new Set();

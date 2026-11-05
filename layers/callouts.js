@@ -1,3 +1,7 @@
+// ## WHAT THIS FILE DOES
+// The ranked labels the present scenes place next to segments ("#1  W Main St"). One point source and one
+// symbol layer; showCallouts rewrites the source data, clearCallouts empties it. Imports nothing. Called from
+// app.js (applySceneLayers, onExitPresent) and the callouts tests.
 // Scene callouts (design section 9): a symbol layer that labels ranked segments on the map.
 // One empty point source and one symbol layer, added once per style load; scenes rewrite the
 // source data with showCallouts and empty it with clearCallouts. Contract C.8.
@@ -7,6 +11,7 @@ export const CALLOUT_LAYER = "callouts";
 
 const EMPTY = { type: "FeatureCollection", features: [] };
 
+// ## calloutAnchor: which side of the point the text sits on
 // The label sits beside the line, so the text-anchor rotates with the segment bearing:
 // a N-S line (bearing near 0 or 180) takes a side anchor, an E-W line takes top or bottom.
 // "left"/"right" mean the text grows away from the point to the east/west; "bottom"/"top"
@@ -19,6 +24,9 @@ export function calloutAnchor(bearingDeg) {
   return "left";
 }
 
+// ## addCalloutLayer: the symbol layer
+// Mapbox concept: a symbol layer draws text or icons at points. text-field reads a property, text-anchor
+// places the text relative to the point, and the overlap flags opt out of Mapbox's label collision pass.
 // The one place the map draws our own type; everything else is HTML. The halo defaults to the
 // explore light paper (--paper #f6f4ee); the caller may restyle text-color/halo for present dusk
 // via setPaintProperty on CALLOUT_LAYER. text-emissive-strength 1 keeps the labels readable under
@@ -50,6 +58,7 @@ export function addCalloutLayer(map) {
   });
 }
 
+// ## showCallouts and clearCallouts
 // items: [{ locId, text, rank, lngLat, bearing }] — text already formatted ("#1  W Main St").
 // Replaces the source data; the anchor is derived per item so each label sits beside its line.
 export function showCallouts(map, items) {

@@ -1,13 +1,19 @@
+// ## WHAT THIS FILE DOES
+// The council ward polygons: a fill that tints only the selected ward, the boundary lines, and the "Ward N"
+// labels at client computed centroids. Imports config.js (ward colors), geo.js (centroids), theme.js and
+// motion.js. Called from app.js (addAllLayers, render, applyMapTheme) and the layers tests.
 import { WARD_COLORS } from "../config.js";
 import { wardCentroids } from "../geo.js";
 import { THEMES } from "../theme.js";
 import { DUR } from "../motion.js";
 
+// ## fillColor: a ["match"] expression from Ward_num to the ward palette
 const fillColor = ["match", ["get", "Ward_num"], ...Object.entries(WARD_COLORS).flatMap(([k, v]) => [Number(k), v]), "#cccccc"];
 // Paint transitions are module constants that nothing else zeroes, so they are built from the reduced motion flag.
 const transitionFor = (reducedMotion) => ({ duration: reducedMotion ? 0 : DUR.mid });
 let theme = THEMES.light;
 
+// ## setWardsTheme
 export function setWardsTheme(map, name) {
   theme = THEMES[name] || THEMES.light;
   if (!map || !map.getLayer || !map.getLayer("wards-line")) return;
@@ -16,6 +22,8 @@ export function setWardsTheme(map, name) {
   map.setPaintProperty("wards-label", "text-halo-color", theme["ward-halo"]);
 }
 
+// ## addWardsLayer: two sources, three layers
+// Slots: the fill and line go in "bottom" (under the roads), the labels in "top" (above everything).
 export function addWardsLayer(map, wards, { reducedMotion = false } = {}) {
   const T = transitionFor(reducedMotion);
   if (!map.getSource("wards")) map.addSource("wards", { type: "geojson", data: wards });
@@ -33,11 +41,13 @@ export function addWardsLayer(map, wards, { reducedMotion = false } = {}) {
     paint: { "text-color": theme["ward-label"], "text-halo-color": theme["ward-halo"], "text-halo-width": 1.4, "text-opacity": 1, "text-opacity-transition": T } });
 }
 
+// ## The small pure helpers render uses, exported so the tests can check them
 export function fillOpacityFor(ward) { return ward == null ? 0 : 0.08; }
 export function labelOpacityFor(ward) { return ward == null ? 1 : 0.55; }
 export function wardFilterFor(ward) { return ["==", ["get", "Ward_num"], ward == null ? -1 : ward]; }
 export function labelFilterFor(ward) { return ward == null ? ["!=", ["get", "Ward_num"], -1] : ["!=", ["get", "Ward_num"], ward]; }
 
+// ## updateWards: on every render, tint the selected ward and fade the other labels
 export function updateWards(map, state) {
   if (!map.getLayer("wards-fill")) return;
   map.setFilter("wards-fill", wardFilterFor(state.ward));

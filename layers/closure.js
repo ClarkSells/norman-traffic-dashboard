@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// The two overlays of closure mode in the Simulate section: the closed segment drawn as a dim dashed line and
+// the detour polyline from closure_impacts.json drawn as an ink line with a casing. The detour segments' new
+// v/c comes through data.js and the normal segment paint, not from here. Imports config.js, theme.js and
+// layers/segments.js (widthExpression). Called from app.js (addAllLayers, applyClosure, applyMapTheme) and
+// the closure tests.
 // Closure mode (CONTRACTS C.14, C.15, C.17): the closed segment drawn dashed and dim on its own layer, and the
 // detour path from closure_impacts.json drawn as an ink line above the segments. The detour segments themselves
 // are repainted through the scenario math in data.js (feature-state v_c), not here. Two empty sources are added
@@ -12,6 +18,7 @@ export const CLOSURE_LAYERS = ["closure-closed", "closure-path-casing", "closure
 const BEFORE_ID = "segments-selected-casing";   // under the selection frame, above segments-line and the flow
 const EMPTY = { type: "FeatureCollection", features: [] };
 
+// ## setClosureTheme
 let theme = THEMES.light;
 export function setClosureTheme(map, name) {
   theme = THEMES[name] || THEMES.light;
@@ -20,12 +27,14 @@ export function setClosureTheme(map, name) {
   map.setPaintProperty("closure-path-casing", "line-color", theme["map-casing"]);
 }
 
+// ## pathFeature
 // The detour polyline as a one feature collection; empty when the pipeline found no path.
 export function pathFeature(impact) {
   if (!impact || impact.no_path || !Array.isArray(impact.path) || impact.path.length < 2) return EMPTY;
   return { type: "FeatureCollection", features: [{ type: "Feature", properties: { detour_len_mi: impact.detour_len_mi, ratio: impact.ratio, flagged: !!impact.flagged }, geometry: { type: "LineString", coordinates: impact.path } }] };
 }
 
+// ## addClosureLayers: two empty sources and three layers, inserted under the selection frame
 export function addClosureLayers(map) {
   if (!map.getSource(CLOSED_SOURCE)) map.addSource(CLOSED_SOURCE, { type: "geojson", data: EMPTY });
   if (!map.getSource(PATH_SOURCE)) map.addSource(PATH_SOURCE, { type: "geojson", data: EMPTY });
@@ -48,6 +57,7 @@ export function addClosureLayers(map) {
   }
 }
 
+// ## setClosure: rewrite both sources for the current closing state
 // closedFeature: the segment feature from segments.geojson (null clears); impact: its closure_impacts.json entry.
 export function setClosure(map, closedFeature, impact) {
   const closed = map.getSource && map.getSource(CLOSED_SOURCE);

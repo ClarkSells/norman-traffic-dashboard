@@ -1,5 +1,10 @@
+// ## WHAT THIS FILE DOES
+// The count locations (where the traffic counters stood) as small circles that appear past zoom 13 and grow
+// on hover. Clicking one opens the same popup as its segment (wired in ui/popup.js). Imports theme.js.
+// Called from app.js (addAllLayers, hover handlers, applyMapTheme).
 import { THEMES } from "../theme.js";
 
+// ## setPointsTheme
 let theme = THEMES.light;
 export function setPointsTheme(map, name) {
   theme = THEMES[name] || THEMES.light;
@@ -10,6 +15,7 @@ export function setPointsTheme(map, name) {
 
 const HOVER = ["boolean", ["feature-state", "hover"], false];
 
+// ## addPointsLayer
 // Count locations: small markers hidden until zoom 13, growing on hover.
 export function addPointsLayer(map, points) {
   if (!map.getSource("points")) map.addSource("points", { type: "geojson", data: points, promoteId: "loc_id" });
@@ -22,6 +28,7 @@ export function addPointsLayer(map, points) {
              "circle-stroke-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 13.6, 1] } });
 }
 
+// ## setPointHover: hover feature state, like segments.js setHover
 let hovered = null;
 export function setPointHover(map, locId) {
   if (!map.getSource || !map.getSource("points")) return;

@@ -1,6 +1,15 @@
+// ## WHAT THIS FILE DOES
+// Everything about the data, with no Mapbox and no DOM. It fetches the GeoJSON and JSON files (loadAll), holds
+// the parsed result (getRaw), and owns every number the dashboard computes from state: v/c at the chosen LOS,
+// crashes in the year window, the combined score, the Simulate scenario math, ranks and headline summaries.
+// Imports only config.js. Imported by app.js, scenes.js, ui/panel.js, ui/popup.js, ui/tooltip.js,
+// ui/legend.js, ui/simulate.js and the tests (which inject data through setRaw instead of fetching).
 import { DATA } from "./config.js";
 
 const ARTERIAL = new Set(["Principal Arterial", "Minor Arterial"]);
+// ## The raw store
+// Parsed files live here after loadAll. segments, collisions, wards, points and summary are required; the
+// three Simulate files may be null when the pipeline has not produced them.
 let raw = { segments: null, collisions: null, wards: null, points: null, summary: null, closures: null, daytypes: null, horizon: null };
 
 // Simulate files (C.15, C.16). config.js DATA holds the five base files; these three are optional: a missing one
@@ -15,6 +24,7 @@ export const DAYTYPE_WORD = { school_fri: "school Friday", school_wkday: "school
 export const BAND_LABEL = { lo: "Low", base: "Base", hi: "High" };
 export const BAND_WORD = { lo: "low band", base: "base band", hi: "high band" };
 
+// ## readWithProgress: stream a fetch body so the progress bar can move
 // Reads a response body counting bytes. onBytes(loaded, total) is called as chunks arrive; total is null when the
 // server sent no Content-Length. Falls back to res.text() when streaming is not available.
 export async function readWithProgress(res, onBytes) {
@@ -32,6 +42,7 @@ export async function readWithProgress(res, onBytes) {
   return new TextDecoder().decode(all);
 }
 
+// ## combineProgress: one number for several parallel downloads
 // Combined progress across files: {loaded, total, ratio} where total and ratio are null when any file lacks a length.
 export function combineProgress(perFile) {
   let loaded = 0, total = 0, known = true;
@@ -39,6 +50,10 @@ export function combineProgress(perFile) {
   return { loaded, total: known ? total : null, ratio: known && total > 0 ? Math.min(1, loaded / total) : null };
 }
 
+// ## loadAll: fetch everything, required files strictly and Simulate files leniently
+// The five base files must load or the whole startup fails (app.js shows the error card). The three Simulate
+// files are fetched in a try block and a 404 just leaves the slot null, so the base dashboard works on a
+// data folder without them.
 // Fetches the five data files in parallel. onProgress({loaded, total, ratio}) fires as bytes arrive.
 export async function loadAll(onProgress) {
   const perFile = {};
@@ -61,11 +76,17 @@ export async function loadAll(onProgress) {
   return raw;
 }
 
+// ## getRaw and setRaw
+// getRaw hands out the live object (the files are large, copying would be wasteful; callers treat it as
+// read only). setRaw is the test seam: node tests load a fixture and inject it here.
 export function getRaw() { return raw; }
 
 // Test seam: lets node tests inject already-parsed data without fetch().
 export function setRaw(obj) { raw = obj; }
 
+// ## years and yearExtent: what the year slider may span
+// years() is the analysis window from summary.json. yearExtent() widens it to any year that appears in a
+// segment's collisions_by_year, so the slider can show older crash years when the data carries them.
 export function years() { return raw.summary && raw.summary.years ? raw.summary.years : [2021, 2022, 2023, 2024, 2025]; }
 
 // Every year that appears in any segment's collisions_by_year, so the year slider can widen past the default window.
@@ -79,8 +100,14 @@ export function yearExtent() {
   return { min: arr[0], max: arr[arr.length - 1] };
 }
 
+// ## Simulate scenario math
+// The Simulate section lets the user project each segment's count forward (year, growth band, growth lever),
+// pick a day type, and close one segment. Every function below is pure: it takes a segment's properties and
+// the state and returns a number or a string. deriveProps calls them so the map paint, the table, the popup
+// and the legend all agree. When the scenario is the default, every result equals today's number exactly.
 // ---- Simulate (CONTRACTS C.14): scenario math, pure ---------------------------------------------------------
 
+// ## isDefaultScenario
 // The default scenario (school Friday count, 2025, no growth lever, base band, nothing closed) leaves every
 // number exactly as the base dashboard computes it. A state without the simulate keys counts as default.
 export function isDefaultScenario(state) {
@@ -91,6 +118,9 @@ export function isDefaultScenario(state) {
     && !state.closing;
 }
 
+// ## growthRate: the annual rate used for the projection
+// The pipeline fits growth_lo, growth_base and growth_hi per segment (a low, central and high band). The
+// state picks the band and may add a citywide lever of 1 or 2 percentage points on top.
 // g = growth_<band> + growthAdd. An unknown band rate falls back to the base rate, then to 0 (the count is carried
 // flat and only the lever applies), so a segment without a fitted growth still projects.
 export function growthRate(p, state) {
@@ -101,6 +131,7 @@ export function growthRate(p, state) {
   return g + (state.growthAdd || 0);
 }
 
+// ## effectiveVpd: the day type volume compounded to the chosen year
 // vpd_eff = dt_<daytype>_vpd * (1 + g) ** (year - volume_year). The count is projected forward from the year it
 // was taken, which can be well before 2025; that is intended. Null when the day type volume is unknown.
 export function effectiveVpd(p, state) {
@@ -113,6 +144,7 @@ export function effectiveVpd(p, state) {
   return base * (1 + growthRate(p, state)) ** (year - from);
 }
 
+// ## closureAdded: extra volume a detour segment carries
 // Volume a detour segment receives from the closed segment, from closure_impacts.json (0 when none or unknown).
 export function closureAdded(locId, closing, impacts) {
   if (!closing || !impacts || !impacts[closing] || !impacts[closing].added_vpd) return 0;
@@ -120,6 +152,7 @@ export function closureAdded(locId, closing, impacts) {
   return v == null ? 0 : v;
 }
 
+// ## effectiveVc: projected volume over capacity
 // vc_eff = (vpd_eff + added_vpd[closing][loc]) / capacity_<los>; the closed segment itself reads 0.
 export function effectiveVc(p, state, closureImpacts) {
   const cap = state.los === "C" ? p.capacity_C : p.capacity_E;
@@ -130,6 +163,9 @@ export function effectiveVc(p, state, closureImpacts) {
   return (vpd + closureAdded(p.loc_id, state.closing, closureImpacts)) / cap;
 }
 
+// ## segmentProps: fast lookup of a segment's properties by loc_id
+// Builds a Map the first time it is asked (and again if the segments collection object changes), so the
+// closure math can look up detour segments without scanning 204 features each time.
 let segIndex = { fc: null, map: new Map() };
 export function segmentProps(locId) {
   const fc = raw.segments;
@@ -138,6 +174,7 @@ export function segmentProps(locId) {
   return segIndex.map.get(locId) || null;
 }
 
+// ## scenarioText and vcLabel: the words every label uses for the active scenario
 // "2031, base band, school weekday" plus ", plus 1 percent per year" and ", W Main St closed" when they apply.
 // Empty for the default scenario. Built from state only, so every label on screen agrees.
 export function scenarioText(state) {
@@ -155,6 +192,9 @@ export function vcLabel(state) {
   return t ? `projected v/c, ${t}` : "v/c";
 }
 
+// ## closureImpact: the detour table for the closed segment
+// For each detour segment named in closure_impacts.json it computes v/c with and without the closure under
+// the same scenario, so the delta is the closure alone. The briefing line, the popup and scene 14 read this.
 // Everything the closure UI says about the closed segment: the detour rows sorted by the v/c increase, the top
 // one, and the pipeline's flags. Null when nothing is closed or the segment is unknown.
 export function closureImpact(state) {
@@ -180,6 +220,7 @@ export function closureImpact(state) {
            detour_len_mi: impact ? impact.detour_len_mi : null, ratio: impact ? impact.ratio : null };
 }
 
+// ## gamedayText
 // The briefing sentence for game day, from daytypes.json alone (C.16). Fields the file lacks are left out.
 export function gamedayText(daytypes) {
   const g = daytypes && daytypes.gameday;
@@ -193,11 +234,18 @@ export function gamedayText(daytypes) {
   return `OU game day: ${parts.length ? parts.join(", ") : "assumption"}`;
 }
 
+// ## countOver
 // How many listed segments sit at or above a v/c threshold under the state (the scene stat and the briefing).
 export function countOver(state, threshold) {
   return rankedRows(state).filter(r => r.v_c_active != null && r.v_c_active >= threshold).length;
 }
 
+// ## deriveProps: the heart of the dashboard
+// Takes one segment's stored properties plus the state and returns the derived properties everything else
+// reads: v_c_active (at the chosen LOS, projected under a scenario), collisions_active (crashes inside the
+// year window, summed from collisions_by_year), combined_active (crashes plus v/c, the brief's formula),
+// metric_value (whichever metric is selected), in_ward and is_primary flags for filtering, and the closure
+// bookkeeping. The map copies these into feature state, the table reads them as row fields.
 // Recompute the state-dependent numbers for one segment feature. Pure function, no Mapbox involved.
 // Under a scenario (C.14) the projected v/c replaces v_c in the paint and the table; the default scenario
 // reproduces the base dashboard exactly.
@@ -228,12 +276,19 @@ export function deriveProps(p, state) {
   return out;
 }
 
+// ## applyState: deriveProps for every segment
+// Returns a new FeatureCollection whose properties are the stored ones merged with the derived ones. app.js
+// computes this once per render and hands it to updateSegments and the flow speed calculation.
 // A fresh GeoJSON with derived properties merged in, ready for map.getSource("segments").setData(...)
 export function applyState(state) {
   const feats = raw.segments.features.map(f => ({ ...f, properties: { ...f.properties, ...deriveProps(f.properties, state) } }));
   return { type: "FeatureCollection", features: feats };
 }
 
+// ## rankedRows: the list in the panel
+// Filter to the ward and the functional classes in play, sort by the active metric with v/c and volume as
+// tie breakers, and number the rows. Rank is a property of the list, not of the segment, so it changes with
+// the ward and the metric.
 // Rows for the side table: segments in the selected ward (or all), primary only unless collectors are on, ranked by the active metric.
 export function rankedRows(state) {
   const rows = applyState(state).features
@@ -244,6 +299,7 @@ export function rankedRows(state) {
   return rows;
 }
 
+// ## rankWithin: the two rank lines the popup shows
 // Rank of one segment inside its ward list and inside the citywide list, under the current state.
 // Ward rank uses the segment's primary ward unless the state has a ward selected that contains it.
 export function rankWithin(state, locId) {
@@ -257,6 +313,7 @@ export function rankWithin(state, locId) {
   return { ward, wardRank: w ? w.rank : null, wardOf: inWard.length, cityRank: c ? c.rank : null, cityOf: city.length, listed: !!c };
 }
 
+// ## summarize: the stat tiles and the briefing numbers, from rankedRows
 // Headline numbers for the stat tiles and the briefing sentence.
 export function summarize(state) {
   const rows = rankedRows(state);

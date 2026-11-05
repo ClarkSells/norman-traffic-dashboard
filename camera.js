@@ -1,3 +1,10 @@
+// ## WHAT THIS FILE DOES
+// Every camera move the dashboard makes, as functions of a map and a feature. The Mapbox camera is the
+// viewpoint: center (lng, lat), zoom, pitch (tilt in degrees, 0 is straight down) and bearing (rotation,
+// 0 is north up). Mapbox offers jumpTo (instant), easeTo (linear time) and flyTo (a zoom out and in arc).
+// This file wraps them with the design's padding rule, the pitch and bearing per move, the reduced motion
+// jump, and the orbit and drift loops. Imports geo.js. Called from app.js (explore and present), and the
+// camera tests drive it with a recording map double.
 // The four camera moves (design section 6): establish, dolly to segment, fit ward, aerial,
 // plus the orbit/drift loops, the caption aware padding rule and the segment length zoom rule.
 // Every move jumps (jumpTo) under reduced motion. Orbit and drift run on injectable now/raf/caf
@@ -6,6 +13,7 @@ import { bearingAcrossScreen, lineBounds, lineMidpoint, metersBetween } from "./
 
 const METERS_PER_MILE = 1609.344;
 
+// ## zoomForLengthMi
 // Zoom by segment length (design section 6): short segments read deeper.
 export function zoomForLengthMi(mi) {
   if (mi < 0.25) return 16.6;
@@ -13,6 +21,10 @@ export function zoomForLengthMi(mi) {
   return 15.7;
 }
 
+// ## presentationPadding: keep the subject clear of the caption card
+// Padding is the number of screen pixels on each side that the camera should treat as covered. In present
+// mode the caption card sits at the left (desktop) or bottom (phone), so the padding reserves that space and
+// the subject lands in the uncovered area, which this file calls the stage.
 // Design padding rule: the caption card gets out of the way on desktop; on phones the
 // bottom sheet reserve is 40vh + 24. captionBox is the card's bounding rect, null in explore.
 export function presentationPadding(viewport, captionBox) {
@@ -23,6 +35,8 @@ export function presentationPadding(viewport, captionBox) {
   return { top: 96, right: 64, bottom: (captionBox ? captionBox.height : 0) + 64, left: (captionBox ? captionBox.width : 0) + 64 };
 }
 
+// ## Bounds helpers
+// A bounds is [[west, south], [east, north]]. These walk any nesting depth of coordinates.
 // Bounds of any GeoJSON geometry (geo.js only ships lineBounds); walks nested coordinate arrays.
 function extendCoord(b, c) {
   if (typeof c[0] === "number") {
@@ -45,12 +59,17 @@ function collectionBounds(fc) {
   return b;
 }
 
+// ## Mercator helpers
+// The map is a Web Mercator projection: longitude maps to x linearly, latitude maps to y through a log of a
+// tangent so the grid stays square. These three functions convert both ways and give the pixel scale at a
+// zoom, which centerForStage needs to turn a pixel offset into a degree offset.
 // Spherical mercator in "degrees" (one unit = one degree of longitude), matching the 512 px
 // world of Mapbox GL JS v3: px per unit at zoom z is 512 * 2^z / 360.
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2)) * 180 / Math.PI;
 const mercYinv = (y) => (Math.atan(Math.exp(y * Math.PI / 180)) * 2 - Math.PI / 2) * 180 / Math.PI;
 const pxPerDeg = (z) => 512 * Math.pow(2, z) / 360;
 
+// ## stageOffset
 // Screen offset of the stage center from the viewport center, from the padding alone
 // (positive x right, positive y down). Symmetric padding gives a zero offset.
 function stageOffset(padding) {
@@ -58,6 +77,10 @@ function stageOffset(padding) {
   return { x: ((p.left || 0) - (p.right || 0)) / 2, y: ((p.top || 0) - (p.bottom || 0)) / 2 };
 }
 
+// ## centerForStage: where to put the camera so the subject lands in the uncovered area
+// The subject is the segment's center. The stage center is offset from the screen center by the padding.
+// To make the subject appear at the stage center the camera center must move the other way, by the same
+// pixels converted to degrees at this zoom, stretched for the pitch and rotated for the bearing.
 // Camera center that projects `subject` onto the stage center at the given zoom/bearing/pitch:
 // invert the flat mercator projection, undo the cos(pitch) vertical compression, un-rotate by
 // the bearing. GL JS v3's cameraForBounds does NOT do this (its padding only shrinks the fit
@@ -73,6 +96,7 @@ function centerForStage(subject, { offset, zoom, bearing, pitch }) {
   return [subject[0] - dx / s, mercYinv(mercY(subject[1]) + dy / s)];
 }
 
+// ## lengthMi
 // Segment length in miles (geo.js has no total length helper; sums metersBetween over the vertices).
 function lengthMi(coords) {
   let m = 0;
@@ -80,6 +104,9 @@ function lengthMi(coords) {
   return m / METERS_PER_MILE;
 }
 
+// ## fitOrJump: fit a bounds, then tilt
+// cameraForBounds asks Mapbox for the center and zoom that fit a bounds inside the padded viewport with
+// no tilt. The pitch is applied in the same easeTo afterwards, which keeps the fit tight.
 // City and ward fits: cameraForBounds gives the flat fit for the padded box; easeTo then applies the
 // scene's pitch. fitBounds with a pitch fits the tilted trapezoid instead, which zooms so far out the
 // city reads as a stamp on the metro map (the first real renderer pass showed the whole OKC metro).
@@ -94,6 +121,7 @@ function fitOrJump(map, bounds, { padding, pitch, bearing, duration: ms, reduced
   else map.easeTo({ ...target, duration: ms });
 }
 
+// ## establishZoom: fill the stage with the city at the scene pitch
 // Establish zoom (3.2-03): the flat fit leaves the city small once the pitch compresses it, and a
 // flat +0.5 bias only fills the frame at 1440x900. Derive the bias from the bounds, the stage and
 // the pitch: project the rotated bounds at the scene pitch (calibrated against the real renderer at
@@ -121,6 +149,7 @@ function establishZoom(map, bounds, { padding, pitch, bearing }) {
   return { center: cam.center, zoom: cam.zoom + Math.log2(scale) };
 }
 
+// ## establish: the citywide view used by the city scenes and the title
 // Establish: the whole city. Union of the ward bounds, pitch 55, bearing -18, 1600 ms.
 // The zoom comes from establishZoom so the ward union fills the stage at every viewport.
 export function establish(map, wardsFc, { padding, pitch = 55, bearing = -18, duration: ms = 1600, reduced } = {}) {
@@ -132,11 +161,16 @@ export function establish(map, wardsFc, { padding, pitch = 55, bearing = -18, du
   else map.easeTo({ ...target, duration: ms });
 }
 
+// ## fitWard: frame one ward polygon
 // Fit ward: the ward polygon framed as a stage, pitch 42, bearing -10, 1800 ms.
 export function fitWard(map, wardFeature, { padding, pitch = 42, bearing = -10, duration: ms = 1800, reduced } = {}) {
   fitOrJump(map, geometryBounds(wardFeature && wardFeature.geometry), { padding, pitch, bearing, duration: ms, reduced });
 }
 
+// ## dolly: the shared segment move behind dollyToSegment and aerial
+// The bearing turns the map so the road runs left to right, the zoom comes from the road length unless the
+// caller fixes it, and the center is shifted so the road sits in the stage. flyTo's curve and speed give the
+// zoom out and back in arc; the promise resolves on moveend so a scene can wait for arrival.
 // Shared dolly mechanics: the segment's bounds center is placed at the stage center (the padded
 // area right of the caption card), then flyTo with the design tuning (curve 1.55, speed 0.85,
 // maxDuration 2600, essential). Resolves on moveend; jumps under reduced.
@@ -157,6 +191,7 @@ function dolly(map, segmentFeature, { padding, zoom, pitch, reduced }) {
   });
 }
 
+// ## dollyToSegment and aerial: the two public segment moves
 // Dolly to segment: pitch 58, the road runs across the screen, zoom from the length rule.
 export function dollyToSegment(map, segmentFeature, { padding, zoom, pitch = 58, reduced } = {}) {
   return dolly(map, segmentFeature, { padding, zoom, pitch, reduced });
@@ -167,6 +202,10 @@ export function aerial(map, segmentFeature, { padding, zoom = 16.8, pitch = 62, 
   return dolly(map, segmentFeature, { padding, zoom, pitch, reduced });
 }
 
+// ## Orbit and drift
+// A slow bearing change over the length of a scene. spin is the shared loop on injectable timers; orbit and
+// drift are the two named uses (a full turn of some degrees, or a gentle few degrees). Every running loop
+// registers its cancel in activeLoops so stopMotion can cut them all.
 // Module level handles for the in flight loops, so stopMotion can cancel them from anywhere.
 const activeLoops = new Set();
 
@@ -207,6 +246,7 @@ export function drift(map, degrees, ms, opts = {}) {
   return spin(map, degrees, ms, opts);
 }
 
+// ## stopMotion: the emergency stop every scene change calls first
 // Cancel every in flight orbit/drift and stop any Mapbox camera animation.
 export function stopMotion(map) {
   for (const cancel of [...activeLoops]) cancel();

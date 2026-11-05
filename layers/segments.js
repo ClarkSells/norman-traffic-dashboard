@@ -1,7 +1,14 @@
+// ## WHAT THIS FILE DOES
+// The street segments themselves: the color ramp by metric, the width by volume and zoom, the casing, the
+// hover and selection feature state, the crossfade between metrics, the pulse on the selected segment, and
+// the ward mask used by the ward scenes. It is the largest layer module because the segments carry the story.
+// Imports config.js (ramp and breaks), theme.js and motion.js. Called from app.js (addAllLayers, render,
+// applySceneLayers), layers/flow.js and layers/closure.js reuse its expressions, and several tests cover it.
 import { BREAKS, RAMP } from "../config.js";
 import { THEMES } from "../theme.js";
 import { DUR, tween, linear } from "../motion.js";
 
+// ## brighten
 // Lighter copy of a hex color for the hover state.
 export function brighten(hex, amount = 0.3) {
   const h = hex.replace("#", "");
@@ -9,14 +16,24 @@ export function brighten(hex, amount = 0.3) {
   return "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
 }
 
+// ## Feature state readers
+// Mapbox concept: feature state is a per feature bag of values the app can write at any time with
+// setFeatureState, without replacing the source data. Paint expressions read it with ["feature-state", key].
+// This module stores hover and selected flags plus the three metric values there, so a metric or LOS change
+// never reparses the GeoJSON.
 const ARTERIAL = ["Principal Arterial", "Minor Arterial"];
 const HOVER = ["boolean", ["feature-state", "hover"], false];
 const SELECTED = ["boolean", ["feature-state", "selected"], false];
 
+// ## metricValue: the expression that reads the active metric from feature state
 // The three metric values live in feature-state (they depend on LOS and the year window); the color expression
 // picks one, so a metric switch is an expression swap that can crossfade while LOS and year changes update in place.
 export function metricValue(metric) { return ["coalesce", ["feature-state", metric], 0]; }
 
+// ## inWardExpression and primaryExpression: the two filters as expressions
+// Mapbox concept: a paint expression is a small JSON program (["case", test, a, b], ["get", prop], ...) that
+// runs on the GPU for every feature. These two return expressions that evaluate true for segments inside the
+// selected ward and for segments in the primary functional classes.
 // Membership of a ward, read from the wards property. GeoJSON array properties may reach an expression as an
 // array or as their JSON text ("[1,4]") depending on the tile path, so both forms are handled.
 export function inWardExpression(ward) {
@@ -32,12 +49,15 @@ export function primaryExpression(includeCollectors) {
   return includeCollectors ? true : ["in", ["get", "functional_class"], ["literal", ARTERIAL]];
 }
 
+// ## colorExpression: the five step ramp
+// ["step", value, color0, break1, color1, ...] picks a ramp color by which break the metric value passes.
 export function colorExpression(metric, bright = false) {
   const b = BREAKS[metric];
   const ramp = bright ? RAMP.map(c => brighten(c)) : RAMP;
   return ["step", metricValue(metric), ramp[0], b[0], ramp[1], b[1], ramp[2], b[2], ramp[3], b[3], ramp[4]];
 }
 
+// ## widthExpression: width by volume, scaled with zoom
 // Width grows with vehicles per day and with zoom, so segments neither vanish at z11 nor flood at z16.
 // extra is a number or a feature expression (a hover case). It is added inside the zoom curve's outputs: Mapbox only
 // accepts ["zoom"] as the input of a top level step or interpolate, so wrapping two zoom curves in a case is refused
@@ -48,6 +68,10 @@ export function widthExpression(extra = 0) {
   return ["interpolate", ["linear"], ["zoom"], 10, byVpd(1.2, 3.2), 12.5, byVpd(2.2, 6.5), 14.5, byVpd(3.5, 10), 16.5, byVpd(5, 15)];
 }
 
+// ## Opacity and color expressions for a state
+// lineOpacityExpression grades segments: selected or hovered fully opaque, in the ward and primary at 0.95,
+// in the ward but a collector at 0.45, everything else at 0.2. The k factor lets the crossfade and the scene
+// opacity scale the whole thing without rebuilding the logic.
 // Line opacity for a state, times a constant factor k (the crossfade handle).
 export function lineOpacityExpression(state, k = 1) {
   const inWard = inWardExpression(state.ward), primary = primaryExpression(state.includeCollectors);
@@ -58,6 +82,7 @@ export function casingOpacityExpression(state, casingOpacity) {
 }
 export function lineColorForState(state) { return ["case", HOVER, colorExpression(state.metric, true), colorExpression(state.metric)]; }
 
+// ## setSegmentsTheme: repaint the casings and halos for a palette
 let theme = THEMES.light;
 export function setSegmentsTheme(map, name) {
   theme = THEMES[name] || THEMES.light;
@@ -69,6 +94,11 @@ export function setSegmentsTheme(map, name) {
   if (lastState) map.setPaintProperty("segments-casing", "line-opacity", casingOpacityExpression(lastState, theme["map-casing-opacity"]));
 }
 
+// ## addSegmentsLayer: the six segment layers
+// Two sources: "segments" (every segment, promoteId makes loc_id the feature id so feature state works) and
+// "segments-selected" (just the chosen one, with lineMetrics so a gradient can run along the line). Layers
+// from bottom to top: casing, selected halo, selected gap ring, the ghost line (holds the old paint during a
+// crossfade), the data line, the shared boundary dashes, and the travelling pulse on top.
 // Paint transitions are module constants that nothing else zeroes, so they are built from the reduced motion flag.
 const transitionFor = (reducedMotion) => ({ duration: reducedMotion ? 0 : DUR.mid });
 
@@ -123,6 +153,9 @@ export function addSegmentsLayer(map, segments, { reducedMotion = false } = {}) 
   lastState = null;
 }
 
+// ## pulseGradient, startPulse, stopPulse: the light that runs along the selection
+// A line gradient is a paint expression keyed on ["line-progress"] (0 at the start of the line, 1 at the
+// end). startPulse rewrites it about 30 times a second with the bright spot moved along.
 // A soft light that travels along the selected segment. p is the head position 0..1; -1 hides the light.
 export function pulseGradient(p) {
   const w = 0.22;
@@ -156,6 +189,7 @@ export function startPulse(map, period = 2400) {
   pulseHandle = requestAnimationFrame(tick);
 }
 
+// ## Module bookkeeping for hover, selection and the last painted state
 let selected = null;
 let hovered = null;
 let lastState = null;
@@ -163,6 +197,7 @@ let cancelFade = null;
 let segmentsCache = null;                                        // the FC passed to addSegmentsLayer
 let selectionFc = { type: "FeatureCollection", features: [] };   // what segments-selected currently holds
 
+// ## setHover
 // Hover feature-state, driven by the table rows and by the map itself. null clears it.
 export function setHover(map, locId) {
   if (!map.getSource || !map.getSource("segments")) return;
@@ -171,6 +206,7 @@ export function setHover(map, locId) {
   hovered = locId;
 }
 
+// ## setSelected
 // Puts the selected feature into its own source and runs the pulse. Under reduced motion the pulse layer is hidden
 // and the ink halo under the class colored line carries the selection on its own.
 export function setSelected(map, feature, { reducedMotion = false } = {}) {
@@ -185,11 +221,17 @@ export function setSelected(map, feature, { reducedMotion = false } = {}) {
   else startPulse(map);
 }
 
+// ## needsCrossfade
 // Did the change call for a crossfade (expression swap) rather than an in-place feature-state update?
 export function needsCrossfade(prev, next) {
   return !!prev && (prev.metric !== next.metric || prev.ward !== next.ward || prev.includeCollectors !== next.includeCollectors);
 }
 
+// ## updateSegments: called on every render
+// Step 1 writes the three metric values into feature state for every segment. Step 2 repaints the line: when
+// the metric, ward or collector flag changed, the ghost layer takes the old expressions and fades out while
+// the data line fades in (a crossfade); otherwise the expressions are swapped in place. Step 3 keeps the
+// casing and boundary opacities in step. Step 4 moves the selected flag and refreshes the selection source.
 // State changes write feature-state instead of replacing the source data, so the 250 KB geojson is parsed and
 // tiled once. data is applyState(state): its derived values are copied into feature-state per feature.
 export function updateSegments(map, state, data) {
@@ -227,6 +269,7 @@ export function updateSegments(map, state, data) {
   lastState = { metric: state.metric, ward: state.ward, includeCollectors: state.includeCollectors };
 }
 
+// ## Scene emphasis: setSegmentsOpacity and pulse
 // ---- Card 1.9: scene emphasis (design section 9) ----
 
 // Applies the crossfade-style opacity scalar k on top of the current state, reusing the same
@@ -280,6 +323,10 @@ export function pulse(map, locIds, { reduced = false, tween: tweenImpl } = {}) {
   return () => { if (typeof cancelTween === "function") cancelTween(); restore(); };
 }
 
+// ## Ward mask
+// A fill polygon covering the city with the chosen ward cut out as a hole, so the ward reads as a lit stage
+// in the ward scenes. The ring helpers keep GeoJSON winding right (outer ring counterclockwise, holes
+// clockwise) so the fill renders the hole correctly.
 // ---- Ward mask: a paper veil over everything outside the ward, so the ward reads as a stage ----
 
 export const WARD_MASK_SOURCE = "ward-mask";
@@ -321,6 +368,7 @@ function wardMaskColor() {
   const mode = el && el.dataset ? el.dataset.mode : null;
   return mode === "present" ? THEMES.present.surface : THEMES.light.surface;
 }
+// ## addWardMask and clearWardMask
 export function addWardMask(map, wardFeature, wardsFc) {
   const bb = unionBbox(wardsFc) || [-180, -85, 180, 85];
   const padX = Math.max((bb[2] - bb[0]) * 0.2, 0.01), padY = Math.max((bb[3] - bb[1]) * 0.2, 0.01);

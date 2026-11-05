@@ -1,3 +1,8 @@
+// ## WHAT THIS FILE DOES
+// The legend pill in the map corner: the metric ramp with its break values, the width key, the boundary dash,
+// the collision dot colors and the heat swatch, with a title that names the metric, the LOS and the year
+// window (and the scenario when one is active). renderLegend rebuilds it on every render; initLegend wires
+// the fold. Imports config.js, theme.js and data.js. Called from app.js and the legend tests.
 // Compact legend: horizontal metric ramp with the break values, a line width key, the dashed boundary key and the collision keys.
 import { BLUE_RAMP, BREAKS, METRIC_LABEL, RAMP } from "../config.js";
 import { COLLISION_COLORS } from "../theme.js";
@@ -7,6 +12,7 @@ export { COLLISION_COLORS };
 function fmt(v, metric) { return metric === "v_c" ? v.toFixed(1) : String(v); }
 
 
+// ## legendTitle
 // Under a Simulate scenario (C.14) the v/c in the ramp is the projected one, and the title says so:
 // "Projected v/c, 2031, base band, school weekday, LOS E, crashes 2021 to 2025".
 export function legendTitle(state) {
@@ -16,6 +22,7 @@ export function legendTitle(state) {
   return `${metric}, LOS ${state.los}, crashes ${state.yearMin} to ${state.yearMax}`;
 }
 
+// ## renderLegend: the full markup, keeping the folded state across renders
 export function renderLegend(el, state) {
   const b = BREAKS[state.metric];
   const collapsed = !!(el.classList && el.classList.contains && el.classList.contains("collapsed"));
@@ -38,6 +45,7 @@ export function renderLegend(el, state) {
     </div>`;
 }
 
+// ## initLegend: the fold toggle
 // The compact legend is a pill: folded it shows the title and the metric swatch row; a click on the
 // title expands the full renderLegend content. `renderLegend` keeps the fold across re-renders by
 // reading the "collapsed" class. Legacy boolean callers (initLegend(el, narrow)) still work.

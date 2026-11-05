@@ -1,3 +1,8 @@
+// ## WHAT THIS FILE DOES
+// The OU game day overlay for the Simulate day type: the routed stadium traffic from daytypes.json as dashed
+// lines from each interchange to the stadium, the origins and the stadium as labeled points, and the dash
+// animation on the routes. Imports layers/flow.js (dashSequence) and theme.js. Called from app.js
+// (addAllLayers, applyGameday, applyMapTheme) and the gameday tests.
 // OU game day overlay (CONTRACTS C.16, C.17): the routed stadium traffic from daytypes.json as thin dashed
 // lines from each interchange to the stadium, the origins as small labeled points. The dash animates with the
 // flow.js ant path cycle on injectable timers; under reduced motion the dash rests. Sources are filled once from
@@ -13,6 +18,7 @@ export const GAMEDAY_STEP_MS = 90;
 const BEFORE_ID = "segments-selected-casing";
 const EMPTY = { type: "FeatureCollection", features: [] };
 
+// ## routesFc and originsFc: daytypes.json to GeoJSON
 // One line per route, width by its share of the stadium traffic.
 export function routesFc(daytypes) {
   const g = daytypes && daytypes.gameday;
@@ -31,6 +37,7 @@ export function originsFc(daytypes) {
   return { type: "FeatureCollection", features: feats };
 }
 
+// ## setGamedayTheme
 let theme = THEMES.light;
 export function setGamedayTheme(map, name) {
   theme = THEMES[name] || THEMES.light;
@@ -42,6 +49,8 @@ export function setGamedayTheme(map, name) {
   map.setPaintProperty("gameday-origin-labels", "text-halo-color", theme.surface);
 }
 
+// ## addGamedayLayers and setGamedayVisible
+// The sources are filled once from daytypes.json; visibility is a layout property toggled per day type.
 export function addGamedayLayers(map, daytypes, { visible = false } = {}) {
   if (!map.getSource(ROUTES_SOURCE)) map.addSource(ROUTES_SOURCE, { type: "geojson", data: routesFc(daytypes) });
   if (!map.getSource(ORIGINS_SOURCE)) map.addSource(ORIGINS_SOURCE, { type: "geojson", data: originsFc(daytypes) });
@@ -72,6 +81,7 @@ export function setGamedayVisible(map, visible) {
   }
 }
 
+// ## startGamedayFlow: the same ant path loop as flow.js, on one layer
 // The dash cycle on the routes: at most one setPaintProperty per 50 ms, nothing while hidden(), stop() cancels.
 // The caller decides about reduced motion (never start it then), as with flow.js.
 export function startGamedayFlow(map, { now, raf, caf, hidden, stepMs = GAMEDAY_STEP_MS } = {}) {

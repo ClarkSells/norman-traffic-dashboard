@@ -1,3 +1,8 @@
+// ## WHAT THIS FILE DOES
+// The loading card over the map and the thin progress bar under the top bar: staged copy while the style and
+// the data load, a determinate bar once bytes arrive, an error card with a reload button if anything fails.
+// Imports facts.js (for the segment count in the copy). Called from app.js (initLoading, setStage,
+// setProgress, hideLoading, showLoadError) and the loading tests.
 // Loading overlay over the map. Shown while the style and the geojson download,
 // hidden once the layers are on the map, turned into an error card if a fetch fails.
 // Copy is staged and calm; the bar is determinate once the first byte arrives.
@@ -11,6 +16,7 @@ const STAGES = {
 
 let stage = "map";
 
+// ## errorMessage
 export function errorMessage(err) {
   const detail = err && err.message ? err.message : String(err || "unknown error");
   return `Could not load the dashboard data. Check your connection and reload the page. Details: ${detail}`;
@@ -18,6 +24,7 @@ export function errorMessage(err) {
 
 function el(id) { return typeof document === "undefined" ? null : document.getElementById(id); }
 
+// ## setStage
 // Sets which stage of the load the card is talking about. Unknown stages are ignored.
 export function setStage(next) {
   if (!STAGES[next]) return;
@@ -25,6 +32,7 @@ export function setStage(next) {
   const text = el("loading-text"); if (text) text.textContent = STAGES[stage];
 }
 
+// ## setProgress and finishProgress
 // Feeds the thin progress bar under the top bar. Indeterminate only before the
 // first byte arrives; afterwards determinate, with the fill tracking the byte
 // ratio when the total is known.
@@ -54,6 +62,7 @@ export function finishProgress() {
   bar.hidden = true;
 }
 
+// ## showLoading, hideLoading, showLoadError
 export function showLoading() {
   const box = el("loading"); if (!box) return;
   box.hidden = false;
@@ -83,6 +92,7 @@ export function showLoadError(err) {
   const bar = el("progress"); if (bar) bar.hidden = true;
 }
 
+// ## initLoading
 // Wire the reload button and show the loading card. Called once, before the fetches start.
 export function initLoading() {
   const btn = el("loading-reload");

@@ -1,19 +1,28 @@
+// ## WHAT THIS FILE DOES
+// The left panel: the briefing title and sentence, the ward, metric and LOS controls, the year range, the
+// collectors switch, the Settings disclosure (heat and flow switches), the stat tiles and the ranked table
+// with keyed rows, keyboard navigation and the FLIP reorder. Controls write state.js; render() in app.js
+// calls renderTable and syncControls on every state change. Imports data.js, state.js, config.js and
+// motion.js. ui/simulate.js reuses rangeFill. Several panel tests cover the pure helpers and the DOM wiring.
 // Left panel: briefing header, controls, stat tiles and the ranked table.
 import { closureImpact, gamedayText, getRaw, scenarioText, summarize, vcLabel, yearExtent, years } from "../data.js";
 import { getState, setState } from "../state.js";
 import { METRIC_LABEL } from "../config.js";
 import { animateNumber, capMoves, flipPlan, measureRows, playFlip } from "../motion.js";
 
+// ## Number formatting
 export function num(v, d = 2) { return v == null ? "n/a" : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
 export function int(v) { return v == null ? "n/a" : Math.round(Number(v)).toLocaleString("en-US"); }
 const ARTERIAL = new Set(["Principal Arterial", "Minor Arterial"]);
 const METRIC_WORD = { combined: "combined score", v_c: "volume to capacity ratio (v/c)", collisions: "crash count" };
 
+// ## briefingTitle
 // "Ward 2" or "All wards"
 export function briefingTitle(state) { return state.ward == null ? "All wards" : `Ward ${state.ward}`; }
 
 const num2 = (v) => num(v, 2);
 
+// ## briefingLine: the sentence under the title
 // One sentence that says what is on screen, e.g. "31 segments, ranked by combined score, crashes 2021 to 2025".
 // Under a Simulate scenario the sentence carries the scenario ("projected v/c, 2031, base band, school weekday")
 // and, with a segment closed, the closure line: the segment with the largest v/c increase, or why there is none.
@@ -33,6 +42,7 @@ export function briefingLine(state, summary) {
   return extra.length ? `${line}. ${extra.join(". ")}` : line;
 }
 
+// ## closureLine: the closure clause of the briefing, from data.js closureImpact
 // "W Main St closed: its 31,886 vpd route onto 12th Ave SE, v/c 0.52 to 0.81, detour 2.1 mi, 1.8 times the segment".
 export function closureLine(state) {
   const ci = closureImpact(state);
@@ -49,6 +59,10 @@ export function closureLine(state) {
   return `${name}: ${parts.join(", ")}`;
 }
 
+// ## Segmented controls: wireSegmented and syncSegmented
+// A segmented control is a row of buttons where one is pressed. wireSegmented listens for a click, reads the
+// value from the button's data attribute and writes it to state; syncSegmented sets the pressed button from
+// a state value (used after hash restores, scenes and reset, when the state changed without a click).
 // Shared behaviour of every segmented control: one pressed button, data-<key> carries the value.
 function wireSegmented(id, key, parse) {
   const box = document.getElementById(id);
@@ -74,6 +88,7 @@ function syncSegmented(id, key, value) {
   });
 }
 
+// ## Year range helpers: clampYears, rangeFill, clampPatchYears
 // Two handle year range. Both inputs share one track; the lower one may not pass the upper one.
 export function clampYears(a, b, lo, hi) {
   a = Math.min(Math.max(a, lo), hi); b = Math.min(Math.max(b, lo), hi);
@@ -92,6 +107,7 @@ export function clampPatchYears(patch) {
   return { ...patch, yearMin: a, yearMax: b };
 }
 
+// ## initControls: wire every explore control once at startup
 export function initControls() {
   wireSegmented("ward-toggle", "ward", v => (v === "" || v == null ? null : Number(v)));
   wireSegmented("metric-toggle", "metric");
@@ -119,6 +135,9 @@ export function initControls() {
   initSettings();
 }
 
+// ## initSettings: the quiet Settings disclosure
+// Moves the LOS, year range and collectors controls from the main control list into the hidden Settings
+// section next to the heat and flow switches, so the panel leads with ward and metric.
 // Climbs from a control's inner element to its .control wrapper so the wrapper can move as one block.
 function controlHost(el) {
   let host = el;
@@ -167,6 +186,7 @@ export function initSettings() {
   return set;
 }
 
+// ## syncControls: state to the controls, called on every render
 // Reflects state into the controls. Used after a hash restore, a tour step or a reset.
 export function syncControls(state) {
   syncSegmented("ward-toggle", "ward", state.ward);
@@ -193,6 +213,7 @@ export function syncControls(state) {
   if (basemap) { basemap.setAttribute("aria-pressed", String(state.basemap === "satellite")); basemap.textContent = state.basemap === "satellite" ? "Streets" : "Satellite"; }
 }
 
+// ## initPanelToggle
 // On narrow screens the list stacks above the map. "Hide list" collapses it so the map gets the full height.
 export function initPanelToggle() {
   const btn = document.getElementById("panel-toggle"), layout = document.getElementById("layout");
@@ -207,6 +228,9 @@ export function initPanelToggle() {
   return set;
 }
 
+// ## Table keyboard: roving tabindex and arrow keys
+// One row at a time holds tabIndex 0 (the tab stop); arrows, Home and End move it and the focus, Enter and
+// Space select. This is the WAI pattern for a list of actionable rows.
 // Enter or Space on a focused row acts like a click. Other keys fall through.
 export function rowKeyActivates(e) { return e.key === "Enter" || e.key === " " || e.key === "Spacebar"; }
 
@@ -235,6 +259,7 @@ function rowKey(e, locId, onRowClick) {
   if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") { e.preventDefault(); moveRowFocus(locId, e.key); }
 }
 
+// ## rowCells: the HTML of one table row
 export function rowCells(r, state, maxScore) {
   const share = maxScore > 0 && r.metric_value != null ? Math.max(0, Math.min(1, r.metric_value / maxScore)) : 0;
   const scoreText = state.metric === "v_c" ? num(r.v_c_active) : state.metric === "collisions" ? int(r.collisions_active) : num(r.combined_active);
@@ -244,6 +269,7 @@ export function rowCells(r, state, maxScore) {
       <td class="num score"><div class="bar" aria-hidden="true"><i style="width:${(share * 100).toFixed(1)}%"></i></div><span>${scoreText}</span></td>`;
 }
 
+// ## emptyMessage
 // Why the list is empty, in words, with a way out.
 export function emptyMessage(state) {
   const where = state.ward == null ? "the city" : `Ward ${state.ward}`;
@@ -251,11 +277,16 @@ export function emptyMessage(state) {
   return { title: `No segments to show in ${where}`, body: "Nothing matches the current filters. Reset the view to return to the citywide list.", action: "Reset view" };
 }
 
+// ## Module bookkeeping: the keyed rows and the roving tab stop
 const rowsByLoc = new Map();
 let hoverLoc = null;
 let rovingLoc = null;      // the row that holds the tab stop (roving tabindex)
 let settingsSet = null;    // initSettings runs once; repeated calls return the same setter
 
+// ## renderTable: the table, the stat tiles and the briefing, on every render
+// Rows are keyed by loc_id and reused, so a re-render only rewrites the cells whose values changed (the sig
+// check) and moves existing <tr> nodes into the new order. Rows that left fade out, new rows fade in, moved
+// rows play a FLIP from motion.js. Then the roving tab stop, the empty state, the stat tiles and the briefing.
 // Renders the ranked table with keyed rows (one <tr> per loc_id is reused across renders so focus and hover survive).
 // hooks: { onHover(locId|null), beforeUpdate(), afterUpdate(added, removed) } are optional.
 export function renderTable(state, onRowClick, hooks = {}) {
@@ -328,6 +359,7 @@ export function renderTable(state, onRowClick, hooks = {}) {
   return rows;
 }
 
+// ## statsLine and renderStats: the stat tiles and the one line summary
 // One mono line under the controls, e.g. "177 segments · 5,121 crashes · top: W Main St".
 // The year window already reads in the briefing line and the year slider label; dropping it here keeps the
 // top street visible inside the 400 px panel (3.3-01). Driven by the same summarize() result as the stat tiles.
@@ -362,6 +394,7 @@ export function renderStats(state, summary, animateNumber) {
   if (line) line.textContent = statsLine(state, summary);
 }
 
+// ## renderBriefing: title, sentence and the document title
 export function renderBriefing(state, summary) {
   const t = document.getElementById("briefing-title"), l = document.getElementById("briefing-line");
   if (t) t.textContent = briefingTitle(state);
@@ -369,6 +402,7 @@ export function renderBriefing(state, summary) {
   if (typeof document !== "undefined" && document.title !== undefined) document.title = `${briefingTitle(state)}, ${METRIC_LABEL[state.metric] || state.metric}: Norman segment priorities`;
 }
 
+// ## highlightRow and rowElement: map hover to table row
 // Map hover -> table: marks the row and scrolls it into view without stealing focus.
 export function highlightRow(locId) {
   if (hoverLoc && hoverLoc !== locId) { const old = rowsByLoc.get(hoverLoc); if (old) old.classList.toggle("hover", false); }

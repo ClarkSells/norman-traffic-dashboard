@@ -1,13 +1,20 @@
+// ## WHAT THIS FILE DOES
+// Small geographic helpers with no Mapbox and no DOM: distances, bearings, bounds, midpoints, centroids and
+// the nearest segment to a point. Coordinates are GeoJSON order, [lng, lat]. Imports nothing. Imported by
+// camera.js (bearing and bounds), app.js (callout anchors and geolocate), layers/wards.js (label centroids)
+// and the geo tests.
 // Small geographic helpers, pure functions, no Mapbox. Coordinates are [lng, lat].
 const R = 6371000;
 const rad = (d) => d * Math.PI / 180;
 
+// ## metersBetween: haversine great circle distance
 export function metersBetween(a, b) {
   const dLat = rad(b[1] - a[1]), dLng = rad(b[0] - a[0]);
   const s = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[1])) * Math.cos(rad(b[1])) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
+// ## polygonCentroid and wardCentroids: where the ward labels go
 // Area weighted centroid of a polygon ring (outer ring only). Falls back to the vertex mean for degenerate rings.
 export function polygonCentroid(ring) {
   let a = 0, cx = 0, cy = 0;
@@ -32,6 +39,10 @@ export function wardCentroids(wards) {
   }) };
 }
 
+// ## bearing, dominantBearing, bearingAcrossScreen: how a road runs
+// bearing is the compass direction between two points. dominantBearing is the road's direction folded into
+// 0..180 so a road read west to east equals the same road read east to west. bearingAcrossScreen converts
+// that into the map bearing that lays the road horizontally, which the dolly camera uses.
 // Compass bearing in degrees (0 north, 90 east) from a to b.
 export function bearing(a, b) {
   const y = Math.sin(rad(b[0] - a[0])) * Math.cos(rad(b[1]));
@@ -54,6 +65,7 @@ export function bearingAcrossScreen(coords) {
   return m;
 }
 
+// ## lineBounds and lineMidpoint
 export function lineBounds(coords) {
   let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
   for (const [x, y] of coords) { w = Math.min(w, x); e = Math.max(e, x); s = Math.min(s, y); n = Math.max(n, y); }
@@ -62,6 +74,7 @@ export function lineBounds(coords) {
 
 export function lineMidpoint(coords) { return coords[Math.floor(coords.length / 2)]; }
 
+// ## metersToLine and nearestSegment: used by the geolocate control
 // Distance in meters from a point to a polyline, using a local equirectangular projection (fine at city scale).
 export function metersToLine(p, coords) {
   const kx = Math.cos(rad(p[1])) * 111320, ky = 110540;

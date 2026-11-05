@@ -1,8 +1,13 @@
+// ## WHAT THIS FILE DOES
+// The "How to read this" overlay in the panel: four cards explaining v/c, LOS, collisions and the combined
+// score in council language, with counts from summary.json. helpHtml is pure; initHelp wires the toggle,
+// the close button, Escape and the focus trap. Imports nothing. Called from app.js and the help tests.
 // "How to read this" overlay: four short cards over the panel, one figure each, plain words for a council audience.
 // Counts come from summary.json (qa block) when present, so they follow a pipeline rerun.
 // The wording tracks docs/report/sections/parts/limits_box.md so the dashboard and the report agree.
 export const FALLBACK_IDS = ["52500-76", "52500-133", "52500-183", "52500-206", "52500-228", "52500-237"];
 
+// ## helpHtml
 export function helpHtml(qa) {
   const q = qa || {};
   const verified = q.segments_lanes_verified != null ? q.segments_lanes_verified : 204;
@@ -31,6 +36,7 @@ export function helpHtml(qa) {
     </div>`;
 }
 
+// ## initHelp
 // Wires the toggle button and the close button. Returns { close, set } so Reset view can shut the overlay.
 export function initHelp(qa) {
   const btn = document.getElementById("help-toggle"), box = document.getElementById("help-box");

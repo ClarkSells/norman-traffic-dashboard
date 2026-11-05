@@ -1,3 +1,8 @@
+// ## WHAT THIS FILE DOES
+// A one off node script that shrinks data/collisions.geojson to the slim shape the dashboard reads (short
+// property keys, rounded coordinates, out of window rows dropped) and writes collisions.meta.json beside it.
+// Run after the pipeline (another repo) refreshes the file. The pure helpers are exported for the slim_data
+// test; main runs only when the file is executed directly. Imports node:fs, node:zlib, node:path, node:url.
 // Slims data/collisions.geojson per CONTRACTS.md C.12 and rewrites it in place.
 //
 //   node scripts/slim-data.mjs
@@ -15,6 +20,7 @@ import { gzipSync } from "node:zlib";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+// ## CAT_CODE and DROP_CATS: the category coding from CONTRACTS.md C.12
 export const CAT_CODE = {
   assigned: "a",
   shared_intersection_resolved: "s",
@@ -26,6 +32,7 @@ export const CAT_CODE = {
 // year_min 2021, year_max 2025). Dropped, not coded.
 export const DROP_CATS = new Set(["outside_year_window"]);
 
+// ## round5 and codeFor
 export function round5(v) {
   const r = Math.round(v * 1e5) / 1e5;
   return r === 0 ? 0 : r; // normalize -0 so serialization stays stable
@@ -43,6 +50,7 @@ function roundCoords(coords) {
   return coords.map((c) => (Array.isArray(c) ? roundCoords(c) : round5(c)));
 }
 
+// ## slimFeature and slimCollection
 // One verbose feature -> one slim feature, or null when the row is dropped.
 // Already slim features are re-emitted with identical shape and key order.
 export function slimFeature(feature) {
@@ -68,6 +76,7 @@ export function slimCollection(fc) {
   return { type: "FeatureCollection", features };
 }
 
+// ## serialize and buildMeta
 // Compact single line JSON: smallest on disk and deterministic, which is what
 // makes the in place rewrite idempotent byte for byte.
 export function serialize(fc) {
@@ -85,6 +94,7 @@ export function buildMeta(fc, bytes, gzipBytes, now = new Date()) {
   };
 }
 
+// ## main: read, slim, write, report
 function main() {
   const root = dirname(dirname(fileURLToPath(import.meta.url)));
   const dataPath = join(root, "data", "collisions.geojson");

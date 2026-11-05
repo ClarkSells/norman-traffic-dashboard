@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// The storyboard of present mode as data. buildScenes(raw) returns the 17 Scene objects (CONTRACTS.md C.2):
+// title, caption, stats, a full dashboard state, basemap and light preset, a camera move, layer flags, motion
+// and autoplay timing. It has no map and no DOM; app.js applyScene turns each object into map calls, ui/tour.js
+// steps through them and ui/present.js renders the captions. Imports config.js, facts.js and data.js. The
+// scene tests check captions quote facts.js and that every scene carries a complete state.
 // The 17 present-mode scenes (0 to 16): the 15 from handoff/02_DESIGN_DIRECTION.md section 10 plus the two
 // Simulate scenes (13 "runout", 14 "closure") after the ward scenes, as pure data (C.2).
 // Captions quote facts.js / tour.js tokens exactly; the ward 2 count and the LOS C crossover list are
@@ -7,6 +13,9 @@ import { SCENE_TIMING } from "./config.js";
 import { FACTS, LIVE_URL, TOP5 } from "./facts.js";
 import { closureImpact, countOver, rankedRows, SIM_DEFAULT, SIM_YEARS } from "./data.js";
 
+// ## BASE, fullState, layers: builders that keep every scene complete
+// A scene must carry a full state (not a patch) so applying it resets everything the previous scene changed.
+// fullState and layers fill in every key with its default so a scene only spells out what differs.
 // Same defaults tour.js BASE uses (the state.js explore defaults), so scene states never drift from explore.
 // The Simulate keys (C.14) ride along at their defaults, so every existing scene shows today's numbers.
 const BASE = { ward: null, metric: "combined", los: "E", yearMin: FACTS.year_min, yearMax: FACTS.year_max, includeCollectors: false, selectedLocId: null, ...SIM_DEFAULT, simPlaying: false };
@@ -24,6 +33,11 @@ function layers({ flow = false, heat = false, dots = "none", callouts = [], puls
   return { flow, heat, dots, callouts, pulse, mask, segmentsOpacity };
 }
 
+// ## buildScenes: compute the scene list from the loaded data
+// The numbers in captions come from facts.js (verified constants) or from the same data.js functions the
+// panel uses (rankedRows, countOver, closureImpact), never from a second calculation. The ward 2 list, the
+// LOS C crossovers, the run out counts and the closure caption are computed up front, then the array below
+// lays out the scenes in order.
 // raw = getRaw(): { segments, wards, collisions, points, summary }. Only segments is read here.
 export function buildScenes(raw) {
   const segs = (raw && raw.segments && raw.segments.features) || [];
@@ -43,6 +57,9 @@ export function buildScenes(raw) {
   const listed = rankedRows(vcState).length;
   const closeId = TOP5[0].loc_id;
   const ci = closureImpact({ ...BASE, closing: closeId });
+  // ## The closure scene caption
+  // Built from closureImpact for the top citywide segment, with graceful wording when closure impacts are
+  // missing or the road graph found no detour.
   const closureCaption = (() => {
     const t = TOP5[0];
     const head = `If ${t.name} closed between ${t.span.replace(" to ", " and ")}`;
@@ -55,6 +72,12 @@ export function buildScenes(raw) {
     return `${head}, ${vol} would route onto ${ci.detours.length} counted segment${ci.detours.length === 1 ? "" : "s"} along the shortest detour.${top}${len}${flag}`;
   })();
 
+  // ## The scene list
+  // Index, kind, and what each scene shows:
+  //   0 title, 1 to 5 citywide (every segment, v/c, crash heat, crashes, combined with the top five),
+  //   6 to 10 one scene per top five segment, 11 and 12 ward 2 and its LOS C change, 13 and 14 the Simulate
+  //   scenes (the year runs out to 2035, then one closure), 15 the satellite lane count story, 16 closing.
+  // kind drives the default autoplay length, camera.kind drives which camera move applySceneLayers uses.
   const scenes = [
     // 0: Title (storyboard copy verbatim, with the section 10 eyebrow and start hint)
     { id: "title", kind: "title", title: "Norman street segment priorities",
@@ -164,6 +187,7 @@ export function buildScenes(raw) {
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
       layers: layers({ dots: "none", segmentsOpacity: 0.5 }) },
   ];
+  // ## Fill in the bookkeeping fields: index, number, total and the default autoplay for the kind
   // eyebrow/hint default to null on every scene but the title (C.2 Wave 4 fields); yearPlay only on the run out scene.
   return scenes.map((s, i) => ({ eyebrow: null, hint: null, yearPlay: null, ...s, index: i, number: i + 1, total: scenes.length, autoplayMs: s.autoplayMs !== undefined ? s.autoplayMs : AUTOPLAY[s.kind] }));
 }

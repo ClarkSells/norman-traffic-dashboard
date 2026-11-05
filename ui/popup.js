@@ -1,3 +1,9 @@
+// ## WHAT THIS FILE DOES
+// The segment popup that opens on a map click or a table row: name, ward chips, the six numbers, the combined
+// score and ranks, the closure line, the Forecast block from the pipeline's projection fields, the caveats,
+// the View site buttons and the aerial link. popupHtml and forecastHtml are pure; attachPopup wires the
+// Mapbox popup to the map's click events. Imports caveats.js, data.js, state.js, config.js and ui/tooltip.js.
+// Called from app.js (attachPopup, popup.open and popup.refresh) and the popup tests.
 // Segment popup: name, ward chips, four numbers with units, crashes in the window, combined score, ranks, caveats.
 import { caveatsFor, FALLBACK_GEOMETRY_IDS } from "../caveats.js";
 import { deriveProps, getRaw, rankWithin } from "../data.js";
@@ -11,6 +17,7 @@ function int(v) { return v == null ? "n/a" : Math.round(Number(v)).toLocaleStrin
 const METHOD_WORD = { loglin: "log linear fit", pairwise: "pairwise", ward_median: "ward median", pooled_ward: "ward pooled rate" };
 const pct = (v, d = 1) => `${Number(v * 100).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })} percent`;
 
+// ## growthText: the growth sentence of the Forecast block
 // "1.3 percent per year, ward pooled rate, 2 counts here, 38 percent weight on the citywide rate, own trend minus 15.7 percent (noisy),
 // band 0.0 to 3.0 percent". For the pooled model the shrink runs toward the citywide rate; older method tags keep the ward median wording.
 export function growthText(p) {
@@ -27,6 +34,9 @@ export function growthText(p) {
   return parts.join(", ");
 }
 
+// ## forecastHtml: the Forecast block
+// Reads the C.13 fields (growth, vc_2035, year_vc_09, upgrade tier, speed) and prints a row for each one the
+// pipeline filled, so a segment with partial data gets a shorter block rather than "n/a" rows.
 // The Forecast block (C.13): rows only for fields the pipeline filled. Empty string when nothing is known.
 export function forecastHtml(p) {
   const rows = [];
@@ -57,6 +67,7 @@ export function forecastHtml(p) {
   return `<div class="forecast"><div class="k">Forecast</div>${rows.map(([k, v]) => `<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("")}</div>`;
 }
 
+// ## sitesHtml and popupHtml: the markup
 // p: raw segment properties merged with deriveProps(); ranks: rankWithin() result or null; state: for the LOS, years and metric labels.
 // sites: [{ id, name, hasMesh }] from siteview.sitesForLoc(locId); renders one "View site" button per capture.
 export function sitesHtml(sites) {
@@ -97,6 +108,7 @@ export function popupHtml(p, ranks, state, sites) {
     ${closure}${forecastHtml(p)}${caveats}${sitesHtml(sites)}${aerial}</div>`;
 }
 
+// ## popupFor: look up the segment, derive its numbers, build the HTML
 // Builds the popup content for a loc_id from the raw data under the current state. Returns null when the id is unknown.
 export function popupFor(locId, state, sites) {
   const f = getRaw().segments.features.find(x => x.properties.loc_id === locId);
@@ -108,6 +120,10 @@ export function popupFor(locId, state, sites) {
   return { html: popupHtml(p, rankWithin(st, locId), st, sites), lngLat: mid, feature: f };
 }
 
+// ## attachPopup: the Mapbox popup and its click wiring
+// Mapbox concept: map.on("click", layerId, handler) fires only when a feature of that layer is under the
+// pointer, with e.features filled in. The popup object gets three extra methods (open, refresh and a loc_id
+// memo) so app.js can open it by id and refresh it when the state changes under an open popup.
 // opts.intercept(locId, lngLat) may claim a segment click (closure mode): when it returns true nothing opens
 // and nothing is selected. opts.sites(locId) lists 3D site captures for the segment and opts.onSite(id) opens one.
 export function attachPopup(map, onSelect, enabled, opts = {}) {
