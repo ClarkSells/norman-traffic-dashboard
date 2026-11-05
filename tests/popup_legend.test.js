@@ -65,13 +65,13 @@ console.log("scenario legend checks passed");
               vc_2035_base: 0.81, vc_2035_lo: 0.74, vc_2035_hi: 0.92, year_vc_09_base: 2031, year_vc_09_lo: 2034, year_vc_09_hi: 2029,
               upgrade_tier: "6 lane divided", upgrade_lanes: 6, upgrade_divided: true, capacity_after: 58000, vc_after_upgrade: 0.61, headroom_yrs: 18,
               speed_measured: 46, speed_diff: 9, speed_flag: true };
-  assert.equal(growthText(f), "2.1 percent per year, pairwise, 2 counts, shrunk 50 percent to ward median, band 1.1 percent to 3.1 percent");
-  assert.equal(growthText({ growth_base: 0.015, growth_method: "ward_median", growth_n_obs: 1, growth_shrink_w: 0 }), "1.5 percent per year, ward median, 1 count");
-  assert.equal(growthText({ growth_base: -0.004, growth_method: "loglin", growth_n_obs: 4, growth_shrink_w: 1 }), "-0.4 percent per year, log linear fit, 4 counts", "no shrink line when the weight is 1");
+  assert.equal(growthText(f), "2.1 percent per year, pairwise, 2 counts here, shrunk 50 percent to ward median, band 1.1 percent to 3.1 percent");
+  assert.equal(growthText({ growth_base: 0.015, growth_method: "ward_median", growth_n_obs: 1, growth_shrink_w: 0 }), "1.5 percent per year, ward median, 1 count here");
+  assert.equal(growthText({ growth_base: -0.004, growth_method: "loglin", growth_n_obs: 4, growth_shrink_w: 1 }), "-0.4 percent per year, log linear fit, 4 counts here", "no shrink line when the weight is 1");
   assert.equal(growthText({ growth_base: null }), null);
   const h = forecastHtml(f);
   assert.ok(h.startsWith('<div class="forecast"><div class="k">Forecast</div>'));
-  assert.ok(h.includes('<span class="k">growth</span><span class="v">2.1 percent per year, pairwise, 2 counts, shrunk 50 percent to ward median, band 1.1 percent to 3.1 percent</span>'));
+  assert.ok(h.includes('<span class="k">growth</span><span class="v">2.1 percent per year, pairwise, 2 counts here, shrunk 50 percent to ward median, band 1.1 percent to 3.1 percent</span>'));
   assert.ok(h.includes('<span class="k">v/c in 2035</span><span class="v">0.81 base, 0.74 to 0.92 across the bands</span>'));
   assert.ok(h.includes('<span class="k">reaches v/c 0.9</span><span class="v">2031 (2029 high band, 2034 low band)</span>'));
   assert.ok(h.includes('<span class="k">upgrade</span><span class="v">6 lane divided, v/c 0.61 in 2035 after, 18 years of headroom</span>'));
@@ -101,4 +101,12 @@ console.log("scenario legend checks passed");
   const full = popupHtml({ loc_id: "52500-1", on_road: "A", from_road: "B", to_road: "C", wards: [1], vpd_max: 1, lanes_final: 2, capacity_E: 17100, v_c_active: 0.1, collisions_active: 1, combined_active: 1.1 }, null, null, [{ id: "site01", name: "A at B", hasMesh: true }]);
   assert.ok(full.includes("site-view"), "popupHtml renders the sites block when given sites");
   console.log("site view popup checks passed");
+}
+
+// Pooled model wording (the pipeline's current method tag): weight on the citywide rate, own trend shown as noisy.
+{
+  const { growthText } = await import("../ui/popup.js");
+  const t = growthText({ growth_base: 0.0129, growth_lo: 0, growth_hi: 0.03, growth_method: "pooled_ward", growth_n_obs: 2, growth_shrink_w: 0.615, growth_raw: -0.157 });
+  assert.equal(t, "1.3 percent per year, ward pooled rate, 2 counts here, 39 percent weight on the citywide rate, own trend -15.7 percent (noisy, not used), band 0.0 percent to 3.0 percent");
+  console.log("pooled growth wording checks passed");
 }

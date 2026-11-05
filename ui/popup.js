@@ -8,19 +8,21 @@ import { closureLine } from "./tooltip.js";
 function num(v, d = 2) { return v == null ? "n/a" : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
 function int(v) { return v == null ? "n/a" : Math.round(Number(v)).toLocaleString("en-US"); }
 
-const METHOD_WORD = { loglin: "log linear fit", pairwise: "pairwise", ward_median: "ward median" };
+const METHOD_WORD = { loglin: "log linear fit", pairwise: "pairwise", ward_median: "ward median", pooled_ward: "ward pooled rate" };
 const pct = (v, d = 1) => `${Number(v * 100).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })} percent`;
 
-// "2.1 percent per year, pairwise, 2 counts, shrunk 50 percent to ward median". Null without a base rate.
+// "1.3 percent per year, ward pooled rate, 2 counts here, 38 percent weight on the citywide rate, own trend minus 15.7 percent (noisy),
+// band 0.0 to 3.0 percent". For the pooled model the shrink runs toward the citywide rate; older method tags keep the ward median wording.
 export function growthText(p) {
   if (p.growth_base == null) return null;
   const parts = [`${pct(p.growth_base)} per year`];
   if (p.growth_method) parts.push(METHOD_WORD[p.growth_method] || p.growth_method);
-  if (p.growth_n_obs != null) parts.push(`${int(p.growth_n_obs)} count${Number(p.growth_n_obs) === 1 ? "" : "s"}`);
+  if (p.growth_n_obs != null) parts.push(`${int(p.growth_n_obs)} count${Number(p.growth_n_obs) === 1 ? "" : "s"} here`);
   if (p.growth_shrink_w != null && p.growth_method !== "ward_median") {
     const toward = Math.round((1 - p.growth_shrink_w) * 100);
-    if (toward > 0) parts.push(`shrunk ${toward} percent to ward median`);
+    if (toward > 0) parts.push(p.growth_method === "pooled_ward" ? `${toward} percent weight on the citywide rate` : `shrunk ${toward} percent to ward median`);
   }
+  if (p.growth_method === "pooled_ward" && p.growth_raw != null) parts.push(`own trend ${pct(p.growth_raw)} (noisy, not used)`);
   if (p.growth_lo != null && p.growth_hi != null) parts.push(`band ${pct(p.growth_lo)} to ${pct(p.growth_hi)}`);
   return parts.join(", ");
 }
