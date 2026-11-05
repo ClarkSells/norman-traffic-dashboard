@@ -358,6 +358,10 @@ function render(state, patch) {
   if (bmBtn) { bmBtn.textContent = state.basemap === "satellite" ? "Streets" : "Satellite"; bmBtn.setAttribute("aria-pressed", String(state.basemap === "satellite")); }
   if (patch && "closing" in patch) applyClosure(state);
   if (patch && ("daytype" in patch || "reducedMotion" in patch)) applyGameday(state);
+  if (presenting && currentScene && currentScene.yearPlay) {   // the live year readout on the run out scene
+    const live = document.querySelector('#present-stats [data-live="year"] .present-stat-value');
+    if (live) live.textContent = String(state.year);
+  }
   if (presenting) { writeHash(state, tour && tour.getState().active ? tour.getState().index : null); return; }
   if (patch && "ward" in patch) flyToWard(state.ward);
   if (patch && "heat" in patch) setHeatVisible(map, state.heat !== false, { fadeMs: state.reducedMotion ? 0 : 600 });

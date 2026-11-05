@@ -176,8 +176,9 @@ assert.equal(runout.kind, "city"); assert.equal(runout.camera.kind, "establish")
 assert.deepEqual(runout.yearPlay, { from: 2025, to: 2035 }, "the year plays across the scene");
 assert.equal(runout.state.band, "base"); assert.equal(runout.state.daytype, "school_fri"); assert.equal(runout.state.year, 2025); assert.equal(runout.state.growthAdd, 0); assert.equal(runout.state.closing, null);
 assert.ok(runout.caption.includes("2025 to 2035") && runout.caption.includes("0.9"), "caption names the range and the threshold");
-assert.equal(runout.stats[1].value, String(countOver({ ...vcState, year: 2035 }, 0.9)), "the stat is the countOver figure, never recomputed");
-assert.equal(runout.stats[0].value, String(countOver(vcState, 0.9)));
+assert.deepEqual(runout.stats[0], { label: "year", value: "2025", live: "year" }, "a live year readout app.js updates while the year plays");
+assert.equal(runout.stats[2].value, String(countOver({ ...vcState, year: 2035 }, 0.9)), "the stat is the countOver figure, never recomputed");
+assert.equal(runout.stats[1].value, String(countOver(vcState, 0.9)));
 assert.equal(runout.autoplayMs, SCENE_TIMING.city);
 assert.equal(closure.kind, "segment"); assert.equal(closure.state.closing, TOP5[0].loc_id, "closes the top citywide segment");
 assert.equal(closure.camera.kind, "segment"); assert.equal(closure.camera.locId, TOP5[0].loc_id); assert.ok(closure.camera.zoom < 15, "zoomed out enough to show the detour");
@@ -185,7 +186,7 @@ assert.equal(closure.state.selectedLocId, null, "the closed segment is not the s
 assert.deepEqual(closure.layers.callouts, [TOP5[0].loc_id]); assert.equal(closure.yearPlay, null); assert.equal(closure.legend, "v_c");
 assert.ok(closure.caption.startsWith(`If ${TOP5[0].name} closed between`), "closure caption");
 assert.equal(closure.stats[0].value, TOP5[0].name);
-if (ci && ci.top) { assert.equal(closure.stats[2].value, ci.top.before.toFixed(2)); assert.equal(closure.stats[3].value, ci.top.after.toFixed(2)); assert.ok(closure.caption.includes(ci.top.on_road)); }
+if (ci && ci.top) { assert.equal(closure.stats[1].value, ci.top.before.toFixed(2)); assert.equal(closure.stats[2].value, ci.top.after.toFixed(2)); assert.ok(closure.stats[1].label.startsWith(ci.top.on_road)); assert.ok(closure.caption.includes(ci.top.on_road)); }
 if (ci && ci.flagged) assert.ok(closure.caption.includes("flags"), "a flagged detour is said so");
 assert.equal(closure.autoplayMs, SCENE_TIMING.segment);
 

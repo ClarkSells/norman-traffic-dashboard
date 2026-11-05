@@ -85,6 +85,7 @@ export function initPresent({ root, reducedMotion, setTimeout: st, clearTimeout:
     for (const s of items) {
       const item = document.createElement("div");
       item.classList.add("present-stat");
+      if (s.live && item.dataset) item.dataset.live = s.live;   // a stat app.js updates while the scene runs (the Simulate year)
       const value = document.createElement("span");
       value.classList.add("present-stat-value");
       value.textContent = s.value;

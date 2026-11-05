@@ -22,12 +22,13 @@ export function briefingLine(state, summary) {
   const parts = [`${n} segment${n === 1 ? "" : "s"}`, `ranked by ${METRIC_WORD[state.metric] || state.metric}`, `crashes ${state.yearMin} to ${state.yearMax}`];
   if (state.los === "C") parts.push("capacity at LOS C");
   if (state.includeCollectors) parts.push("collectors included");
-  const sc = scenarioText(state);
+  const closure = closureLine(state);
+  // The closure sentence names the closed segment itself, so the scenario clause leaves it out.
+  const sc = scenarioText(closure ? { ...state, closing: null } : state);
   if (sc && state.metric !== "collisions") parts.push(`projected v/c, ${sc}`);
   const line = parts.join(", ");
   const extra = [];
   if (state.daytype === "gameday") extra.push(gamedayText(getRaw().daytypes));
-  const closure = closureLine(state);
   if (closure) extra.push(closure);
   return extra.length ? `${line}. ${extra.join(". ")}` : line;
 }
@@ -42,7 +43,7 @@ export function closureLine(state) {
   const vol = ci.closed.vpd_max != null ? `its ${int(ci.closed.vpd_max)} vpd` : "its volume";
   const parts = [];
   if (ci.top) parts.push(`${vol} route onto ${ci.top.on_road}, v/c ${num2(ci.top.before)} to ${num2(ci.top.after)}`);
-  if (ci.detours.length > 1) parts.push(`${ci.detours.length} detour segments in all`);
+  if (ci.detours.length > 1) parts.push(`${ci.detours.length} detour segments`);
   if (ci.detour_len_mi != null) parts.push(`detour ${num(ci.detour_len_mi, 1)} mi${ci.ratio != null ? `, ${num(ci.ratio, 1)} times the segment` : ""}`);
   if (ci.flagged) parts.push("flagged by the pipeline as an implausible detour");
   return `${name}: ${parts.join(", ")}`;

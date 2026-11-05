@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import assert from "node:assert/strict";
 const here = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(here, "..", "app.js"), "utf8");
-for (const imp of ["./config.js", "./data.js", "./layers/collisions.js", "./layers/points.js", "./layers/segments.js", "./layers/wards.js", "./layers/flow.js", "./layers/callouts.js", "./ui/legend.js", "./ui/panel.js", "./ui/popup.js", "./state.js", "./ui/help.js", "./ui/loading.js", "./theme.js", "./layers/basemap.js", "./ui/tooltip.js", "./scenes.js", "./ui/tour.js", "./ui/present.js", "./ui/layout.js", "./ui/mapchrome.js", "./camera.js", "./hash.js", "./ui/sheet.js"]) {
+for (const imp of ["./config.js", "./data.js", "./layers/collisions.js", "./layers/points.js", "./layers/segments.js", "./layers/wards.js", "./layers/flow.js", "./layers/callouts.js", "./ui/legend.js", "./ui/panel.js", "./ui/popup.js", "./state.js", "./ui/help.js", "./ui/loading.js", "./theme.js", "./layers/basemap.js", "./ui/tooltip.js", "./scenes.js", "./ui/tour.js", "./ui/present.js", "./ui/layout.js", "./ui/mapchrome.js", "./camera.js", "./hash.js", "./ui/sheet.js", "./ui/simulate.js", "./layers/closure.js", "./layers/gameday.js"]) {
   assert.ok(src.includes(`from "${imp}"`), `app.js must import ${imp}`);
 }
 assert.ok(!src.includes("./tour.js") && !src.includes("ui/status.js"), "the old tour and the HUD are gone");
@@ -47,4 +47,10 @@ assert.ok(src.includes("initSheet("), "bottom sheet wired");
 assert.ok(src.includes("initLayout(") && src.includes("initMapChrome("), "layout keeper and map chrome wired");
 assert.ok(src.includes('map.on("mousemove", "segments-line"') && src.includes("showTooltip(") && src.includes("setPointHover("), "hover tooltip and point hover");
 assert.ok(src.includes("startFlow(") && src.includes("setHeatVisible(") && src.includes("showCallouts(") && src.includes("addWardMask("), "flow, heat, callouts and the ward mask wired");
+// Simulate (C.14, C.17): controls, closure and game day overlays, the scene year player, all wired through render().
+assert.ok(src.includes("initSimulate(") && src.includes("syncSimulate(state)"), "Simulate section initialised and synced from state");
+assert.ok(src.includes("addClosureLayers(map)") && src.includes("addGamedayLayers(map,"), "closure and game day layers added with the rest");
+assert.ok(src.includes("intercept: closureIntercept"), "segment clicks go to the closure first while the switch is on");
+assert.ok(src.includes("playYears(") && src.includes("stopYears()"), "scene year player started after arrival and stopped on scene change and exit");
+assert.ok(src.includes("setSampleNotice("), "sample data notice");
 console.log("app.js static checks passed");

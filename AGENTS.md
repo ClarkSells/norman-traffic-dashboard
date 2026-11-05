@@ -27,3 +27,8 @@ ACCEPTANCE: <command>  -> PASS | FAIL
 OUTPUT: <last 10 lines>
 NOTES: <contract gaps, DOM ids needed, design constraints hit, anything the lead must wire in Wave 2>
 ```
+
+## Simulate (Phase 2, CONTRACTS C.13 to C.17)
+- Scenario math lives in `data.js` (`isDefaultScenario`, `effectiveVpd`, `effectiveVc`, `closureImpact`, `scenarioText`, `vcLabel`, `countOver`, `gamedayText`); nothing else recomputes a projected number.
+- `ui/simulate.js` owns the Simulate section and the year player; `layers/closure.js` and `layers/gameday.js` own the closure and game day overlays; `scenes.js` carries the two Simulate scenes (13 and 14).
+- `scripts/stamp_sample.mjs` writes SAMPLE scenario data for development only. While `data/SAMPLE_DATA.txt` exists every forecast, day type, closure and speed value is made up; the pipeline (other repo, `phase2/forecast`) overwrites `data/segments.geojson`, `closure_impacts.json`, `daytypes.json` and `horizon.json`. Delete the marker when the real files land. Nothing in the app may depend on a sample-only value.

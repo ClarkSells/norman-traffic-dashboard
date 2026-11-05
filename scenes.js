@@ -136,7 +136,7 @@ export function buildScenes(raw) {
     // 13: When does each corridor run out of road (the year plays 2025 to 2035 at base growth)
     { id: "runout", kind: "city", title: "When does each corridor run out of road",
       caption: `Each count projected forward at its own fitted growth rate, base band, school year Friday. ${overToday} of the ${listed} listed segments sit at or above v/c 0.9 today; ${over2035} do by 2035. Watch the year run from 2025 to 2035.`,
-      stats: [{ label: "at or over 0.9 today", value: String(overToday) }, { label: "at or over 0.9 by 2035", value: String(over2035) }, { label: "growth band", value: "base" }],
+      stats: [{ label: "year", value: String(SIM_YEARS[0]), live: "year" }, { label: "at or over 0.9 today", value: String(overToday) }, { label: "at or over 0.9 by 2035", value: String(over2035) }, { label: "growth band", value: "base" }],
       legend: "v_c", list: null,
       state: fullState("light", { metric: "v_c" }), basemap: "light", lightPreset: "dusk",
       camera: { kind: "establish" }, motion: { orbitDeg: 0, driftDeg: 0 },
@@ -144,7 +144,7 @@ export function buildScenes(raw) {
     // 14: One closure (the top citywide segment closes, its detour draws, the detour segments repaint)
     { id: "closure", kind: "segment", title: "One closure",
       caption: closureCaption,
-      stats: ci && ci.top ? [{ label: "closed", value: TOP5[0].name }, { label: "onto", value: ci.top.on_road }, { label: "v/c before", value: ci.top.before.toFixed(2) }, { label: "v/c after", value: ci.top.after.toFixed(2) }] : [{ label: "closed", value: TOP5[0].name }],
+      stats: ci && ci.top ? [{ label: "closed", value: TOP5[0].name }, { label: `${ci.top.on_road}, v/c before`, value: ci.top.before.toFixed(2) }, { label: "v/c after", value: ci.top.after.toFixed(2) }] : [{ label: "closed", value: TOP5[0].name }],
       legend: "v_c", list: null,
       state: fullState("light", { metric: "v_c", closing: closeId }), basemap: "light", lightPreset: "dusk",
       camera: { kind: "segment", locId: closeId, zoom: 13.6 }, motion: { orbitDeg: 0, driftDeg: 5 },

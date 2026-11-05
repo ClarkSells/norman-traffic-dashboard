@@ -137,7 +137,7 @@ tbody tr:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; 
 .sim-assumption strong { color: var(--ink); font-weight: 500; }
 .sim-sample { margin: 0; font-family: var(--font-num); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
 .sim-sample[hidden] { display: none; }
-th.projected { color: var(--accent); }
+th.projected { color: var(--accent); white-space: normal; line-height: 1.15; max-width: 72px; }
 .map-tooltip .closure { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--hairline); color: var(--ink-muted); font-size: 11px; max-width: 240px; }
 
 /* "How to read this" overlay: four short cards over the panel, one mono figure each */
