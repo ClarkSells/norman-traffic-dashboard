@@ -57,3 +57,36 @@ assert.equal(legendTitle({ ...scen, metric: "collisions" }), "Collisions, LOS E,
 renderLegend(el, scen);
 assert.ok(el.innerHTML.includes("lower projected v/c") && el.innerHTML.includes("higher projected v/c"), "ramp ends say projected under a scenario");
 console.log("scenario legend checks passed");
+
+// Forecast block (C.13): only the fields the pipeline filled, in words.
+{
+  const { forecastHtml, growthText } = await import("../ui/popup.js");
+  const f = { growth_base: 0.021, growth_lo: 0.011, growth_hi: 0.031, growth_method: "pairwise", growth_n_obs: 2, growth_shrink_w: 0.5,
+              vc_2035_base: 0.81, vc_2035_lo: 0.74, vc_2035_hi: 0.92, year_vc_09_base: 2031, year_vc_09_lo: 2034, year_vc_09_hi: 2029,
+              upgrade_tier: "6 lane divided", upgrade_lanes: 6, upgrade_divided: true, capacity_after: 58000, vc_after_upgrade: 0.61, headroom_yrs: 18,
+              speed_measured: 46, speed_diff: 9, speed_flag: true };
+  assert.equal(growthText(f), "2.1 percent per year, pairwise, 2 counts, shrunk 50 percent to ward median, band 1.1 percent to 3.1 percent");
+  assert.equal(growthText({ growth_base: 0.015, growth_method: "ward_median", growth_n_obs: 1, growth_shrink_w: 0 }), "1.5 percent per year, ward median, 1 count");
+  assert.equal(growthText({ growth_base: -0.004, growth_method: "loglin", growth_n_obs: 4, growth_shrink_w: 1 }), "-0.4 percent per year, log linear fit, 4 counts", "no shrink line when the weight is 1");
+  assert.equal(growthText({ growth_base: null }), null);
+  const h = forecastHtml(f);
+  assert.ok(h.startsWith('<div class="forecast"><div class="k">Forecast</div>'));
+  assert.ok(h.includes('<span class="k">growth</span><span class="v">2.1 percent per year, pairwise, 2 counts, shrunk 50 percent to ward median, band 1.1 percent to 3.1 percent</span>'));
+  assert.ok(h.includes('<span class="k">v/c in 2035</span><span class="v">0.81 base, 0.74 to 0.92 across the bands</span>'));
+  assert.ok(h.includes('<span class="k">reaches v/c 0.9</span><span class="v">2031 (2029 high band, 2034 low band)</span>'));
+  assert.ok(h.includes('<span class="k">upgrade</span><span class="v">6 lane divided, v/c 0.61 in 2035 after, 18 years of headroom</span>'));
+  assert.ok(h.includes('<span class="k">speed</span><span class="v">46 mph measured, 9 over the posted limit</span>'));
+  assert.ok(forecastHtml({ ...f, year_vc_09_base: null, year_vc_09_lo: null, year_vc_09_hi: null }).includes("<span class=\"v\">not by 2050</span>"), "null crossing year reads as not by 2050");
+  assert.ok(forecastHtml({ ...f, year_vc_09_base: 2025, year_vc_09_lo: 2027, year_vc_09_hi: null }).includes("already (not by 2050 high band, 2027 low band)"), "2025 means already");
+  assert.ok(forecastHtml({ ...f, upgrade_tier: "at top tier", capacity_after: null, vc_after_upgrade: null, headroom_yrs: null }).includes("already at the top tier of the ACOG table"));
+  assert.ok(forecastHtml({ ...f, headroom_yrs: 25 }).includes("25 or more years of headroom"));
+  assert.ok(!forecastHtml({ ...f, speed_flag: false }).includes("speed"), "no speed line unless flagged");
+  assert.ok(!forecastHtml({ ...f, vc_2035_base: null, vc_2035_lo: null, vc_2035_hi: null }).includes("v/c in 2035"), "null fields are skipped");
+  assert.equal(forecastHtml({ loc_id: "x", vpd_max: 100 }), "", "nothing known, no block");
+  assert.equal(forecastHtml({}), "");
+  assert.ok(!h.includes("—") && !h.includes(" - "));
+  // the block rides inside the popup, and an unstamped segment shows none
+  assert.ok(popupHtml({ ...p, ...f }, null, state).includes('<div class="forecast">'));
+  assert.ok(!popupHtml(p, null, state).includes('class="forecast"'));
+  console.log("forecast block checks passed");
+}

@@ -8,6 +8,53 @@ import { closureLine } from "./tooltip.js";
 function num(v, d = 2) { return v == null ? "n/a" : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
 function int(v) { return v == null ? "n/a" : Math.round(Number(v)).toLocaleString("en-US"); }
 
+const METHOD_WORD = { loglin: "log linear fit", pairwise: "pairwise", ward_median: "ward median" };
+const pct = (v, d = 1) => `${Number(v * 100).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })} percent`;
+
+// "2.1 percent per year, pairwise, 2 counts, shrunk 50 percent to ward median". Null without a base rate.
+export function growthText(p) {
+  if (p.growth_base == null) return null;
+  const parts = [`${pct(p.growth_base)} per year`];
+  if (p.growth_method) parts.push(METHOD_WORD[p.growth_method] || p.growth_method);
+  if (p.growth_n_obs != null) parts.push(`${int(p.growth_n_obs)} count${Number(p.growth_n_obs) === 1 ? "" : "s"}`);
+  if (p.growth_shrink_w != null && p.growth_method !== "ward_median") {
+    const toward = Math.round((1 - p.growth_shrink_w) * 100);
+    if (toward > 0) parts.push(`shrunk ${toward} percent to ward median`);
+  }
+  if (p.growth_lo != null && p.growth_hi != null) parts.push(`band ${pct(p.growth_lo)} to ${pct(p.growth_hi)}`);
+  return parts.join(", ");
+}
+
+// The Forecast block (C.13): rows only for fields the pipeline filled. Empty string when nothing is known.
+export function forecastHtml(p) {
+  const rows = [];
+  const g = growthText(p);
+  if (g) rows.push(["growth", g]);
+  if (p.vc_2035_base != null) {
+    const range = p.vc_2035_lo != null && p.vc_2035_hi != null ? `, ${num(p.vc_2035_lo)} to ${num(p.vc_2035_hi)} across the bands` : "";
+    rows.push(["v/c in 2035", `${num(p.vc_2035_base)} base${range}`]);
+  }
+  if ("year_vc_09_base" in p && (p.year_vc_09_base != null || p.vc_2035_base != null)) {
+    let when = p.year_vc_09_base == null ? "not by 2050" : p.year_vc_09_base <= 2025 ? "already" : String(p.year_vc_09_base);
+    if (p.year_vc_09_hi != null || p.year_vc_09_lo != null) when += ` (${p.year_vc_09_hi != null ? p.year_vc_09_hi : "not by 2050"} high band, ${p.year_vc_09_lo != null ? p.year_vc_09_lo : "not by 2050"} low band)`;
+    rows.push(["reaches v/c 0.9", when]);
+  }
+  if (p.upgrade_tier) {
+    if (p.upgrade_tier === "at top tier") rows.push(["upgrade", "already at the top tier of the ACOG table"]);
+    else {
+      const bits = [p.upgrade_tier];
+      if (p.vc_after_upgrade != null) bits.push(`v/c ${num(p.vc_after_upgrade)} in 2035 after`);
+      if (p.headroom_yrs != null) bits.push(`${Number(p.headroom_yrs) >= 25 ? "25 or more" : num(p.headroom_yrs, 0)} years of headroom`);
+      rows.push(["upgrade", bits.join(", ")]);
+    }
+  }
+  if (p.speed_flag && p.speed_measured != null) {
+    rows.push(["speed", `${num(p.speed_measured, 0)} mph measured${p.speed_diff != null ? `, ${num(p.speed_diff, 0)} over the posted limit` : ""}`]);
+  }
+  if (!rows.length) return "";
+  return `<div class="forecast"><div class="k">Forecast</div>${rows.map(([k, v]) => `<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("")}</div>`;
+}
+
 // p: raw segment properties merged with deriveProps(); ranks: rankWithin() result or null; state: for the LOS, years and metric labels.
 export function popupHtml(p, ranks, state) {
   const st = state || { los: p.capacity_los || "E", yearMin: 2021, yearMax: 2025, metric: "combined" };
@@ -39,7 +86,7 @@ export function popupHtml(p, ranks, state) {
       <div class="cell"><div class="v">${p.length_mi != null ? num(p.length_mi, 2) : "n/a"}<small>mi</small></div><div class="k">length${FALLBACK_GEOMETRY_IDS.includes(p.loc_id) ? ", approximate" : ""}</div></div>
     </div>
     <div class="score-row"><div><div class="k" style="font-size:10.5px;color:var(--ink-muted)">${METRIC_LABEL.combined}, crashes + v/c</div><div class="v">${num(p.combined_active)}</div></div><div class="ranks">${rankLine}</div></div>
-    ${closure}${caveats}${aerial}</div>`;
+    ${closure}${forecastHtml(p)}${caveats}${aerial}</div>`;
 }
 
 // Builds the popup content for a loc_id from the raw data under the current state. Returns null when the id is unknown.
