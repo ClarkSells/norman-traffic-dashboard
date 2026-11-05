@@ -26,11 +26,16 @@
    "52500-261"
   ],
   "score": 237.536,
-  "has_mesh": false,
-  "streetview": []
+  "has_mesh": true,
+  "streetview": [
+   "heading_000.jpg",
+   "heading_090.jpg",
+   "heading_180.jpg",
+   "heading_270.jpg"
+  ]
  },
  "site03": {
-  "name": "24TH AVE NW at W Robinson St",
+  "name": "24th Ave NW at W Robinson St",
   "lat": 35.232942,
   "lon": -97.480404,
   "loc_ids": [
@@ -39,8 +44,13 @@
    "52500-5003"
   ],
   "score": 230.539,
-  "has_mesh": false,
-  "streetview": []
+  "has_mesh": true,
+  "streetview": [
+   "heading_000.jpg",
+   "heading_090.jpg",
+   "heading_180.jpg",
+   "heading_270.jpg"
+  ]
  },
  "site04": {
   "name": "12th Ave.SE at E Lindsey St",
@@ -51,8 +61,13 @@
    "52500-254"
   ],
   "score": 220.047,
-  "has_mesh": false,
-  "streetview": []
+  "has_mesh": true,
+  "streetview": [
+   "heading_000.jpg",
+   "heading_090.jpg",
+   "heading_180.jpg",
+   "heading_270.jpg"
+  ]
  },
  "site05": {
   "name": "Flood Ave. at Tecumseh Rd.",
@@ -63,7 +78,12 @@
    "52500-243"
   ],
   "score": 207.343,
-  "has_mesh": false,
-  "streetview": []
+  "has_mesh": true,
+  "streetview": [
+   "heading_000.jpg",
+   "heading_090.jpg",
+   "heading_180.jpg",
+   "heading_270.jpg"
+  ]
  }
 }

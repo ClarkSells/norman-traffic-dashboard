@@ -1,6 +1,6 @@
 {
  "site_id": "site03",
- "name": "24TH AVE NW at W Robinson St",
+ "name": "24th Ave NW at W Robinson St",
  "center": {
   "lon": -97.480404,
   "lat": 35.232942
@@ -25,7 +25,7 @@
  "labels": [
   {
    "kind": "intersection",
-   "text": "24TH AVE NW at W Robinson St",
+   "text": "24th Ave NW at W Robinson St",
    "lon": -97.480404,
    "lat": 35.232942,
    "x": 0.0,
