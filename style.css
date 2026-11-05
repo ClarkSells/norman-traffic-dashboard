@@ -382,3 +382,10 @@ td.score span { position: relative; }
 /* site view buttons in the popup */
 .popup .links.sites{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .popup .links.sites .btn{text-align:left;white-space:normal}
+
+/* popup media: aerial first, then the two street view headings, each a figure with a one line caption */
+.popup .media{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0 2px}
+.popup .media figure{margin:0;grid-column:span 1}
+.popup .media figure:first-child{grid-column:span 2}
+.popup .media img{display:block;width:100%;height:auto;border-radius:4px;background:var(--surface-2,#eeece4)}
+.popup .media figcaption{font:10.5px/1.3 var(--font-mono,monospace);color:var(--ink-muted,#6b6960);margin-top:2px}

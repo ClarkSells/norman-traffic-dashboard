@@ -110,3 +110,17 @@ console.log("scenario legend checks passed");
   assert.equal(t, "1.3 percent per year, ward pooled rate, 2 counts here, 39 percent weight on the citywide rate, own trend -15.7 percent (noisy, not used), band 0.0 percent to 3.0 percent");
   console.log("pooled growth wording checks passed");
 }
+
+// Site media: aerial plus the two along road Street View headings from media/index.json, nothing when a point has none.
+{
+  const { mediaHtml, setMediaIndex } = await import("../ui/popup.js");
+  setMediaIndex({ "52500-1": { aerial: true, bearing: 0.6, streetview: [{ file: "sv_001.jpg", heading: 1, date: "2021-02" }, { file: "sv_181.jpg", heading: 181, date: "2021-02" }] }, "52500-2": { aerial: false, streetview: [] } });
+  const h = mediaHtml("52500-1");
+  assert.ok(h.includes('src="media/52500-1/aerial.jpg"') && h.includes("aerial, count point at center"), "aerial figure");
+  assert.ok(h.includes('src="media/52500-1/sv_001.jpg"') && h.includes("street view looking N, 2021-02"), "north heading");
+  assert.ok(h.includes("street view looking S, 2021-02"), "south heading");
+  assert.ok(h.includes('loading="lazy"'), "images are lazy");
+  assert.equal(mediaHtml("52500-2"), "", "no media, no block");
+  assert.equal(mediaHtml("52500-999"), "", "unknown point, no block");
+  console.log("site media checks passed");
+}

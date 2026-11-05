@@ -75,6 +75,27 @@ export function sitesHtml(sites) {
   return `<div class="links sites">${sites.map(s => `<button type="button" class="btn small site-view" data-site="${s.id}">${s.hasMesh ? "View site in 3D" : "View site"}: ${s.name}</button>`).join("")}</div>`;
 }
 
+// ## Site media: the aerial and the two along road Street View headings the pipeline fetched into media/<loc_id>/.
+// media/index.json is loaded once per page; until it arrives (or when a point has no media) nothing is rendered.
+let mediaIndex = null;
+let mediaPromise = null;
+export function loadMediaIndex(fetchJson) {
+  if (mediaPromise) return mediaPromise;
+  const f = fetchJson || ((u) => fetch(u).then(r => (r.ok ? r.json() : {})));
+  mediaPromise = f("media/index.json").then(j => { mediaIndex = j || {}; return mediaIndex; }).catch(() => { mediaIndex = {}; return mediaIndex; });
+  return mediaPromise;
+}
+export function setMediaIndex(j) { mediaIndex = j; }
+export function mediaHtml(locId, index) {
+  const m = (index || mediaIndex || {})[locId];
+  if (!m || (!m.aerial && !(m.streetview || []).length)) return "";
+  const compass = (h) => ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(((h % 360) + 360) % 360 / 45) % 8];
+  const imgs = [];
+  if (m.aerial) imgs.push(`<figure><img src="media/${locId}/aerial.jpg" alt="Aerial view of the count point" loading="lazy" width="800" height="800"><figcaption>aerial, count point at center</figcaption></figure>`);
+  for (const s of m.streetview || []) imgs.push(`<figure><img src="media/${locId}/${s.file}" alt="Street View looking ${compass(s.heading)}" loading="lazy" width="800" height="450"><figcaption>street view looking ${compass(s.heading)}${s.date ? `, ${s.date}` : ""}</figcaption></figure>`);
+  return `<div class="media">${imgs.join("")}</div>`;
+}
+
 export function popupHtml(p, ranks, state, sites) {
   const st = state || { los: p.capacity_los || "E", yearMin: 2021, yearMax: 2025, metric: "combined" };
   const wards = Array.isArray(p.wards) ? p.wards : JSON.parse(p.wards || "[]");
@@ -105,7 +126,7 @@ export function popupHtml(p, ranks, state, sites) {
       <div class="cell"><div class="v">${p.length_mi != null ? num(p.length_mi, 2) : "n/a"}<small>mi</small></div><div class="k">length${FALLBACK_GEOMETRY_IDS.includes(p.loc_id) ? ", approximate" : ""}</div></div>
     </div>
     <div class="score-row"><div><div class="k" style="font-size:10.5px;color:var(--ink-muted)">${METRIC_LABEL.combined}, crashes + v/c</div><div class="v">${num(p.combined_active)}</div></div><div class="ranks">${rankLine}</div></div>
-    ${closure}${forecastHtml(p)}${caveats}${sitesHtml(sites)}${aerial}</div>`;
+    ${mediaHtml(p.loc_id)}${closure}${forecastHtml(p)}${caveats}${sitesHtml(sites)}${aerial}</div>`;
 }
 
 // ## popupFor: look up the segment, derive its numbers, build the HTML

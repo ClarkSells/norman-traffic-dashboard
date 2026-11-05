@@ -19,7 +19,7 @@ import { initHelp } from "./ui/help.js";
 import { initLegend, renderLegend } from "./ui/legend.js";
 import { hideLoading, initLoading, setProgress, setStage, showLoadError } from "./ui/loading.js";
 import { clampPatchYears, highlightRow, initControls, initPanelToggle, renderTable, syncControls } from "./ui/panel.js";
-import { attachPopup } from "./ui/popup.js";
+import { attachPopup, loadMediaIndex } from "./ui/popup.js";
 import { initSiteView } from "./ui/siteview.js";
 import { hideTooltip, showTooltip, tooltipHtml } from "./ui/tooltip.js";
 import { getState, setState, subscribe } from "./state.js";
@@ -479,6 +479,7 @@ async function main() {
   addAllLayers();
   performance.mark("dash:layers-added");
   const siteView = initSiteView(map);
+  loadMediaIndex().then(() => { if (popup && popup.isOpen && popup.isOpen()) popup.refresh(); });
   popup = attachPopup(map, (locId) => setState({ selectedLocId: locId }), () => !presenting,
                       { intercept: closureIntercept, sites: siteView.sitesForLoc, onSite: (id) => { if (popup) popup.remove(); siteView.open(id); } });
   helpBox = initHelp(getRaw().summary && getRaw().summary.qa);
