@@ -1,0 +1,86 @@
+[
+ {
+  "file": "01_ingest_counts.svg",
+  "number": 1,
+  "caption": "ingest_counts.py: 500 rows from five ACOG workbooks, 498 parsed; the dates show the counts are school year Fridays.",
+  "bytes": 28414
+ },
+ {
+  "file": "02_select_volume.svg",
+  "number": 2,
+  "caption": "select_volume.py: one row per station keeping the highest volume across years, as the assignment asks.",
+  "bytes": 15944
+ },
+ {
+  "file": "03_lanes.svg",
+  "number": 3,
+  "caption": "enrich_gis.py and lane_review.py: the city lanes field as a starting point, every station verified against aerials.",
+  "bytes": 12906
+ },
+ {
+  "file": "04_capacity.svg",
+  "number": 4,
+  "caption": "capacity.py: the ACOG table; LOS E is the pipeline default (config.CAPACITY_LOS).",
+  "bytes": 15786
+ },
+ {
+  "file": "05_wards.svg",
+  "number": 5,
+  "caption": "wards.py: point in polygon with a 30 m boundary buffer; boundary segments appear in both ward lists.",
+  "bytes": 133372
+ },
+ {
+  "file": "06_segment_geometry.svg",
+  "number": 6,
+  "caption": "segment_geometry.py and collisions_assign.py: a centerline clipped between its cross streets, crashes within 30 m assigned to it.",
+  "bytes": 31195
+ },
+ {
+  "file": "07_collisions.svg",
+  "number": 7,
+  "caption": "collisions_load.py and collisions_assign.py: every row gets exactly one audit category; method B cross checks method A.",
+  "bytes": 19562
+ },
+ {
+  "file": "08_scoring.svg",
+  "number": 8,
+  "caption": "scoring.py: combined = crashes + v/c; ranks by ward with min rank on ties.",
+  "bytes": 161582
+ },
+ {
+  "file": "09_qa.svg",
+  "number": 9,
+  "caption": "qa.py: the reconciliation checks the workbook and the dashboard quote.",
+  "bytes": 16817
+ },
+ {
+  "file": "10_growth_backtest.svg",
+  "number": 10,
+  "caption": "forecast/growth.py and backtest.py: pooled rates because single counts are noisy; the back test scores each band against the held out latest count.",
+  "bytes": 28051
+ },
+ {
+  "file": "11_horizon.svg",
+  "number": 11,
+  "caption": "forecast/horizon.py: vpd(Y) = vpd_max x (1 + g)^(Y - count year); the year a segment crosses 0.9 is the headline.",
+  "bytes": 64859
+ },
+ {
+  "file": "12_closures.svg",
+  "number": 12,
+  "caption": "scenarios/graph.py and closure.py: a networkx graph of 8,115 centerline edges; a closure's volume moves to the shortest detour.",
+  "bytes": 111881
+ },
+ {
+  "file": "13_daytypes.svg",
+  "number": 13,
+  "caption": "scenarios/daytype.py: factors relative to the school Friday count; game day adds stadium vehicles routed from the interchanges.",
+  "bytes": 66145
+ },
+ {
+  "file": "14_speed_sites.svg",
+  "number": 14,
+  "caption": "scenarios/speed.py and sites/aleph_sites.py: the count string's speed against the posted limit; the top five intersections get a 3D capture.",
+  "bytes": 89816
+ }
+]
