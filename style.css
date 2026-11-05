@@ -378,3 +378,7 @@ td.score span { position: relative; }
   .stat { padding: 10px 12px; }
   .stat .value { font-size: 22px; }
 }
+
+/* site view buttons in the popup */
+.popup .links.sites{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.popup .links.sites .btn{text-align:left;white-space:normal}

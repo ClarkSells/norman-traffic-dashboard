@@ -90,3 +90,15 @@ console.log("scenario legend checks passed");
   assert.ok(!popupHtml(p, null, state).includes('class="forecast"'));
   console.log("forecast block checks passed");
 }
+
+// Site view: a "View site" button per capture, none when the segment has no site.
+{
+  const { popupHtml, sitesHtml } = await import("../ui/popup.js");
+  assert.equal(sitesHtml([]), "", "no sites, no block");
+  const html = sitesHtml([{ id: "site01", name: "W Main St at 24th Ave NW", hasMesh: true }, { id: "site02", name: "X at Y", hasMesh: false }]);
+  assert.ok(html.includes('data-site="site01"') && html.includes("View site in 3D: W Main St at 24th Ave NW"), "mesh sites say 3D");
+  assert.ok(html.includes('data-site="site02"') && html.includes("View site: X at Y"), "sites without a mesh still open");
+  const full = popupHtml({ loc_id: "52500-1", on_road: "A", from_road: "B", to_road: "C", wards: [1], vpd_max: 1, lanes_final: 2, capacity_E: 17100, v_c_active: 0.1, collisions_active: 1, combined_active: 1.1 }, null, null, [{ id: "site01", name: "A at B", hasMesh: true }]);
+  assert.ok(full.includes("site-view"), "popupHtml renders the sites block when given sites");
+  console.log("site view popup checks passed");
+}

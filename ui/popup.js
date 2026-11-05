@@ -56,7 +56,13 @@ export function forecastHtml(p) {
 }
 
 // p: raw segment properties merged with deriveProps(); ranks: rankWithin() result or null; state: for the LOS, years and metric labels.
-export function popupHtml(p, ranks, state) {
+// sites: [{ id, name, hasMesh }] from siteview.sitesForLoc(locId); renders one "View site" button per capture.
+export function sitesHtml(sites) {
+  if (!Array.isArray(sites) || !sites.length) return "";
+  return `<div class="links sites">${sites.map(s => `<button type="button" class="btn small site-view" data-site="${s.id}">${s.hasMesh ? "View site in 3D" : "View site"}: ${s.name}</button>`).join("")}</div>`;
+}
+
+export function popupHtml(p, ranks, state, sites) {
   const st = state || { los: p.capacity_los || "E", yearMin: 2021, yearMax: 2025, metric: "combined" };
   const wards = Array.isArray(p.wards) ? p.wards : JSON.parse(p.wards || "[]");
   const cap = p.capacity_active != null ? p.capacity_active : (st.los === "C" ? p.capacity_C : p.capacity_E);
@@ -86,30 +92,36 @@ export function popupHtml(p, ranks, state) {
       <div class="cell"><div class="v">${p.length_mi != null ? num(p.length_mi, 2) : "n/a"}<small>mi</small></div><div class="k">length${FALLBACK_GEOMETRY_IDS.includes(p.loc_id) ? ", approximate" : ""}</div></div>
     </div>
     <div class="score-row"><div><div class="k" style="font-size:10.5px;color:var(--ink-muted)">${METRIC_LABEL.combined}, crashes + v/c</div><div class="v">${num(p.combined_active)}</div></div><div class="ranks">${rankLine}</div></div>
-    ${closure}${forecastHtml(p)}${caveats}${aerial}</div>`;
+    ${closure}${forecastHtml(p)}${caveats}${sitesHtml(sites)}${aerial}</div>`;
 }
 
 // Builds the popup content for a loc_id from the raw data under the current state. Returns null when the id is unknown.
-export function popupFor(locId, state) {
+export function popupFor(locId, state, sites) {
   const f = getRaw().segments.features.find(x => x.properties.loc_id === locId);
   if (!f) return null;
   const st = state || getState();
   const coords = f.geometry.coordinates;
   const mid = coords[Math.floor(coords.length / 2)];
   const p = { ...f.properties, ...deriveProps(f.properties, st), geometry_lon: mid[0], geometry_lat: mid[1] };
-  return { html: popupHtml(p, rankWithin(st, locId), st), lngLat: mid, feature: f };
+  return { html: popupHtml(p, rankWithin(st, locId), st, sites), lngLat: mid, feature: f };
 }
 
 // opts.intercept(locId, lngLat) may claim a segment click (closure mode): when it returns true nothing opens
-// and nothing is selected.
+// and nothing is selected. opts.sites(locId) lists 3D site captures for the segment and opts.onSite(id) opens one.
 export function attachPopup(map, onSelect, enabled, opts = {}) {
   const canOpen = typeof enabled === "function" ? enabled : () => true;
   const intercept = typeof opts.intercept === "function" ? opts.intercept : () => false;
+  const sitesFor = typeof opts.sites === "function" ? opts.sites : () => [];
+  const onSite = typeof opts.onSite === "function" ? opts.onSite : () => {};
   const popup = new mapboxgl.Popup({ closeButton: true, maxWidth: "340px", offset: 10 });
   const open = (locId, lngLat) => {
-    const built = popupFor(locId);
+    const built = popupFor(locId, undefined, sitesFor(locId));
     if (!built) return null;
     popup.setLngLat(lngLat || built.lngLat).setHTML(built.html).addTo(map);
+    const root = typeof popup.getElement === "function" ? popup.getElement() : null;
+    if (root && typeof root.querySelectorAll === "function") {
+      for (const b of root.querySelectorAll("[data-site]")) b.addEventListener("click", () => onSite(b.dataset.site || b.getAttribute("data-site")));
+    }
     return popup;
   };
   const onFeatureClick = (e) => {

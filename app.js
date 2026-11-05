@@ -13,6 +13,7 @@ import { initLegend, renderLegend } from "./ui/legend.js";
 import { hideLoading, initLoading, setProgress, setStage, showLoadError } from "./ui/loading.js";
 import { clampPatchYears, highlightRow, initControls, initPanelToggle, renderTable, syncControls } from "./ui/panel.js";
 import { attachPopup } from "./ui/popup.js";
+import { initSiteView } from "./ui/siteview.js";
 import { hideTooltip, showTooltip, tooltipHtml } from "./ui/tooltip.js";
 import { getState, setState, subscribe } from "./state.js";
 import { applyMode, applyTheme, themeFor } from "./theme.js";
@@ -380,7 +381,9 @@ async function main() {
   fetch("data/SAMPLE_DATA.txt", { method: "HEAD" }).then(r => setSampleNotice(r.ok)).catch(() => setSampleNotice(false));
   addAllLayers();
   performance.mark("dash:layers-added");
-  popup = attachPopup(map, (locId) => setState({ selectedLocId: locId }), () => !presenting, { intercept: closureIntercept });
+  const siteView = initSiteView(map);
+  popup = attachPopup(map, (locId) => setState({ selectedLocId: locId }), () => !presenting,
+                      { intercept: closureIntercept, sites: siteView.sitesForLoc, onSite: (id) => { if (popup) popup.remove(); siteView.open(id); } });
   helpBox = initHelp(getRaw().summary && getRaw().summary.qa);
   panelToggle = initPanelToggle();
   const sheet = initSheet({ panel: document.getElementById("panel"), handle: document.getElementById("sheet-handle"), header: document.getElementById("briefing"),
