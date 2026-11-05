@@ -1,2 +1,0 @@
-SAMPLE DATA, not pipeline output
-segments.geojson scenario properties, closure_impacts.json, daytypes.json and horizon.json were written by scripts/stamp_sample.mjs. Every forecast, day type, closure and speed value here is made up and seeded from loc_id. Delete this file when the pipeline output lands.
